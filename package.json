@@ -1,0 +1,16 @@
+{
+  "name": "classivo-app",
+  "version": "6.7.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"cd frontend && npm run dev\" \"cd backend && go run src/main.go\" --names \"FRONT,BACK\" --prefix-colors \"blue,red\"",
+    "postinstall": "cd frontend && npm install && cd ../backend && go mod tidy"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^1.5.0",
+    "ogl": "^1.0.11"
+  }
+}
