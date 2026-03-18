@@ -100,18 +100,20 @@ func HandleSubmitQuery(c *fiber.Ctx) error {
 	})
 }
 
-type AdminKeyPayload struct {
-	Key string `json:"key"`
+type AdminCredentialsPayload struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func HandleGetQueries(c *fiber.Ctx) error {
-	var body AdminKeyPayload
+	var body AdminCredentialsPayload
 	if err := c.BodyParser(&body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid body"})
 	}
 
-	if body.Key != "Classivo-admin-secret" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid admin key"})
+	// For security, use "admin@classivo.com" and "ClassivoAdmin2026!"
+	if body.Email != "admin@classivo.com" || body.Password != "ClassivoAdmin2026!" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid admin credentials"})
 	}
 
 	db, err := databases.NewDatabaseHelper()

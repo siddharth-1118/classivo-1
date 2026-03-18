@@ -22,13 +22,15 @@ interface StudentQuery {
 }
 
 const AdminQueriesPage = () => {
-    const [adminKey, setAdminKey] = useState("");
+    const [adminEmail, setAdminEmail] = useState("");
+    const [adminPassword, setAdminPassword] = useState("");
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [queries, setQueries] = useState<StudentQuery[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const fetchQueries = async (key: string) => {
+    const fetchQueries = async (email: string, password: string) => {
+        if (!email || !password) return;
         setLoading(true);
         setError("");
         try {
@@ -38,7 +40,7 @@ const AdminQueriesPage = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ key }),
+                body: JSON.stringify({ email, password }),
             });
 
             if (!response.ok) {
@@ -49,7 +51,8 @@ const AdminQueriesPage = () => {
             const data = await response.json();
             setQueries(data);
             setIsAuthorized(true);
-            localStorage.setItem("classivo_admin_key", key);
+            localStorage.setItem("classivo_admin_email", email);
+            localStorage.setItem("classivo_admin_password", password);
         } catch (err: any) {
             setError(err.message);
             setIsAuthorized(false);
@@ -59,16 +62,18 @@ const AdminQueriesPage = () => {
     };
 
     useEffect(() => {
-        const savedKey = localStorage.getItem("classivo_admin_key");
-        if (savedKey) {
-            setAdminKey(savedKey);
-            fetchQueries(savedKey);
+        const savedEmail = localStorage.getItem("classivo_admin_email");
+        const savedPassword = localStorage.getItem("classivo_admin_password");
+        if (savedEmail && savedPassword) {
+            setAdminEmail(savedEmail);
+            setAdminPassword(savedPassword);
+            fetchQueries(savedEmail, savedPassword);
         }
     }, []);
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
-        fetchQueries(adminKey);
+        fetchQueries(adminEmail, adminPassword);
     };
 
     if (!isAuthorized) {
@@ -85,12 +90,23 @@ const AdminQueriesPage = () => {
                     
                     <form onSubmit={handleLogin} className="space-y-4">
                         <div className="relative">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
+                            <input
+                                type="email"
+                                value={adminEmail}
+                                onChange={(e) => setAdminEmail(e.target.value)}
+                                placeholder="Admin Email"
+                                className="w-full bg-zinc-800/50 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+                                required
+                            />
+                        </div>
+                        <div className="relative">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
                             <input
                                 type="password"
-                                value={adminKey}
-                                onChange={(e) => setAdminKey(e.target.value)}
-                                placeholder="Enter Admin Secret Key"
+                                value={adminPassword}
+                                onChange={(e) => setAdminPassword(e.target.value)}
+                                placeholder="Admin Password"
                                 className="w-full bg-zinc-800/50 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all font-mono"
                                 required
                             />
@@ -126,7 +142,7 @@ const AdminQueriesPage = () => {
                         <p className="text-zinc-400 mt-1">Manage and respond to student inquiries from the portal.</p>
                     </div>
                     <button
-                        onClick={() => fetchQueries(adminKey)}
+                        onClick={() => fetchQueries(adminEmail, adminPassword)}
                         disabled={loading}
                         className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-white/5 transition-all text-sm"
                     >
