@@ -1,5 +1,7 @@
 "use client";
 import React from "react";
+import { motion } from "motion/react";
+
 
 import Link from "next/link";
 import {
@@ -239,32 +241,35 @@ const DashboardPage = () => {
           </div>
         </header>
 
-        <div className="flex-1 flex flex-col gap-5 sm:gap-8 min-h-0 overflow-y-auto custom-scrollbar relative z-10 pb-20">
+        <div className="flex-1 flex flex-col gap-4 sm:gap-8 min-h-0 overflow-y-auto custom-scrollbar relative z-10 pb-24">
           {/* Navigation Grid */}
           <section>
             <div className="flex items-center gap-2 mb-4 px-1">
               <div className="w-1.5 h-1.5 rounded-full bg-premium-gold animate-pulse" />
               <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-[0.2em]">Quick Access</h2>
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3 sm:gap-4">
-              {navItems.map((item) => (
-                <Card
+            <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-4">
+              {navItems.map((item, idx) => (
+                <motion.div
                   key={item.name}
-                  className="group relative overflow-hidden bg-zinc-900/40 border-zinc-800/50 hover:border-premium-gold/30 transition-all duration-300 p-4 cursor-pointer"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.05 }}
                 >
+                  <Card
+                    className="group relative h-full overflow-hidden bg-zinc-900/40 border-zinc-800/50 hover:border-premium-gold/30 transition-all duration-300 p-2 sm:p-4 cursor-pointer"
+                  >
                   <Link href={item.href} className="flex flex-col items-center justify-center text-center gap-3">
-                    <div className={`p-3 rounded-2xl bg-zinc-950/50 border border-zinc-800/80 group-hover:scale-110 group-hover:bg-premium-gold/10 transition-all ${item.color}`}>
-                      <item.icon size={24} strokeWidth={1.5} />
+                    <div className={`p-2 sm:p-3 rounded-2xl bg-zinc-950/50 border border-zinc-800/80 group-hover:scale-110 group-hover:bg-premium-gold/10 transition-all ${item.color}`}>
+                      <item.icon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={1.5} />
                     </div>
-                    <div className="flex items-center gap-1.5 justify-center">
-                       <span className="text-xs font-bold text-white tracking-wide uppercase">{item.name}</span>
-                       <span className="text-sm opacity-60 group-hover:opacity-100 transition-opacity">{item.emoji}</span>
+                    <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 justify-center">
+                       <span className="text-[9px] sm:text-xs font-bold text-white tracking-wide uppercase text-center">{item.name}</span>
+                       <span className="text-xs sm:text-sm opacity-60 group-hover:opacity-100 transition-opacity hidden sm:inline">{item.emoji}</span>
                     </div>
                   </Link>
-                  
-                  {/* Visual flourish for premium feel */}
-                  <div className="absolute -right-2 -bottom-2 w-12 h-12 bg-premium-gold/5 blur-xl group-hover:bg-premium-gold/10 transition-all rounded-full" />
                 </Card>
+                </motion.div>
               ))}
             </div>
           </section>
