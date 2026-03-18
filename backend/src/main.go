@@ -17,6 +17,7 @@ import (
 	"goscraper/src/globals"
 	"goscraper/src/handlers"
 	"goscraper/src/helpers/databases"
+	"goscraper/src/scheduler"
 	"goscraper/src/types"
 	"goscraper/src/utils"
 
@@ -44,6 +45,7 @@ func main() {
 	}
 
 	logEnvPresence()
+	scheduler.StartCronManager()
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -224,6 +226,8 @@ func main() {
 
 		return c.JSON(fiber.Map{"message": "All users logged out successfully"})
 	})
+
+	api.Post("/admin/queries", handlers.HandleGetQueries)
 
 	// Universal error handling middleware
 	app.Use(func(c *fiber.Ctx) error {
@@ -450,6 +454,11 @@ func main() {
 	api.Post("/ai/chat", func(c *fiber.Ctx) error {
 		return handlers.HandleChatCompletion(c)
 	})
+
+	api.Post("/queries", handlers.HandleSubmitQuery)
+	api.Post("/notifications/subscribe", handlers.HandleSaveSubscription)
+	api.Post("/notifications/test", scheduler.HandleTestPush)
+
 
 	// ----------------------------------------------------
 

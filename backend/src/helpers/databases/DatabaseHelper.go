@@ -61,6 +61,11 @@ func min(a, b int) int {
 	return b
 }
 
+func (db *DatabaseHelper) Client() *supabase.Client {
+	return db.client
+}
+
+
 func (db *DatabaseHelper) encrypt(text string) (string, error) {
 	block, err := aes.NewCipher(db.key)
 	if err != nil {

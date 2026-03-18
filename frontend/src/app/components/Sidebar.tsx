@@ -1,7 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
+import QueryModal from "./QueryModal";
+import { subscribeToPushNotifications } from "../lib/pushNotifications";
 import { usePathname } from "next/navigation";
 import {
     LayoutGrid,
@@ -10,11 +12,28 @@ import {
     GraduationCap,
     Calendar,
     LogOut,
-    Settings
+    Settings,
+    HelpCircle,
+    BellRing
 } from "lucide-react";
 
 const Sidebar = () => {
     const pathname = usePathname();
+    const [isQueryModalOpen, setIsQueryModalOpen] = useState(false);
+    const [pushStatus, setPushStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+    const handleSubscribe = async () => {
+        setPushStatus("loading");
+        try {
+            await subscribeToPushNotifications();
+            setPushStatus("success");
+            setTimeout(() => setPushStatus("idle"), 3000);
+        } catch (error) {
+            console.error(error);
+            setPushStatus("error");
+            setTimeout(() => setPushStatus("idle"), 4000);
+        }
+    };
 
     const navItems = [
         { name: "Dashboard", href: "/app/dashboard", icon: LayoutGrid },
@@ -67,6 +86,30 @@ const Sidebar = () => {
 
                 {/* Bottom Actions */}
                 <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-2">
+                    <button
+                        onClick={handleSubscribe}
+                        disabled={pushStatus === "loading"}
+                        className={`p-3 rounded-xl transition-all duration-300 group relative flex justify-center w-full
+                            ${pushStatus === "success" ? "text-emerald-400 bg-emerald-500/10" : 
+                              pushStatus === "error" ? "text-red-400 bg-red-500/10" :
+                              "text-zinc-400 hover:text-amber-400 hover:bg-amber-500/10"}`}
+                    >
+                        <BellRing size={20} className={pushStatus === "loading" ? "animate-pulse" : ""} />
+                        <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 border border-zinc-800 rounded-md text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                            {pushStatus === "success" ? "Alerts Enabled!" :
+                             pushStatus === "error" ? "Failed to Enable" :
+                             "Enable Mess Alerts"}
+                        </div>
+                    </button>
+                    <button
+                        onClick={() => setIsQueryModalOpen(true)}
+                        className="p-3 rounded-xl text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-300 group relative flex justify-center w-full"
+                    >
+                        <HelpCircle size={20} />
+                        <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 border border-zinc-800 rounded-md text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                            Contact Admin
+                        </div>
+                    </button>
                     <Link
                         href="/auth/logout"
                         className="p-3 rounded-xl text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300 group"
@@ -78,6 +121,11 @@ const Sidebar = () => {
                     </Link>
                 </div>
             </div>
+
+            <QueryModal 
+                isOpen={isQueryModalOpen} 
+                onClose={() => setIsQueryModalOpen(false)} 
+            />
         </aside>
     );
 };
