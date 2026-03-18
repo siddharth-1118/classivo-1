@@ -10,7 +10,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: "/app/",
     },
-    sitemap: "https://Classivo123.vercel.app/sitemap.xml",
+    sitemap: "https://classivo-1.vercel.app/sitemap.xml",
   };
 }
 

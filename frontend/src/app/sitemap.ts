@@ -4,7 +4,7 @@ export const dynamic = 'force-static'
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: 'https://vertex123.vercel.app',
+      url: 'https://classivo-1.vercel.app',
       lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 1,
