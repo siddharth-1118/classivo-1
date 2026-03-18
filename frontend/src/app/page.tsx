@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AIChat } from "./components/AIChat";
 
 export default function Home() {
   return (
@@ -77,7 +76,6 @@ export default function Home() {
         </Link>
       </div>
     </main>
-    <AIChat />
     </>
   );
 }
