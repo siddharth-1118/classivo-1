@@ -28,11 +28,15 @@ func NewDatabaseHelper() (*DatabaseHelper, error) {
 		godotenv.Load()
 	}
 	supabaseUrl := strings.Trim(strings.Trim(os.Getenv("SUPABASE_URL"), " "), "\"")
-	supabaseKey := strings.Trim(strings.Trim(os.Getenv("SUPABASE_ANON_KEY"), " "), "\"")
-	source := "SUPABASE_ANON_KEY"
+	supabaseKey := strings.Trim(strings.Trim(os.Getenv("SUPABASE_SERVICE_ROLE_KEY"), " "), "\"")
+	source := "SUPABASE_SERVICE_ROLE_KEY"
 	if supabaseKey == "" {
-		supabaseKey = strings.Trim(strings.Trim(os.Getenv("SUPABASE_KEY"), " "), "\"") // Fallback
+		supabaseKey = strings.Trim(strings.Trim(os.Getenv("SUPABASE_KEY"), " "), "\"")
 		source = "SUPABASE_KEY"
+	}
+	if supabaseKey == "" {
+		supabaseKey = strings.Trim(strings.Trim(os.Getenv("SUPABASE_ANON_KEY"), " "), "\"")
+		source = "SUPABASE_ANON_KEY"
 	}
 	encryptionKey := os.Getenv("ENCRYPTION_KEY")
 
