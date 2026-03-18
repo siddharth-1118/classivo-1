@@ -13,6 +13,7 @@ import PageTransition from "./components/PageTransition";
 import NavigationWrapper from "./components/NavigationWrapper";
 import QueryProvider from "./app/components/provider";
 import { AIChat } from "./components/AIChat";
+import NotificationPrompt from "./components/NotificationPrompt";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -115,6 +116,7 @@ export default function RootLayout({
             </NavigationWrapper>
           </QueryProvider>
           <AIChat />
+          <NotificationPrompt />
           {enableVercelAnalytics ? <Analytics /> : null}
           {enableVercelAnalytics ? <SpeedInsights /> : null}
         </body>

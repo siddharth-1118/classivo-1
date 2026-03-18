@@ -9,8 +9,10 @@ import {
   Sparkles,
   Clock3,
   ChartNoAxesCombined,
+  BellRing,
 } from "lucide-react";
 import { useAttendance, useTimetable, useMarks, useUserInfo, useDayOrder } from "@/hooks/query";
+import { subscribeToPushNotifications } from "@/app/lib/pushNotifications";
 import { Card } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
@@ -38,6 +40,20 @@ const DashboardPage = () => {
   const { data: marksData } = useMarks();
   const { data: userInfo } = useUserInfo();
   const { data: dayOrderData, refetch: refetchDayOrder, isFetching: isFetchingDayOrder } = useDayOrder();
+  const [pushStatus, setPushStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
+
+  const handleSubscribe = async () => {
+    setPushStatus("loading");
+    try {
+      await subscribeToPushNotifications();
+      setPushStatus("success");
+      setTimeout(() => setPushStatus("idle"), 3000);
+    } catch (error) {
+      console.error(error);
+      setPushStatus("error");
+      setTimeout(() => setPushStatus("idle"), 4000);
+    }
+  };
 
   const averageAttendance =
     attendanceData && attendanceData.length > 0
@@ -119,6 +135,19 @@ const DashboardPage = () => {
                 aria-label="Refresh timetable"
               >
                 {(isFetchingTimetable || isFetchingDayOrder) ? <RotateCcw size={18} className="animate-spin" /> : <RotateCcw size={18} />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={pushStatus === "loading"}
+                className={`rounded-full border border-white/10 bg-white/5 transition-all duration-300
+                  ${pushStatus === "success" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : 
+                    pushStatus === "error" ? "text-red-400 bg-red-500/10 border-red-500/20" :
+                    "text-zinc-300 hover:bg-white/10 hover:text-amber-400"}`}
+                onClick={handleSubscribe}
+                aria-label="Enable notifications"
+              >
+                <BellRing size={18} className={pushStatus === "loading" ? "animate-pulse" : ""} />
               </Button>
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
                 <span className="text-lg text-white font-display">{initials}</span>
