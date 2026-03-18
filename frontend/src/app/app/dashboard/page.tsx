@@ -27,6 +27,7 @@ import { subscribeToPushNotifications } from "@/app/lib/pushNotifications";
 import { Card } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
+import { ClassivoLogo } from "@/components/ui/ClassivoLogo";
 import { TotalMarksCard } from "@/app/components/TotalMarksCard";
 
 const CALENDAR_MONTH_LABELS = [
@@ -138,24 +139,24 @@ const DashboardPage = () => {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return { text: "Good Morning", emoji: "🌅" };
-    if (hour < 17) return { text: "Good Afternoon", emoji: "☀️" };
-    return { text: "Good Evening", emoji: "🌙" };
+    if (hour < 12) return { text: "Good Morning" };
+    if (hour < 17) return { text: "Good Afternoon" };
+    return { text: "Good Evening" };
   };
 
   const greeting = getGreeting();
 
   const navItems = [
-    { name: "Timetable", href: "/app/timetable", icon: Clock3, color: "text-blue-400", emoji: "📅" },
-    { name: "Attendance", href: "/app/attendance", icon: ChartNoAxesCombined, color: "text-emerald-400", emoji: "✅" },
-    { name: "Marks", href: "/app/marks", icon: TrendingUp, color: "text-purple-400", emoji: "📊" },
-    { name: "Subjects", href: "/app/marks", icon: BookOpenText, color: "text-orange-400", emoji: "📚" },
-    { name: "Placements", href: "/app/placements", icon: GraduationCap, color: "text-pink-400", emoji: "🎓" },
-    { name: "Mess Menu", href: "/app/messmenu", icon: Calendar, color: "text-yellow-400", emoji: "🍲" },
-    { name: "Profile", href: "/app/profile", icon: User, color: "text-zinc-400", emoji: "👤" },
-    { name: "Community", href: "https://chat.whatsapp.com/KCbxvabSvRbK96h67JF3Io", icon: Users, color: "text-green-400", emoji: "💬" },
-    { name: "Clubs", href: "/app/clubs", icon: Sparkles, color: "text-pink-400", emoji: "✨" },
-    { name: "Settings", href: "/app/settings", icon: Settings, color: "text-slate-400", emoji: "⚙️" },
+    { name: "Timetable", href: "/app/timetable", icon: Clock3, color: "text-blue-400" },
+    { name: "Attendance", href: "/app/attendance", icon: ChartNoAxesCombined, color: "text-emerald-400" },
+    { name: "Marks", href: "/app/marks", icon: TrendingUp, color: "text-purple-400" },
+    { name: "Subjects", href: "/app/marks", icon: BookOpenText, color: "text-orange-400" },
+    { name: "Placements", href: "/app/placements", icon: GraduationCap, color: "text-pink-400" },
+    { name: "Mess Menu", href: "/app/messmenu", icon: Calendar, color: "text-yellow-400" },
+    { name: "Profile", href: "/app/profile", icon: User, color: "text-zinc-400" },
+    { name: "Community", href: "https://chat.whatsapp.com/KCbxvabSvRbK96h67JF3Io", icon: Users, color: "text-green-400" },
+    { name: "Clubs", href: "/app/clubs", icon: Sparkles, color: "text-pink-400" },
+    { name: "Settings", href: "/app/settings", icon: Settings, color: "text-slate-400" },
   ];
 
   return (
@@ -173,8 +174,9 @@ const DashboardPage = () => {
                   Academic overview
                 </span>
               </div>
-              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl font-space-grotesk">
-                {greeting.text}{userInfo?.name ? `, ${userInfo.name.split(" ")[0]}` : ""}{greeting.emoji}
+              <h1 className="mt-4 flex items-center gap-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl font-space-grotesk">
+                {greeting.text}{userInfo?.name ? `, ${userInfo.name.split(" ")[0]}` : ""}
+                <ClassivoLogo className="h-8 w-8 text-premium-gold" />
               </h1>
 
               {isTomorrowHoliday && (
@@ -183,7 +185,9 @@ const DashboardPage = () => {
                     <PartyPopper size={18} />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-premium-gold uppercase tracking-widest">Holiday Alert! 🎉</p>
+                    <p className="flex items-center gap-2 text-xs font-bold text-premium-gold uppercase tracking-widest">
+                      Holiday Alert! <ClassivoLogo className="h-4 w-4" />
+                    </p>
                     <p className="text-sm text-white/80">Tomorrow is a holiday ({tomorrowEvent}). Enjoy your day off!</p>
                   </div>
                 </div>
@@ -265,7 +269,7 @@ const DashboardPage = () => {
                     </div>
                     <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 justify-center">
                        <span className="text-[9px] sm:text-xs font-bold text-white tracking-wide uppercase text-center">{item.name}</span>
-                       <span className="text-xs sm:text-sm opacity-60 group-hover:opacity-100 transition-opacity hidden sm:inline">{item.emoji}</span>
+                       <ClassivoLogo className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity hidden sm:inline text-premium-gold" />
                     </div>
                   </Link>
                 </Card>
@@ -304,8 +308,8 @@ const DashboardPage = () => {
           <Card className="flex-1 p-0 flex flex-col bg-black/20 border-white/10 backdrop-blur-xl overflow-hidden shrink-0 sm:shrink shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
             <div className="p-4 sm:p-6 border-b border-white/10 flex flex-col md:flex-row md:items-end justify-between items-start shrink-0">
               <div className="mb-4 md:mb-0">
-                <div className="flex items-center gap-2 mb-2">
-                   <span className="text-2xl">{greeting.emoji}</span>
+                <div className="flex items-center gap-3 mb-2">
+                   <ClassivoLogo className="h-8 w-8 text-premium-gold" />
                    <h1 className="text-3xl font-display font-medium tracking-tight text-white m-0">
                      {greeting.text}, {userInfo?.name?.split(" ")[0]}
                    </h1>

@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/web-app-manifest-512x512.png",
+        url: "/favicon.svg",
         width: 1200,
         height: 630,
         alt: "CLASSIVO SRM - Academic Management",
@@ -72,14 +72,14 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "CLASSIVO SRM",
     description,
-    images: ["/web-app-manifest-512x512.png"],
+    images: ["/favicon.svg"],
   },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
     ],
     shortcut: "/favicon.svg",
-    apple: "/apple-touch-icon.png",
+    apple: "/favicon.svg",
   },
 };
 
