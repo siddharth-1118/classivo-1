@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -129,6 +130,21 @@ func StartCronManager() {
 	}
 
 	c := cron.New(cron.WithLocation(istLoc))
+
+	// Keep-alive: ping self every 5 minutes to prevent Hugging Face from sleeping
+	selfURL := os.Getenv("SELF_URL")
+	if selfURL == "" {
+		selfURL = "https://siddu1118-classivo-backend.hf.space"
+	}
+	c.AddFunc("*/5 * * * *", func() {
+		resp, err := (&http.Client{Timeout: 10 * time.Second}).Get(selfURL + "/health")
+		if err != nil {
+			log.Println("[CRON KEEPALIVE] Ping failed:", err)
+			return
+		}
+		resp.Body.Close()
+		log.Println("[CRON KEEPALIVE] Ping OK")
+	})
 
 	// Breakfast at 7am -> Notify at 6am (0 6 * * *)
 	c.AddFunc("0 6 * * *", func() { triggerMenuNotification("Breakfast") })

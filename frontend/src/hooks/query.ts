@@ -25,9 +25,6 @@ export function useTimetable() {
     queryFn: async () => {
       const { data } = await timetable();
       if (data.error) throw new Error(data.error);
-      if (data.stale) {
-        toast.warning("Showing cached data. Portal is unavailable.");
-      }
       return data.timetable as DaySchedule[];
     },
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
@@ -41,9 +38,6 @@ export function useAttendance() {
     queryFn: async () => {
       const { data } = await attendance();
       if (data.error) throw new Error(data.error);
-      if (data.stale) {
-        toast.warning("Showing cached data. Portal is unavailable.");
-      }
       return data.attendance as AttendanceDetail[];
     },
     staleTime: 1000 * 60 * 30, // 30 minutes
@@ -57,9 +51,6 @@ export function useMarks() {
     queryFn: async () => {
       const { data } = await marks();
       if (data.error) throw new Error(data.error);
-      if (data.stale) {
-        toast.warning("Showing cached data. Portal is unavailable.");
-      }
       return data.markList.map((mark) => ({
         ...mark,
         subject: mark.course,
@@ -90,9 +81,6 @@ export function useCourse() {
     queryFn: async () => {
       const { data } = await Course();
       if (data.error) throw new Error(data.error);
-      if (data.stale) {
-        toast.warning("Showing cached data. Portal is unavailable.");
-      }
       return data.courseList as CourseDetail[];
     },
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
@@ -106,9 +94,6 @@ export function useCalendar() {
     queryFn: async () => {
       const { data } = await Calendar();
       if (data.error) throw new Error(data.error);
-      if (data.stale) {
-        toast.warning("Showing fallback calendar data. Live calendar source is unavailable.");
-      }
       return data.calendar as Month[];
     },
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
@@ -122,9 +107,6 @@ export function useDayOrder() {
     queryFn: async () => {
       const { data } = await dayOrder();
       if (data.error) throw new Error(data.error);
-      if (data.stale) {
-        toast.warning("Showing fallback day order. Live calendar source is unavailable.");
-      }
       return data as DayOrderResponse;
     },
     retry: 1,

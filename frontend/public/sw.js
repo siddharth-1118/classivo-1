@@ -12,7 +12,7 @@ const API_CACHE = `Classivo-api-${CACHE_VERSION}`;
 
 // Put build-time hashed assets here (recommended). Keep "/" out if you want network-first nav.
 const PRECACHE_URLS = [
-  "/classivo-tab-icon.svg",
+  "/favicon-512.png",
   "/site.webmanifest",
   // Add other hashed JS/CSS produced by your build, e.g. "/_next/static/chunks/app-abc123.js"
 ];
@@ -251,8 +251,8 @@ self.addEventListener('push', function (event) {
     const data = event.data.json();
     const options = {
       body: data.body,
-      icon: data.icon || '/icon-192x192.png',
-      badge: '/icon-192x192.png',
+      icon: data.icon || '/favicon-512.png',
+      badge: '/favicon-512.png',
       vibrate: [100, 50, 100],
       data: {
         dateOfArrival: Date.now(),
