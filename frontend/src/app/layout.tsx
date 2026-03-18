@@ -77,9 +77,10 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-512.png", type: "image/png", sizes: "512x512" },
     ],
-    shortcut: "/favicon.svg",
-    apple: "/favicon.svg",
+    shortcut: "/favicon-512.png",
+    apple: "/favicon-512.png",
   },
 };
 
@@ -92,7 +93,9 @@ export default function RootLayout({
     <ViewTransitions>
       <html lang="en" suppressHydrationWarning>
         <head>
-          <link rel="manifest" href="/site.webmanifest?v=8" />
+          <link rel="icon" href="/favicon-512.png" type="image/png" />
+          <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+          <link rel="manifest" href="/site.webmanifest?v=9" />
           <meta name="theme-color" content="#09090b" />
         </head>
         <body
