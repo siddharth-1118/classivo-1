@@ -13,45 +13,25 @@ export interface LoaderProps {
 
 export const Loader = ({
   size = "h-12 w-12",
-  strokeColor = "stroke-neutral-500 dark:stroke-neutral-100",
-  fillColor = "transparent",
-  speed = 1.5,
+  strokeColor = "border-amber-200/40",
+  speed = 1.2,
   className = "",
-  strokeLength = 0.25,
 }: LoaderProps) => {
   return (
-    <motion.svg
-      xmlns="http://www.w3.org/2000/svg"
-      
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={`${size} ${strokeColor} ${className}`}
-    >
-      {/* Background Track */}
-      <path
-        d="M13 6l0 4l6 0l-8 11l0 -7l-6 0l8 -11l0 3Z"
-        strokeOpacity="0.1"
-        fill={fillColor}
+    <div className={`relative flex items-center justify-center ${size} ${className}`}>
+      <motion.div
+        className={`absolute inset-0 rounded-full border ${strokeColor} bg-white/5`}
+        animate={{ rotate: 360 }}
+        transition={{ duration: speed * 1.6, ease: "linear", repeat: Infinity }}
+      >
+        <div className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-premium-gold shadow-[0_0_14px_rgba(212,175,55,0.8)]" />
+      </motion.div>
+      <motion.div
+        className="h-[58%] w-[58%] rounded-full border border-white/10 bg-black/25"
+        animate={{ scale: [1, 1.06, 1] }}
+        transition={{ duration: speed, repeat: Infinity, ease: "easeInOut" }}
       />
-
-      {/* The Moving Train */}
-      <motion.path
-        // NEW PATH: Starts in the middle of the vertical line to hide the seam
-        d="M13 6l0 4l6 0l-8 11l0 -7l-6 0l8 -11l0 3Z"
-        fill="none"
-        initial={{ pathLength: strokeLength }}
-        animate={{ pathOffset: [0, 1] }}
-        transition={{
-          duration: speed,
-          ease: "linear",
-          repeat: Infinity,
-        }}
-      />
-    </motion.svg>
+    </div>
   );
 };
 

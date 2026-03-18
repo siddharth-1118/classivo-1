@@ -15,6 +15,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabaseClient";
 import Cookies from "js-cookie";
 import type { GocalRow } from "@/types/supabase-custom";
 import { emitAuthEvent } from "@/utils/authSync";
+import { getAuthToken } from "@/utils/authStorage";
 
 const LOGOUT_PATH = "/auth/logout";
 const SUCCESS_STATUS = 200;
@@ -128,6 +129,7 @@ type CalendarData = {
   calendar: CalendarMonthNormalized[];
   error: string | null;
   status: number;
+  stale: boolean;
 };
 
 type CourseData = {
@@ -157,6 +159,7 @@ type DayOrderData = {
   dayOrder: string;
   error: string | null;
   status: number;
+  stale: boolean;
 };
 
 type ApiResult<T> = { data: T };
@@ -394,7 +397,7 @@ const extractMessage = (error: unknown, fallback: string): string => {
 };
 
 const handleAuthError = (error: unknown) => {
-  if (isStatusError(error) && (error.status === 401 || error.status === 404)) {
+  if (isStatusError(error) && error.status === 401) {
     handleAuthRedirect();
   }
 };
@@ -410,7 +413,7 @@ function handleAuthRedirect() {
 
 async function getToken() {
   if (typeof window === "undefined") return undefined;
-  const token = Cookies.get("token");
+  const token = getAuthToken();
   
   if (!token) {
     const rawPath = window.location.pathname || "/";
@@ -484,7 +487,7 @@ export async function serverLogin(params: {
 }
 
 export async function getLogout(tokenParam?: string): Promise<{ res: Json | { success: boolean } }> {
-  const token = tokenParam ?? Cookies.get("token");
+  const token = tokenParam ?? getAuthToken();
   if (!token || isDevToken(token)) {
     return { res: { success: true } };
   }
@@ -782,6 +785,7 @@ export async function Calendar(): Promise<ApiResult<CalendarData>> {
         calendar: [],
         error: "Not authenticated",
         status: 401,
+        stale: false,
       },
     };
   }
@@ -791,6 +795,7 @@ export async function Calendar(): Promise<ApiResult<CalendarData>> {
         calendar: mockCalendar,
         error: null,
         status: SUCCESS_STATUS,
+        stale: false,
       },
     };
   }
@@ -818,6 +823,7 @@ export async function Calendar(): Promise<ApiResult<CalendarData>> {
             calendar: supabaseCalendar,
             error: null,
             status,
+            stale: true,
           },
         };
       }
@@ -829,6 +835,7 @@ export async function Calendar(): Promise<ApiResult<CalendarData>> {
         calendar,
         error: null,
         status,
+        stale: false,
       },
     };
   } catch (error) {
@@ -841,14 +848,17 @@ export async function Calendar(): Promise<ApiResult<CalendarData>> {
           calendar: supabaseCalendar,
           error: null,
           status: SUCCESS_STATUS,
+          stale: true,
         },
       };
     }
+    calendarLog("Falling back to bundled mock calendar data");
     return {
       data: {
-        calendar: [],
-        error: extractMessage(error, "Failed to fetch calendar"),
-        status: extractStatus(error),
+        calendar: mockCalendar,
+        error: null,
+        status: SUCCESS_STATUS,
+        stale: true,
       },
     };
   }
@@ -969,6 +979,20 @@ function deriveDayOrderFromCalendarMonths(months: CalendarMonthNormalized[]): st
     }
   }
   return null;
+}
+
+function deriveDayOrderFromMockPlanner(): string | null {
+  const normalized = mockCalendar.map((month) => ({
+    month: month.month,
+    days: month.days.map((day) => ({
+      day: day.day,
+      date: day.date,
+      dayOrder: day.dayOrder,
+      event: day.event,
+    })),
+  }));
+
+  return deriveDayOrderFromCalendarMonths(normalized);
 }
 
 function prioritizeMonths(
@@ -1229,21 +1253,35 @@ export async function userInfo(): Promise<ApiResult<UserInfoData>> {
 
 export async function dayOrder(): Promise<ApiResult<DayOrderData>> {
   const token = await getToken();
+  const plannerDayOrder = deriveDayOrderFromMockPlanner();
   if (!token) {
     return {
       data: {
-        dayOrder: "0",
+        dayOrder: plannerDayOrder ?? "0",
         error: "Not authenticated",
         status: 401,
+        stale: plannerDayOrder !== null,
       },
     };
   }
   if (isDevToken(token)) {
     return {
       data: {
-        dayOrder: mockDayOrder.dayOrder,
+        dayOrder: plannerDayOrder ?? mockDayOrder.dayOrder,
         error: null,
         status: mockDayOrder.status,
+        stale: plannerDayOrder !== null,
+      },
+    };
+  }
+
+  if (plannerDayOrder !== null) {
+    return {
+      data: {
+        dayOrder: plannerDayOrder,
+        error: null,
+        status: SUCCESS_STATUS,
+        stale: true,
       },
     };
   }
@@ -1263,6 +1301,7 @@ export async function dayOrder(): Promise<ApiResult<DayOrderData>> {
           dayOrder: normalizedDayOrder,
           error: null,
           status,
+          stale: false,
         },
       };
     }
@@ -1277,6 +1316,7 @@ export async function dayOrder(): Promise<ApiResult<DayOrderData>> {
           dayOrder: derivedDayOrder,
           error: null,
           status,
+          stale: false,
         },
       };
     }
@@ -1289,6 +1329,7 @@ export async function dayOrder(): Promise<ApiResult<DayOrderData>> {
           dayOrder: supabaseDayOrder,
           error: null,
           status: SUCCESS_STATUS,
+          stale: true,
         },
       };
     }
@@ -1298,6 +1339,7 @@ export async function dayOrder(): Promise<ApiResult<DayOrderData>> {
         dayOrder: "0",
         error: "Unable to determine day order",
         status,
+        stale: false,
       },
     };
   } catch (error) {
@@ -1310,14 +1352,17 @@ export async function dayOrder(): Promise<ApiResult<DayOrderData>> {
           dayOrder: supabaseDayOrder,
           error: null,
           status: SUCCESS_STATUS,
+          stale: true,
         },
       };
     }
+    calendarLog("Falling back to bundled mock day order");
     return {
       data: {
-        dayOrder: "0",
-        error: extractMessage(error, "Failed to fetch day order"),
-        status: extractStatus(error),
+        dayOrder: mockDayOrder.dayOrder,
+        error: null,
+        status: mockDayOrder.status,
+        stale: true,
       },
     };
   }

@@ -2,23 +2,23 @@
   "name": "CLASSIVO SRM",
   "short_name": "Classivo",
   "description": "CLASSIVO SRM: Your all-in-one student companion app for SRM students.",
-  "id": "/app/dashboard?v=7",
-  "start_url": "/app/dashboard?v=7",
+  "id": "/app/dashboard?v=8",
+  "start_url": "/app/dashboard?v=8",
   "theme_color": "#16171b",
   "background_color": "#16171b",
   "display": "standalone",
   "icons": [
     {
-      "src": "/web-app-manifest-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src": "/classivo-tab-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/web-app-manifest-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "src": "/classivo-tab-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }

@@ -29,8 +29,11 @@ func NewCalDBHelper() (*CalendarDatabaseHelper, error) {
 	if globals.DevMode {
 		godotenv.Load()
 	}
-	supabaseUrl := os.Getenv("SUPABASE_URL")
-	supabaseKey := os.Getenv("SUPABASE_KEY")
+	supabaseUrl := strings.Trim(strings.Trim(os.Getenv("SUPABASE_URL"), " "), "\"")
+	supabaseKey := strings.Trim(strings.Trim(os.Getenv("SUPABASE_KEY"), " "), "\"")
+	if supabaseKey == "" {
+		supabaseKey = strings.Trim(strings.Trim(os.Getenv("SUPABASE_ANON_KEY"), " "), "\"")
+	}
 
 	client, err := supabase.NewClient(supabaseUrl, supabaseKey, nil)
 	if err != nil {

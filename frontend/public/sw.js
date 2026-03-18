@@ -5,16 +5,14 @@
 // - cache trimming + versioning
 // - client notifications on update
 
-const CACHE_VERSION = "v1-20251117"; // bump this on every deploy (or inject during build)
+const CACHE_VERSION = "v4-20260317"; // bump this on every deploy (or inject during build)
 const PRECACHE = `Classivo-precache-${CACHE_VERSION}`;
 const RUNTIME = `Classivo-runtime-${CACHE_VERSION}`;
 const API_CACHE = `Classivo-api-${CACHE_VERSION}`;
 
 // Put build-time hashed assets here (recommended). Keep "/" out if you want network-first nav.
 const PRECACHE_URLS = [
-  "/favicon.ico",
-  "/favicon-96x96.png",
-  "/favicon.svg",
+  "/classivo-tab-icon.svg",
   "/site.webmanifest",
   // Add other hashed JS/CSS produced by your build, e.g. "/_next/static/chunks/app-abc123.js"
 ];
@@ -103,13 +101,21 @@ self.addEventListener("activate", (event) => {
 
 // Helper: respond with cached asset (cache-first) for static resources
 async function cacheFirst(request) {
+  if (!request.url.startsWith("http://") && !request.url.startsWith("https://")) {
+    return fetch(request);
+  }
+
   const cache = await caches.open(RUNTIME);
   const cached = await cache.match(request);
   if (cached) return cached;
   try {
     const response = await fetch(request);
     if (response && response.ok) {
-      cache.put(request, response.clone());
+      try {
+        await cache.put(request, response.clone());
+      } catch (_) {
+        // Some browser-internal and extension URLs cannot be cached.
+      }
       // trim cache
       trimCache(RUNTIME, MAX_ASSET_ENTRIES).catch(() => {});
     }
@@ -121,6 +127,10 @@ async function cacheFirst(request) {
 
 // Helper: network-first for APIs and navigations, but update cache for fallback
 async function networkFirstWithCacheFallback(request, cacheName = API_CACHE) {
+  if (!request.url.startsWith("http://") && !request.url.startsWith("https://")) {
+    return fetch(request);
+  }
+
   const cache = await caches.open(cacheName);
   try {
     // try network with a modest timeout
@@ -163,6 +173,10 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    return;
+  }
+
   // Don't interfere with devtools/extension or cross-origin opaque requests badly
   if (request.method !== "GET") {
     // For non-GET, just pass through
@@ -186,7 +200,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 3) Navigation (SPA routes) -> network-first, fallback to cached precache index or offline page
+  // 3) Navigation (SPA routes) -> network-first, fallback to cached app shell only
   if (request.mode === "navigate") {
     event.respondWith(
       (async () => {
@@ -196,75 +210,16 @@ self.addEventListener("fetch", (event) => {
           // skip putting whole index into cache to avoid serving stale shell; only put if you'd like offline support
           return networkResponse;
         } catch (err) {
-          // fallback: try to serve a cached precached index.html (if you precached one)
           const cache = await caches.open(PRECACHE);
           const cachedIndex = await cache.match("/");
           if (cachedIndex) return cachedIndex;
-          // If you didn't precache "/", try runtime cache
           const runtimeCached = await caches.match(request);
           if (runtimeCached) return runtimeCached;
-          return new Response(
-  `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Offline | Classivo SRM</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    :root {
-      --gold: #D4AF37;
-      --obsidian: #09090b;
-    }
-    body {
-      background-color: var(--obsidian);
-      color: #ffffff;
-      font-family: system-ui, -apple-system, sans-serif;
-      height: 100vh;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 2rem;
-    }
-    .orb {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, var(--gold), transparent);
-      border: 1px solid rgba(212, 175, 55, 0.3);
-      margin-bottom: 2rem;
-      animation: pulse 2s infinite ease-in-out;
-    }
-    h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 1rem; color: var(--gold); }
-    p { color: #888; margin: 0 0 2rem; max-width: 300px; line-height: 1.5; }
-    button {
-      background: var(--gold);
-      color: black;
-      border: none;
-      padding: 0.8rem 2rem;
-      border-radius: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    button:active { transform: scale(0.95); }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 0.5; box-shadow: 0 0 0 rgba(212, 175, 55, 0); }
-      50% { transform: scale(1.05); opacity: 0.8; box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
-    }
-  </style>
-</head>
-<body>
-  <div class="orb"></div>
-  <h1>Connection Interrupted</h1>
-  <p>You appear to be offline. Classivo requires an active link to the SRM Command Center.</p>
-  <button onclick="window.location.reload()">Re-establish Link</button>
-</body>
-</html>`,
-  { headers: { "Content-Type": "text/html" }, status: 200 }
-);
+          return new Response("Service unavailable", {
+            status: 503,
+            statusText: "Service Unavailable",
+            headers: { "Content-Type": "text/plain; charset=utf-8" },
+          });
         }
       })()
     );
@@ -278,7 +233,15 @@ self.addEventListener("fetch", (event) => {
         // optionally cache generic responses? skip for safety
         return res;
       })
-      .catch(() => caches.match(request))
+      .catch(async () => {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        return new Response("Service unavailable", {
+          status: 503,
+          statusText: "Service Unavailable",
+          headers: { "Content-Type": "text/plain; charset=utf-8" },
+        });
+      })
   );
 });
 

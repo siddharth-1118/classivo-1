@@ -1,8 +1,8 @@
 "use client";
 
-import Cookies from "js-cookie";
 import { useEffect } from "react";
 import { listenAuthEvents, type AuthEventPayload } from "@/utils/authSync";
+import { getAuthToken } from "@/utils/authStorage";
 
 const PROTECTED_PREFIX = "/app";
 const AUTH_PREFIX = "/auth";
@@ -69,14 +69,14 @@ export function AuthStateWatcher() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    let lastToken = Cookies.get("token") ?? null;
+    let lastToken = getAuthToken() ?? null;
 
     enforceRouteForState(isValidToken(lastToken));
 
     const unsubscribe = listenAuthEvents(handleAuthPayload);
 
     const checkToken = () => {
-      const currentToken = Cookies.get("token") ?? null;
+      const currentToken = getAuthToken() ?? null;
       if (currentToken === lastToken) return;
       lastToken = currentToken;
       enforceRouteForState(isValidToken(currentToken), true);

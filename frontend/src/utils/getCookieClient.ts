@@ -1,8 +1,9 @@
 "use client";
 import Cookies from "js-cookie";
 import { PaymentType } from "../../Types/payment";
+import { getAuthToken } from "./authStorage";
 export function getCookie() {
-  const cookie = Cookies.get("token");
+  const cookie = getAuthToken();
   return cookie as string;
 }
 

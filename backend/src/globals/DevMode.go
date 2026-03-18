@@ -3,6 +3,6 @@ package globals
 import "sync"
 
 var (
-	DevMode        bool = false
+	DevMode        bool = true
 	ActiveSessions sync.Map
 )

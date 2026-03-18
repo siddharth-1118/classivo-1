@@ -555,30 +555,12 @@ func (lf *LoginFetcher) GetSession(password string, lookup map[string]interface{
 		return nil, err
 	}
 
-	// Collect ALL Set-Cookie headers and combine them into a cookie string
-	var cookiePairs []string
-	resp.Header.VisitAll(func(key, value []byte) {
-		if string(key) == "Set-Cookie" {
-			// Parse Set-Cookie header: "name=value; Path=/; Domain=..." -> "name=value"
-			cookieHeader := string(value)
-			// Extract just the name=value part (before the first semicolon)
-			parts := strings.Split(cookieHeader, ";")
-			if len(parts) > 0 {
-				cookiePair := strings.TrimSpace(parts[0])
-				if cookiePair != "" {
-					cookiePairs = append(cookiePairs, cookiePair)
-				}
-			}
-		}
-	})
+	// Return the full accumulated cookie jar, not just the cookies set on the
+	// final password request. Subsequent SRM page fetches rely on the complete set.
+	cookies := strings.ReplaceAll(jar.headerValue(), " ", "")
 
-	// Combine all cookies into a single cookie string format
-	// remove all spaces AND sort for consistency during hash verification
-	sort.Strings(cookiePairs)
-	cookies := strings.ReplaceAll(strings.Join(cookiePairs, ";"), " ", "")
-	
 	if cookies == "" {
-		fmt.Printf("Warning: No Set-Cookie headers found in login response\n")
+		fmt.Printf("Warning: No cookies found in accumulated login jar\n")
 	}
 	data["cookies"] = cookies
 

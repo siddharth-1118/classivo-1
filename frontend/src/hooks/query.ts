@@ -106,6 +106,9 @@ export function useCalendar() {
     queryFn: async () => {
       const { data } = await Calendar();
       if (data.error) throw new Error(data.error);
+      if (data.stale) {
+        toast.warning("Showing fallback calendar data. Live calendar source is unavailable.");
+      }
       return data.calendar as Month[];
     },
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
@@ -119,6 +122,9 @@ export function useDayOrder() {
     queryFn: async () => {
       const { data } = await dayOrder();
       if (data.error) throw new Error(data.error);
+      if (data.stale) {
+        toast.warning("Showing fallback day order. Live calendar source is unavailable.");
+      }
       return data as DayOrderResponse;
     },
     retry: 1,

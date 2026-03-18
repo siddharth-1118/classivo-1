@@ -24,6 +24,8 @@
 :root {
   --font-ordina: 'Outfit', 'Ordina', system-ui, sans-serif;
   --font-space-grotesk: 'Space Grotesk', sans-serif;
+  --font-body: var(--font-ordina);
+  --font-heading: var(--font-space-grotesk);
 
   /* Cinematic Linear Palette */
   --classivo-black: #000000;
@@ -54,10 +56,12 @@ body {
   color: var(--classivo-white);
   min-height: 100vh;
   overflow-x: hidden;
-  font-size: 14px;
+  font-size: 15px;
   /* High density */
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  font-family: var(--font-body);
+  letter-spacing: -0.01em;
 }
 
 html {
@@ -72,10 +76,24 @@ h4,
 h5,
 h6 {
   color: var(--classivo-pure-white);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  /* Tight tracking */
-  font-family: var(--font-inter-display), var(--font-inter), sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-family: var(--font-heading);
+}
+
+p,
+span,
+button,
+input,
+textarea,
+select,
+label {
+  font-family: var(--font-body);
+}
+
+.font-display {
+  font-family: var(--font-heading);
+  letter-spacing: -0.03em;
 }
 
 @layer utilities {

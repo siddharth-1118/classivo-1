@@ -25,34 +25,52 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-const description = "CLASSIVO SRM - The ultimate academic management tool for SRM students.";
+const description = "Classivo helps SRM students track attendance, marks, timetable, day order, and academic calendar in one clear student-friendly app.";
+const enableVercelAnalytics = process.env.NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS === "true";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://classivo-1.vercel.app"),
   title: {
     default: "CLASSIVO SRM",
     template: "%s | CLASSIVO SRM",
   },
   description,
   verification: {
-    google: "lqZoy4RwbD94xx4x_rz8CjmuvarmsG32kB5obHt0kdc",
+    google: ["D5DQAd4OvMAzaT1kOX4HAmkqhAfz_hq6XW-zbw0Jo0k", "googlee4776157d45cbccf"],
   },
-  authors: [{ name: "StealthTensor" }],
-  keywords: ["CLASSIVO SRM", "SRM Academia", "SRM University", "Classivo Student Portal", "Academic Management"],
+  authors: [{ name: "vss" }],
+  keywords: [
+    "CLASSIVO SRM",
+    "Classivo",
+    "Classivo SRM app",
+    "SRM timetable",
+    "SRM attendance",
+    "SRM marks",
+    "SRM academic calendar",
+    "SRM student portal",
+    "Academic management",
+  ],
   openGraph: {
     title: "CLASSIVO SRM",
     description,
-    url: "https://classivo123.vercel.app",
+    url: "https://classivo-1.vercel.app",
     siteName: "CLASSIVO SRM",
     locale: "en_US",
     type: "website",
     images: [
       {
-        url: "https://u.cubeupload.com/Trinai308/r8A6pD.png",
+        url: "/classivo-tab-icon.svg",
         width: 1200,
         height: 630,
         alt: "CLASSIVO SRM - Academic Management",
       },
     ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CLASSIVO SRM",
+    description,
+    images: ["/classivo-tab-icon.svg"],
   },
 };
 
@@ -65,26 +83,19 @@ export default function RootLayout({
     <ViewTransitions>
       <html lang="en" suppressHydrationWarning>
         <head>
-          <link rel="icon" href="/classivo-icon.png" />
-          <link
-            rel="icon"
-            type="image/png"
-            href="/classivo-icon.png"
-            sizes="96x96"
-          />
-          <link rel="icon" type="image/svg+xml" href="/classivo-icon.png" />
+          <link rel="icon" type="image/svg+xml" href="/classivo-tab-icon.svg" />
+          <link rel="shortcut icon" href="/classivo-tab-icon.svg" />
           <link
             rel="apple-touch-icon"
-            href="/classivo-icon.png"
-            sizes="180x180"
+            href="/classivo-tab-icon.svg"
           />
-          <link rel="manifest" href="/site.webmanifest?v=7" />
+          <link rel="manifest" href="/site.webmanifest?v=8" />
           <meta name="theme-color" content="#09090b" />
         </head>
         <body
           className={`${geistMono.variable} ${spaceGrotesk.variable} antialiased`}
           style={{
-            fontFamily: 'var(--font-ordina), var(--font-space-grotesk), system-ui, sans-serif'
+            fontFamily: 'var(--font-body), system-ui, sans-serif'
           }}
         >
           <SwRegister />
@@ -102,8 +113,8 @@ export default function RootLayout({
               </main>
             </NavigationWrapper>
           </QueryProvider>
-          <Analytics />
-          <SpeedInsights />
+          {enableVercelAnalytics ? <Analytics /> : null}
+          {enableVercelAnalytics ? <SpeedInsights /> : null}
         </body>
       </html>
     </ViewTransitions>

@@ -12,6 +12,7 @@ import { encrypt } from "@/utils/encryption";
 import { updateUserCache } from "@/lib/userCache";
 import { token } from "@/utils/Tokenize";
 import { ClassivoLogo } from "@/components/ui/ClassivoLogo";
+import { setAuthToken } from "@/utils/authStorage";
 
 
 type LoginPayload = {
@@ -49,6 +50,10 @@ const extractStatusCode = (value: unknown): number | null => {
 
 const containsRateLimitMessage = (message?: string) =>
   typeof message === "string" && /rate limit|too many requests?/i.test(message);
+
+const isBackendUnavailable = (message?: string) =>
+  typeof message === "string" &&
+  /temporarily unavailable|service unavailable|your space is in error/i.test(message);
 
 const isRateLimitError = (error: unknown, fallbackMessage?: string): boolean => {
   const status = extractStatusCode(error);
@@ -145,7 +150,7 @@ export const LoginComponent = () => {
         if (email.mail.toLowerCase() === devEmail) {
           if (hash2 === devPassword) {
             const devToken = `${DEV_TOKEN_PREFIX}${Math.random().toString(36).slice(2)}`;
-            Cookies.set("token", devToken, { expires: 30, path: "/" });
+            setAuthToken(devToken);
             Cookies.set("user", email.mail, { expires: 30, path: "/" });
             emitAuthEvent("login");
             return (window.location.href = "/app/dashboard");
@@ -212,7 +217,7 @@ export const LoginComponent = () => {
 
         if (loginSucceeded) {
           if (hasCookies) {
-            Cookies.set("token", cookiesText, { expires: 30, path: "/" });
+            setAuthToken(cookiesText);
             Cookies.set("user", email.mail, { expires: 30, path: "/" });
             const encryptionKey = process.env.NEXT_PUBLIC_ENCRYPTION_KEY || "@Ethical_Hacker2";
             encrypt(hash2, encryptionKey).then((encryptedPassword) => {
@@ -282,6 +287,11 @@ export const LoginComponent = () => {
         setLoading(false);
         return;
       }
+      if (isBackendUnavailable(errorMessage)) {
+        setError("Login service is temporarily unavailable. Please try again in a few moments.");
+        setLoading(false);
+        return;
+      }
 
       // Handle JSON parsing errors
       if (errorMessage.includes("Unexpected token '<'") ||
@@ -296,126 +306,187 @@ export const LoginComponent = () => {
     }
   };
   return (
-    <div className="flex-1 flex items-center justify-center px-6 lg:px-0">
-      <div className="relative max-w-5xl min-h-[300px] lg:min-h-[50%] w-full rounded-3xl grid grid-cols-1 lg:grid-cols-2 bg-white/5 apply-border-md backdrop-blur-3xl apply-inner-shadow-sm">
-        <div className="absolute inset-0 bg-white/10 blur-3xl -z-10" />
+    <div className="flex-1 overflow-y-auto px-4 pb-6 pt-4 sm:px-6 lg:px-0">
+      <div className="mx-auto relative w-full max-w-6xl overflow-hidden rounded-[36px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-3xl">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.15),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.08),transparent_28%)]" />
+        <div className="relative grid grid-cols-1 lg:min-h-[620px] lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="flex flex-col justify-between border-b border-white/10 px-6 py-6 lg:border-b-0 lg:border-r lg:px-10 lg:py-10">
+            <div>
+              <div className="inline-flex items-center gap-3 rounded-full border border-premium-gold/20 bg-premium-gold/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-premium-gold">
+                <ClassivoLogo className="h-4 w-4" />
+                Premium Student Access
+              </div>
+              <h1 className="mt-6 max-w-xl text-3xl font-bold leading-tight text-white sm:text-5xl">
+                Secure access to your academic dashboard.
+              </h1>
+              <p className="mt-4 max-w-xl text-sm leading-7 text-zinc-300 sm:text-base sm:leading-8">
+                Login to Classivo to view your timetable, attendance, marks, and academic calendar in a student-friendly way.
+                Everything is arranged to be simple, readable, and quick to understand.
+              </p>
+            </div>
 
-        <div className="flex items-center justify-center min-h-20 lg:text-4xl h-full text-2xl font-bold tracking-tighter text-premium-gold uppercase italic">
-          Classivo
-        </div>
-        <div className="w-full h-full flex items-center justify-center ">
-          <form
-            onSubmit={HandleSubmit}
-            className="w-[90%] h-[90%] flex flex-col justify-center items-center gap-10 p-4"
-          >
-            <div className="w-full flex flex-col gap-4 ">
-              {/* Show email input if digest is empty (first step) */}
-              {email?.digest.length === 0 && (
-                <input
-                  id="name"
-                  name="name"
-                  type="name"
-                  className="w-full px-4 py-3 rounded-xl apply-inner-shadow-sm bg-white/10 focus:outline-none border border-white/5 focus:border-premium-gold/30 transition-colors"
-                  placeholder="SRM Mail ID"
-                  autoComplete="email"
-                  autoFocus
-                  required
-                />
-              )}
-              {/* Show password input if digest is present and password is not yet set (second step) */}
-              {email?.digest.length !== 0 && (
-                <div className="w-full relative z-10 ">
-                  <input
-                    id="password"
-                    name="password"
-                    type={eyeOpen ? "name" : "password"}
-                    className="w-full px-4 py-3 rounded-xl apply-inner-shadow-sm bg-white/10 focus:outline-none border border-white/5 focus:border-premium-gold/30 transition-colors"
-                    placeholder="Password"
-                    autoComplete="current-password"
-                    autoFocus
-                    required
-                  />
-                  <div className="right-0 top-1/2 -translate-y-1/2 absolute flex items-center justify-end pr-5 ">
-                    {eyeOpen ? (
-                      <Eye
-                        onClick={() => setEyeOpen((prev) => !prev)}
-                        className="h-6 w-6 cursor-pointer"
+            <div className="mt-8 grid gap-4">
+              <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
+                <div className="text-xs uppercase tracking-[0.24em] text-zinc-500">Inside Classivo</div>
+                <div className="mt-3 grid gap-3 text-sm text-zinc-200">
+                  <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3">Timetable with clear class boxes and day-order support</div>
+                  <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3">Attendance summaries with safety status and graphs</div>
+                  <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3">Marks and calendar shown in a way students can understand fast</div>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-white/10 bg-premium-gold/10 p-5 text-sm leading-7 text-zinc-100">
+                Begin with your SRM email address and continue with your password. If Academia requires CAPTCHA verification,
+                Classivo will display it here and guide you through the next step.
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center px-4 py-6 lg:px-10 lg:py-10">
+            <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-black/25 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-2xl sm:p-7">
+              <div className="mb-6">
+                <div className="text-xs uppercase tracking-[0.22em] text-zinc-500">
+                  {email?.digest.length === 0 ? "Step 1" : "Step 2"}
+                </div>
+                <h2 className="mt-3 text-3xl font-semibold text-white">
+                  {email?.digest.length === 0 ? "Enter your SRM email" : "Enter your password"}
+                </h2>
+                <p className="mt-2 text-sm leading-7 text-zinc-400">
+                  {email?.digest.length === 0
+                    ? "Your SRM email address will be used to proceed to the secure authentication step."
+                    : `Signing in as ${email.mail}`}
+                </p>
+              </div>
+
+              <form onSubmit={HandleSubmit} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4">
+                  {email?.digest.length === 0 && (
+                    <div className="space-y-2">
+                      <label htmlFor="name" className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                        SRM Mail ID
+                      </label>
+                      <input
+                        id="name"
+                        name="name"
+                        type="name"
+                        className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-white outline-none transition-colors placeholder:text-zinc-500 focus:border-premium-gold/40 focus:bg-white/10"
+                        placeholder="example@srmist.edu.in"
+                        autoComplete="email"
+                        autoFocus
+                        required
                       />
+                    </div>
+                  )}
+
+                  {email?.digest.length !== 0 && (
+                    <div className="space-y-2">
+                      <label htmlFor="password" className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                        Password
+                      </label>
+                      <div className="relative z-10">
+                        <input
+                          id="password"
+                          name="password"
+                          type={eyeOpen ? "text" : "password"}
+                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 pr-14 text-white outline-none transition-colors placeholder:text-zinc-500 focus:border-premium-gold/40 focus:bg-white/10"
+                          placeholder="Enter your SRM password"
+                          autoComplete="current-password"
+                          autoFocus
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setEyeOpen((prev) => !prev)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 transition hover:text-white"
+                        >
+                          {eyeOpen ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {email?.digest.length !== 0 && captchaImage && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">Verification</div>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={captchaImage} alt="captcha" className="mt-3 w-full max-w-60 rounded-xl border border-white/10 bg-black/20" />
+                      <input
+                        id="captcha"
+                        name="captcha"
+                        type="text"
+                        value={captchaCode}
+                        onChange={(e) => setCaptchaCode(e.target.value)}
+                        className="mt-4 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none transition-colors placeholder:text-zinc-500 focus:border-premium-gold/40"
+                        placeholder="Enter CAPTCHA"
+                        autoComplete="off"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {error && (
+                  <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                    {String(error).includes("CAPTCHA") ? (
+                      "Captcha not supported yet"
+                    ) : String(error).toLowerCase().includes("old password") || String(error).includes("Error") ? (
+                      <div className="flex flex-col items-start gap-2 text-left">
+                        <span>You&apos;ve entered an old password. Please enter your new password.</span>
+                        <a
+                          href="https://academia.srmist.edu.in"
+                          target="_blank"
+                          rel="noopener"
+                          className="text-sm text-white/70 underline transition-colors hover:text-white"
+                        >
+                          Open Academia to set new password
+                        </a>
+                      </div>
+                    ) : String(error).includes("concurrent") || (typeof token() === "string" && token().includes("iamtt")) ? (
+                      <div className="flex flex-col items-start gap-2 text-left">
+                        <span>Maximum concurrent sessions limit reached.</span>
+                        <a
+                          href="https://academia.srmist.edu.in/49910842/portal/academia-academic-services/myProfile"
+                          target="_blank"
+                          rel="noopener"
+                          className="text-sm text-white/70 underline transition-colors hover:text-white"
+                        >
+                          Login to Academia and terminate all sessions
+                        </a>
+                      </div>
                     ) : (
-                      <EyeOff
-                        onClick={() => setEyeOpen((prev) => !prev)}
-                        className="h-6 w-6 cursor-pointer"
-                      />
+                      String(error)
                     )}
                   </div>
-                </div>
-              )}
-              {email?.digest.length !== 0 && captchaImage && (
-                <div className="w-full flex flex-col gap-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={captchaImage} alt="captcha" className="w-full max-w-60 h-auto rounded-xl apply-inner-shadow-sm bg-white/10" />
-                  <input
-                    id="captcha"
-                    name="captcha"
-                    type="text"
-                    value={captchaCode}
-                    onChange={(e) => setCaptchaCode(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl apply-inner-shadow-sm bg-white/10 focus:outline-none border border-white/5 focus:border-premium-gold/30 transition-colors"
-                    placeholder="Enter CAPTCHA"
-                    autoComplete="off"
-                  />
-                </div>
-              )}
-            </div>
-            {error &&
-              <div className="text-red-400 font-medium text-sm text-center">
-                {String(error).includes("CAPTCHA") ? (
-                  "Captcha not supported yet"
-                ) : String(error).toLowerCase().includes("old password") || String(error).includes("Error") ? (
-                  <div className="flex items-center justify-center gap-2 flex-col text-center">
-                    You&apos;ve entered an old password. Please enter your new password.
-                    <a
-                      href="https://academia.srmist.edu.in"
-                      target="_blank"
-                      rel="noopener"
-                      className="text-white/50 text-sm underline hover:text-white transition-colors"
-                    >
-                      (Open Academia to set new password)
-                    </a>
-                  </div>
-                ) : (String(error).includes("concurrent")) || (typeof token() === "string" && token().includes("iamtt")) ? (
-                  <div className="flex items-center justify-center gap-2 flex-col text-center text-red-400">
-                    Maximum concurrent sessions limit reached
-                    <a
-                      href="https://academia.srmist.edu.in/49910842/portal/academia-academic-services/myProfile"
-                      target="_blank"
-                      rel="noopener"
-                      className="text-white/50 text-sm underline hover:text-white transition-colors"
-                    >
-                      (Login to Academia and Terminate all Sessions)
-                    </a>
-                  </div>
-                ) : (
-                  String(error)
                 )}
-              </div>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full px-4 py-3 rounded-xl apply-inner-shadow-md bg-premium-gold text-black font-bold uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_20px_rgba(212,175,55,0.2)] focus:outline-none flex item-center justify-center cursor-pointer"
-            >
-              {loading ? <Loader className="w-6 h-6 " /> : <h1>Login</h1>}
-            </button>
-          </form>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex w-full items-center justify-center rounded-2xl bg-premium-gold px-4 py-3.5 text-sm font-bold uppercase tracking-[0.22em] text-black transition-all hover:bg-[#f3cf63] disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {loading ? (
+                    <span className="inline-flex items-center gap-2">
+                      <Loader className="h-4 w-4 text-black" />
+                      Processing
+                    </span>
+                  ) : email?.digest.length === 0 ? (
+                    "Continue"
+                  ) : (
+                    "Login"
+                  )}
+                </button>
+
+                <a
+                  href="https://academia.srmist.edu.in/reset"
+                  target="_blank"
+                  rel="noopener"
+                  className="text-center text-sm text-zinc-400 transition-colors hover:text-white"
+                >
+                  Forgot Password?
+                </a>
+              </form>
+            </div>
+          </div>
         </div>
-        <a
-          href="https://academia.srmist.edu.in/reset"
-          target="_blank"
-          rel="noopener"
-          className="absolute -bottom-20 left-1/2 -translate-x-1/2 px-4 py-2 apply-border-sm bg-white/5 rounded-full text-xs font-medium text-zinc-500 hover:text-white hover:bg-white/10 transition-all"
-        >
-          Forgot Password?
-        </a>
       </div>
     </div>
   );

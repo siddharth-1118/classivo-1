@@ -8,6 +8,7 @@ import { emitAuthEvent } from "@/utils/authSync";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
+import { clearAuthToken } from "@/utils/authStorage";
 
 const Page = () => {
   const router = useRouter();
@@ -24,8 +25,7 @@ const Page = () => {
       }
 
       // Try multiple ways to clear the token to be safe
-      Cookies.remove("token", { path: "/" });
-      Cookies.remove("token");
+      clearAuthToken();
       Cookies.remove("user", { path: "/" });
       Cookies.remove("user");
 

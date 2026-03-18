@@ -644,9 +644,6 @@ export const mockCourses: CourseDetail[] = [
   },
 ];
 
-// Generate mock calendar data with current month format
-const now = new Date();
-const currentYear = String(now.getFullYear()).slice(-2);
 const monthsShort = [
   "Jan",
   "Feb",
@@ -661,110 +658,183 @@ const monthsShort = [
   "Nov",
   "Dec",
 ];
-const currentMonthIndex = now.getMonth();
-const currentMonthName = `${monthsShort[currentMonthIndex]} '${currentYear}`;
-const nextMonthIndex = (currentMonthIndex + 1) % 12;
-// Logic to handle year wraparound for next month if current month is Dec
-const nextMonthYear = currentMonthIndex === 11 ? String(now.getFullYear() + 1).slice(-2) : currentYear;
-const nextMonthName = `${monthsShort[nextMonthIndex]} '${nextMonthYear}`;
 
-const prevMonthIndex = currentMonthIndex === 0 ? 11 : currentMonthIndex - 1;
-const prevYear =
-  currentMonthIndex === 0
-    ? String(now.getFullYear() - 1).slice(-2)
-    : currentYear;
-const prevMonthName = `${monthsShort[prevMonthIndex]} '${prevYear}`;
-
-export const mockCalendar: Month[] = [
-  {
-    month: prevMonthName,
-    days: [
-      { day: "Monday", date: "1", dayOrder: "1", event: "" },
-      { day: "Tuesday", date: "2", dayOrder: "2", event: "" },
-      { day: "Wednesday", date: "3", dayOrder: "3", event: "" },
-      { day: "Thursday", date: "4", dayOrder: "4", event: "" },
-      { day: "Friday", date: "5", dayOrder: "5", event: "" },
-      { day: "Saturday", date: "6", dayOrder: "-", event: "" },
-      { day: "Sunday", date: "7", dayOrder: "-", event: "" },
-      { day: "Monday", date: "15", dayOrder: "1", event: "Holiday" },
-      { day: "Tuesday", date: "26", dayOrder: "2", event: "Event" },
-    ],
-  },
-  {
-    month: currentMonthName,
-    days: [
-      { day: "Monday", date: "1", dayOrder: "1", event: "" },
-      { day: "Tuesday", date: "2", dayOrder: "2", event: "" },
-      { day: "Wednesday", date: "3", dayOrder: "3", event: "" },
-      { day: "Thursday", date: "4", dayOrder: "4", event: "" },
-      { day: "Friday", date: "5", dayOrder: "5", event: "" },
-      { day: "Saturday", date: "6", dayOrder: "-", event: "" },
-      { day: "Sunday", date: "7", dayOrder: "-", event: "" },
-      { day: "Monday", date: "8", dayOrder: "1", event: "" },
-      { day: "Tuesday", date: "9", dayOrder: "2", event: "" },
-      { day: "Wednesday", date: "10", dayOrder: "-", event: "Local Holiday" },
-      { day: "Thursday", date: "11", dayOrder: "4", event: "" },
-      { day: "Friday", date: "12", dayOrder: "5", event: "" },
-      { day: "Saturday", date: "13", dayOrder: "-", event: "" },
-      { day: "Sunday", date: "14", dayOrder: "-", event: "" },
-      { day: "Monday", date: "15", dayOrder: "1", event: "" },
-      { day: "Tuesday", date: "16", dayOrder: "2", event: "" },
-      { day: "Wednesday", date: "17", dayOrder: "3", event: "" },
-      { day: "Thursday", date: "18", dayOrder: "4", event: "" },
-      { day: "Friday", date: "19", dayOrder: "5", event: "" },
-      { day: "Saturday", date: "20", dayOrder: "-", event: "" },
-      { day: "Sunday", date: "21", dayOrder: "-", event: "" },
-      { day: "Monday", date: "22", dayOrder: "1", event: "" },
-      { day: "Tuesday", date: "23", dayOrder: "2", event: "" },
-      { day: "Wednesday", date: "24", dayOrder: "3", event: "Christmas Eve" },
-      { day: "Thursday", date: "25", dayOrder: "-", event: "Christmas Day" },
-      { day: "Friday", date: "26", dayOrder: "5", event: "" },
-      { day: "Saturday", date: "27", dayOrder: "-", event: "" },
-      { day: "Sunday", date: "28", dayOrder: "-", event: "" },
-      { day: "Monday", date: "29", dayOrder: "1", event: "" },
-      { day: "Tuesday", date: "30", dayOrder: "2", event: "" },
-      { day: "Wednesday", date: "31", dayOrder: "3", event: "New Year's Eve" },
-    ],
-  },
-  {
-    month: nextMonthName,
-    days: [
-      { day: "Thursday", date: "1", dayOrder: "-", event: "New Year's Day" },
-      { day: "Friday", date: "2", dayOrder: "5", event: "" },
-      { day: "Saturday", date: "3", dayOrder: "-", event: "" },
-      { day: "Sunday", date: "4", dayOrder: "-", event: "" },
-      { day: "Monday", date: "5", dayOrder: "1", event: "" },
-      { day: "Tuesday", date: "6", dayOrder: "2", event: "" },
-      { day: "Wednesday", date: "7", dayOrder: "3", event: "" },
-      { day: "Thursday", date: "8", dayOrder: "4", event: "" },
-      { day: "Friday", date: "9", dayOrder: "5", event: "" },
-      { day: "Saturday", date: "10", dayOrder: "-", event: "" },
-      { day: "Sunday", date: "11", dayOrder: "-", event: "" },
-      { day: "Monday", date: "12", dayOrder: "1", event: "" },
-      { day: "Tuesday", date: "13", dayOrder: "2", event: "" },
-      { day: "Wednesday", date: "14", dayOrder: "-", event: "Pongal" },
-      { day: "Thursday", date: "15", dayOrder: "-", event: "Thiruvalluvar Day" },
-      { day: "Friday", date: "16", dayOrder: "-", event: "Uzhavar Thirunal" },
-      { day: "Saturday", date: "17", dayOrder: "-", event: "" },
-      { day: "Sunday", date: "18", dayOrder: "-", event: "" },
-      { day: "Monday", date: "19", dayOrder: "1", event: "" },
-      { day: "Tuesday", date: "20", dayOrder: "2", event: "" },
-      { day: "Wednesday", date: "21", dayOrder: "3", event: "" },
-      { day: "Thursday", date: "22", dayOrder: "4", event: "" },
-      { day: "Friday", date: "23", dayOrder: "5", event: "" },
-      { day: "Saturday", date: "24", dayOrder: "-", event: "" },
-      { day: "Sunday", date: "25", dayOrder: "-", event: "" },
-      { day: "Monday", date: "26", dayOrder: "-", event: "Republic Day" },
-      { day: "Tuesday", date: "27", dayOrder: "2", event: "" },
-      { day: "Wednesday", date: "28", dayOrder: "3", event: "" },
-      { day: "Thursday", date: "29", dayOrder: "4", event: "" },
-      { day: "Friday", date: "30", dayOrder: "5", event: "" },
-      { day: "Saturday", date: "31", dayOrder: "-", event: "" },
-    ],
-  },
+const weekdayNames = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
 ];
 
+const formatIsoDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const academicEvents: Record<string, string> = {
+  "2026-01-01": "New Year's Day - Holiday",
+  "2026-01-05": "Enrolment Day - B.Tech I,II,III,IV / M.Tech (Int) - I,II,III,IV,V / M.Tech - I,II (Year)",
+  "2026-01-08": "Commencement of Classes for - B.Tech I,II,III,IV / M.Tech (Int) - I,II,III,IV,V / M.Tech - I,II (Year)",
+  "2026-01-15": "Pongal - Holiday",
+  "2026-01-16": "Thiruvalluvar Day - Holiday",
+  "2026-01-17": "Uzhavar Thirunal - Holiday",
+  "2026-01-26": "Republic Day - Holiday",
+  "2026-02-01": "Thaipoosam - Holiday",
+  "2026-03-04": "Holi",
+  "2026-03-19": "Telugu New Year's Day - Holiday",
+  "2026-03-21": "Ramzan - Holiday",
+  "2026-03-31": "Mahaveer Jayanthi - Holiday",
+  "2026-04-03": "Good Friday - Holiday",
+  "2026-04-14": "Tamil New Year's Day / Dr. B.R. Ambedkar's Birthday - Holiday",
+  "2026-05-01": "May Day - Holiday",
+  "2026-05-06": "Last working day - B.Tech - I,II,III,IV / M.Tech (Int) - I,II,III,IV,V / M.Tech - I,II (Year)",
+  "2026-06-26": "Muharram - Holiday",
+};
+
+const forcedWorkingDays = new Set<string>([]);
+
+const explicitDayOrderOverrides: Record<string, string> = {
+  "2026-01-02": "1",
+};
+
+const forcedHolidays = new Set([
+  "2026-01-01",
+  "2026-01-05",
+  "2026-01-06",
+  "2026-01-07",
+  "2026-01-15",
+  "2026-01-16",
+  "2026-01-17",
+  "2026-01-26",
+  "2026-02-01",
+  "2026-03-04",
+  "2026-03-19",
+  "2026-03-21",
+  "2026-03-31",
+  "2026-04-03",
+  "2026-04-14",
+  "2026-05-01",
+  "2026-05-06",
+  "2026-05-07",
+  "2026-05-08",
+  "2026-05-09",
+  "2026-05-10",
+  "2026-05-11",
+  "2026-05-12",
+  "2026-05-13",
+  "2026-05-14",
+  "2026-05-15",
+  "2026-05-16",
+  "2026-05-17",
+  "2026-05-18",
+  "2026-05-19",
+  "2026-05-20",
+  "2026-05-21",
+  "2026-05-22",
+  "2026-05-23",
+  "2026-05-24",
+  "2026-05-25",
+  "2026-05-26",
+  "2026-05-27",
+  "2026-05-28",
+  "2026-05-29",
+  "2026-05-30",
+  "2026-05-31",
+  "2026-06-01",
+  "2026-06-02",
+  "2026-06-03",
+  "2026-06-04",
+  "2026-06-05",
+  "2026-06-06",
+  "2026-06-07",
+  "2026-06-08",
+  "2026-06-09",
+  "2026-06-10",
+  "2026-06-11",
+  "2026-06-12",
+  "2026-06-13",
+  "2026-06-14",
+  "2026-06-15",
+  "2026-06-16",
+  "2026-06-17",
+  "2026-06-18",
+  "2026-06-19",
+  "2026-06-20",
+  "2026-06-21",
+  "2026-06-22",
+  "2026-06-23",
+  "2026-06-24",
+  "2026-06-25",
+  "2026-06-26",
+  "2026-06-27",
+  "2026-06-28",
+  "2026-06-29",
+  "2026-06-30",
+]);
+
+const academicStartDate = "2026-01-08";
+
+const buildAcademicCalendar = (): Month[] => {
+  const start = new Date(2026, 0, 1);
+  const end = new Date(2026, 5, 30);
+  const months = new Map<string, Month["days"]>();
+  let currentDayOrder = 0;
+
+  for (let cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) {
+    const date = new Date(cursor);
+    const iso = formatIsoDate(date);
+    const monthLabel = `${monthsShort[date.getMonth()]} '${String(date.getFullYear()).slice(-2)}`;
+    const dayName = weekdayNames[date.getDay()];
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    const isWorkingDay = forcedWorkingDays.has(iso);
+    const isHoliday = forcedHolidays.has(iso);
+    const hasAcademicCycleStarted = iso >= academicStartDate;
+    const explicitDayOrder = explicitDayOrderOverrides[iso];
+    const isRegularCycleDay = !isWeekend && !isHoliday && hasAcademicCycleStarted;
+
+    let dayOrder = "-";
+    if (explicitDayOrder) {
+      dayOrder = explicitDayOrder;
+    } else if (isRegularCycleDay) {
+      currentDayOrder = (currentDayOrder % 5) + 1;
+      dayOrder = String(currentDayOrder);
+    }
+
+    const monthDays = months.get(monthLabel) ?? [];
+    monthDays.push({
+      day: dayName,
+      date: String(date.getDate()),
+      dayOrder,
+      event: academicEvents[iso] ?? "",
+    });
+    months.set(monthLabel, monthDays);
+  }
+
+  return Array.from(months.entries()).map(([month, days]) => ({
+    month,
+    days,
+  }));
+};
+
+export const mockCalendar: Month[] = buildAcademicCalendar();
+
+const getFallbackDayOrder = (): string => {
+  const today = new Date();
+  const monthLabel = `${monthsShort[today.getMonth()]} '${String(today.getFullYear()).slice(-2)}`;
+  const month = mockCalendar.find((entry) => entry.month === monthLabel);
+  if (!month) return "0";
+
+  const day = month.days.find((entry) => entry.date === String(today.getDate()));
+  if (!day) return "0";
+  return day.dayOrder === "-" ? "0" : day.dayOrder;
+};
+
 export const mockDayOrder: DayOrderResponse = {
-  dayOrder: "1",
+  dayOrder: getFallbackDayOrder(),
   status: 200,
 };

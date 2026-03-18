@@ -1,0 +1,54 @@
+/* SKEUOMORPHIC UI SYSTEM */
+.skeuo-flat {
+  background: #121315;
+  box-shadow: 
+    -4px -4px 10px rgba(255, 255, 255, 0.03),
+    4px 4px 10px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.skeuo-convex {
+  background: linear-gradient(145deg, #18191c, #101113);
+  box-shadow: 
+    -4px -4px 10px rgba(255, 255, 255, 0.03),
+    4px 4px 10px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.skeuo-pressed {
+  background: #0d0e10;
+  box-shadow: 
+    inset -4px -4px 10px rgba(255, 255, 255, 0.03),
+    inset 4px 4px 10px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.skeuo-glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 
+    -2px -2px 5px rgba(255, 255, 255, 0.05),
+    2px 2px 5px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  border: none;
+}
+
+.skeuo-beveled-edge {
+  position: relative;
+}
+
+.skeuo-beveled-edge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.skeuo-glow-gold {
+  box-shadow: 
+    0 0 15px rgba(212, 175, 55, 0.1),
+    inset 0 0 10px rgba(212, 175, 55, 0.05);
+}

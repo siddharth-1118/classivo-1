@@ -10,22 +10,29 @@ export default function SwRegister() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator)) return;
+    const isDevelopment = process.env.NODE_ENV !== "production";
 
-    let mounted = true;
     let registrationRef: ServiceWorkerRegistration | null = null;
 
-    // Try to unregister extremely old workers that might be using different logic.
-    async function cleanupOldWorkers() {
+    // Remove stale or incompatible workers, and fully disable SW in local dev.
+    async function cleanupWorkers({ unregisterAll = false }: { unregisterAll?: boolean } = {}) {
       try {
         const regs = await navigator.serviceWorker.getRegistrations();
         for (const r of regs) {
-          // If the SW scriptURL doesn't match our expected /sw.js, unregister it.
-          if (!r.active || !r.active.scriptURL.endsWith("/sw.js")) {
+          if (unregisterAll || !r.active || !r.active.scriptURL.endsWith("/sw.js")) {
             try {
               await r.unregister();
             } catch {
               // ignore
             }
+          }
+        }
+        if (unregisterAll) {
+          try {
+            const keys = await caches.keys();
+            await Promise.all(keys.map((key) => caches.delete(key)));
+          } catch {
+            // ignore
           }
         }
       } catch {
@@ -113,13 +120,16 @@ export default function SwRegister() {
     }
 
     (async () => {
-      await cleanupOldWorkers();
+      if (isDevelopment) {
+        await cleanupWorkers({ unregisterAll: true });
+        return;
+      }
+      await cleanupWorkers();
       await registerSW();
     })();
 
     // cleanup
     return () => {
-      mounted = false;
       try {
         navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
       } catch {

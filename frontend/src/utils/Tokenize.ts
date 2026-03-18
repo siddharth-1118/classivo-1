@@ -1,2 +1,2 @@
-import Cookies from "js-cookie";
-export const token = () => Cookies.get("token") || "";
+import { getAuthToken } from "./authStorage";
+export const token = () => getAuthToken() || "";

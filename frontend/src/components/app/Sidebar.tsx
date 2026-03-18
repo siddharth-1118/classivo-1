@@ -15,7 +15,6 @@ import {
     CalendarClock,
     BookOpenText,
     TrendingUp,
-    Bell,
     Calculator,
     User,
     Users,
@@ -44,11 +43,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         { name: "Calendar", href: "/app/calendar", icon: Calendar },
         { name: "GradeX", href: "/app/gradex", icon: Calculator },
         { name: "Mess Menu", href: "/app/messmenu", icon: Calendar },
-        { name: "Notifications", href: "/app/notifications", icon: Bell },
         { name: "Profile", href: "/app/profile", icon: User },
         { name: "Join Community", href: "https://chat.whatsapp.com/KCbxvabSvRbK96h67JF3Io", icon: Users },
         { name: "Settings", href: "/app/settings", icon: Settings },
-        { name: "UI Morphisms", href: "/app/morphisms", icon: LayoutDashboard },
     ];
 
     const isActive = (path: string) => pathname === path;

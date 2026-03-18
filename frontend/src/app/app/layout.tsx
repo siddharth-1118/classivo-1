@@ -15,8 +15,13 @@ export default function Layout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-full">
-      {children}
+    <div className="flex min-h-screen w-full flex-col">
+      <div className="flex-1">
+        {children}
+      </div>
+      <div className="pb-24 pt-4 text-center text-[10px] uppercase tracking-[0.22em] text-zinc-500">
+        made by vss
+      </div>
     </div>
   );
 }

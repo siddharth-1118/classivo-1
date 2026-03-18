@@ -2,148 +2,141 @@
 import React from "react";
 import Link from "next/link";
 import { useUserInfo } from "@/hooks/query";
-import { Card } from "@/app/components/ui/Card";
-import { Button } from "@/app/components/ui/Button";
-import { ChevronRight, User, Bell, Shield, Palette, LogOut, Moon, Book, TrendingUp } from "lucide-react";
+import { Badge } from "@/app/components/ui/Badge";
+import { ChevronRight, User, LogOut, Book, TrendingUp, Sparkles, LockKeyhole, PanelsTopLeft } from "lucide-react";
 
 const SettingsPage = () => {
-    const { data: userInfo } = useUserInfo();
+  const { data: userInfo } = useUserInfo();
 
-    return (
-        <main className="min-h-screen w-full text-white overflow-y-auto">
-            <div className="max-w-3xl mx-auto px-6 pb-1 pt-1">
+  return (
+    <main className="min-h-screen w-full overflow-y-auto text-white">
+      <div className="mx-auto max-w-4xl px-4 pb-6 pt-2 sm:px-6">
+        <header className="mb-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur-xl">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="border-premium-gold/25 bg-premium-gold/10 text-[10px] uppercase tracking-[0.22em] text-premium-gold">
+              Settings
+            </Badge>
+          </div>
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">Application Settings</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-zinc-300">
+            Manage profile access, academic shortcuts, and account actions from a premium glassmorphism settings interface.
+          </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <InfoCard icon={<User size={12} />} label="Account" value={userInfo?.name || "Student account"} />
+            <InfoCard icon={<PanelsTopLeft size={12} />} label="Academic" value="Shortcuts and utilities" />
+            <InfoCard icon={<Sparkles size={12} />} label="Interface" value="Premium glass design" />
+          </div>
+        </header>
 
-                {/* Header */}
-                <header className="mb-6">
-                    <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-                </header>
-
-                {/* Settings Lists (Linear Style) */}
-                <div className="space-y-6">
-
-                    {/* Manual Mode */}
-                    {/* Account Section */}
-                    <section>
-                        <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 pl-1">
-                            Account
-                        </h2>
-                        <div className="bg-zinc-900/30 border border-white/5 rounded-2xl overflow-hidden">
-
-                            <Link href="/app/profile" className="flex items-center justify-between p-4 group hover:bg-white/5 transition-colors cursor-pointer border-b border-white/5">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-2 bg-zinc-800/50 rounded-lg text-zinc-400 group-hover:text-white transition-colors">
-                                        <User size={18} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-zinc-200">Profile</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-1">
-                                    <span className="text-sm text-zinc-500 mb-0.5">{userInfo?.name || "User"}</span>
-                                    <ChevronRight size={16} className="text-zinc-600" />
-                                </div>
-                            </Link>
-
-                            <Link href="https://academia.srmist.edu.in/reset" className="flex items-center justify-between p-4 group hover:bg-white/5 transition-colors cursor-pointer border-b border-white/5">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-2 bg-zinc-800/50 rounded-lg text-zinc-400 group-hover:text-white transition-colors">
-                                        <Shield size={18} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-zinc-200">Security</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-1">
-                                    <span className="text-sm text-zinc-500 mb-0.5">Change Password</span>
-                                    <ChevronRight size={16} className="text-zinc-600" />
-                                </div>
-                            </Link>
-
-                            <Link href="/app/notifications" className="flex items-center justify-between p-4 group hover:bg-white/5 transition-colors cursor-pointer">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-2 bg-zinc-800/50 rounded-lg text-zinc-400 group-hover:text-white transition-colors">
-                                        <Bell size={18} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-zinc-200">Push Notifications</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm text-zinc-500 opacity-0">On/Off</span>
-                                </div>
-                            </Link>
-
-
-                        </div>
-                    </section>
-
-                    {/* Academics Section*/}
-
-                    <section>
-                        <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 pl-1">
-                            Academics
-                        </h2>
-                        <div className="bg-zinc-900/30 border border-white/5 rounded-2xl overflow-hidden">
-                            <Link href="/app/course" className="flex items-center justify-between p-4 group hover:bg-white/5 transition-colors cursor-pointer border-b border-white/5">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-2 bg-zinc-800/50 rounded-lg text-zinc-400 group-hover:text-white transition-colors">
-                                        <Book size={18} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-zinc-200">Courses</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    <ChevronRight size={16} className="text-zinc-600" />
-                                </div>
-                            </Link>
-                            <Link href="/app/percentage" className="flex items-center justify-between p-4 group hover:bg-white/5 transition-colors cursor-pointer">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-2 bg-zinc-800/50 rounded-lg text-zinc-400 group-hover:text-white transition-colors">
-                                        <TrendingUp size={18} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-zinc-200">Percentages</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    <ChevronRight size={16} className="text-zinc-600" />
-                                </div>
-                            </Link>
-                        </div>
-                    </section>
-
-                    {/* Logout Section*/}
-                    <section>
-                        <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 pl-1">
-                            Logout
-                        </h2>
-                        <div className="bg-zinc-900/30 border border-white/5 rounded-2xl overflow-hidden">
-                            <Link href="/auth/logout" className="flex items-center justify-between p-4 group hover:bg-red-500/10 cursor-pointer transition-colors">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-2 bg-red-500/10 rounded-lg text-red-500">
-                                        <LogOut size={18} />
-                                    </div>
-                                    <p className="text-sm font-medium text-red-500">Log Out</p>
-                                </div>
-                            </Link>
-                        </div>
-                    </section>
-                </div>
-
-                {/* Footer */}
-                <div className="mt-8 text-center">
-                    <p className="text-xs text-zinc-700 font-mono">Classivo v6.0.0-beta</p>
-                </div>
-
+        <div className="space-y-6">
+          <section>
+            <h2 className="mb-4 pl-1 text-xs font-bold uppercase tracking-widest text-zinc-500">Account</h2>
+            <div className="overflow-hidden rounded-[24px] border border-white/10 bg-black/20 shadow-[0_20px_60px_rgba(0,0,0,0.2)] backdrop-blur-xl">
+              <SettingsLink
+                href="/app/profile"
+                icon={<User size={18} />}
+                title="Profile"
+                description="View your student information and account details"
+                trailing={userInfo?.name || "User"}
+              />
+              <SettingsLink
+                href="https://academia.srmist.edu.in/reset"
+                icon={<LockKeyhole size={18} />}
+                title="Security"
+                description="Update your SRM password through Academia"
+                trailing="Change Password"
+                noBorder
+              />
             </div>
-        </main>
-    );
+          </section>
+
+          <section>
+            <h2 className="mb-4 pl-1 text-xs font-bold uppercase tracking-widest text-zinc-500">Academics</h2>
+            <div className="overflow-hidden rounded-[24px] border border-white/10 bg-black/20 shadow-[0_20px_60px_rgba(0,0,0,0.2)] backdrop-blur-xl">
+              <SettingsLink
+                href="/app/course"
+                icon={<Book size={18} />}
+                title="Courses"
+                description="Access registered courses and class details"
+              />
+              <SettingsLink
+                href="/app/percentage"
+                icon={<TrendingUp size={18} />}
+                title="Percentages"
+                description="Review your subject-wise percentage summary"
+                noBorder
+              />
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-4 pl-1 text-xs font-bold uppercase tracking-widest text-zinc-500">Exit</h2>
+            <div className="overflow-hidden rounded-[24px] border border-red-500/20 bg-red-500/5 shadow-[0_20px_60px_rgba(0,0,0,0.2)] backdrop-blur-xl">
+              <Link href="/auth/logout" className="flex items-center justify-between p-4 transition-colors hover:bg-red-500/10">
+                <div className="flex items-center gap-4">
+                  <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-red-400">
+                    <LogOut size={18} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-red-400">Log Out</p>
+                                        <p className="mt-1 text-xs text-red-200/70">Securely end the current session</p>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </section>
+        </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-xs text-zinc-600 font-mono">Classivo premium settings</p>
+        </div>
+      </div>
+    </main>
+  );
 };
+
+const InfoCard = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
+  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-zinc-500">
+      {icon}
+      {label}
+    </div>
+    <div className="mt-2 text-sm font-medium text-white">{value}</div>
+  </div>
+);
+
+const SettingsLink = ({
+  href,
+  icon,
+  title,
+  description,
+  trailing,
+  noBorder,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  trailing?: string;
+  noBorder?: boolean;
+}) => (
+  <Link
+    href={href}
+    className={`flex items-center justify-between p-4 transition-colors hover:bg-white/5 ${noBorder ? "" : "border-b border-white/10"}`}
+  >
+    <div className="flex items-center gap-4">
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-zinc-300">{icon}</div>
+      <div>
+        <p className="text-sm font-medium text-zinc-200">{title}</p>
+        <p className="mt-1 text-xs text-zinc-500">{description}</p>
+      </div>
+    </div>
+
+    <div className="flex items-center gap-2">
+      {trailing ? <span className="text-sm text-zinc-500">{trailing}</span> : null}
+      <ChevronRight size={16} className="text-zinc-600" />
+    </div>
+  </Link>
+);
 
 export default SettingsPage;

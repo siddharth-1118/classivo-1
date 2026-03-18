@@ -37,7 +37,10 @@ const (
 
 func main() {
 	if globals.DevMode {
-		godotenv.Load()
+		// Try current dir first, then parent (src/ -> backend/)
+		if err := godotenv.Load(); err != nil {
+			godotenv.Load("../.env")
+		}
 	}
 
 	logEnvPresence()
@@ -50,7 +53,8 @@ func main() {
 		log.Printf("Using configured PORT=%s", port)
 	}
 
-	indexFile := filepath.Join(staticDir, "admin.html")
+	resolvedStaticDir := resolveStaticDir(staticDir)
+	indexFile := filepath.Join(resolvedStaticDir, "admin.html")
 	ensureStaticIndex(indexFile)
 
 	app := fiber.New(fiber.Config{
@@ -70,6 +74,11 @@ func main() {
 			"status":  "running",
 			"version": "v17-persistent",
 		})
+	})
+
+	app.Use(func(c *fiber.Ctx) error {
+		log.Printf("[REQUEST] %s %s", c.Method(), c.Path())
+		return c.Next()
 	})
 
 	app.Use(recover.New())
@@ -152,7 +161,11 @@ func main() {
 	})
 
 	api.Use(func(c *fiber.Ctx) error {
-		if globals.DevMode || isPublicRoute(c.Path()) {
+		if isPublicRoute(c.Path()) {
+			return c.Next()
+		}
+
+		if globals.DevMode {
 			return c.Next()
 		}
 
@@ -434,6 +447,10 @@ func main() {
 		return c.JSON(fiber.Map{"shortUrl": link})
 	})
 
+	api.Post("/ai/chat", func(c *fiber.Ctx) error {
+		return handlers.HandleChatCompletion(c)
+	})
+
 	// ----------------------------------------------------
 
 	app.Use(func(c *fiber.Ctx) error {
@@ -455,8 +472,8 @@ func main() {
 		return nil
 	})
 
-	log.Printf("Serving static frontend from %s", staticDir)
-	app.Static("/", staticDir, fiber.Static{
+	log.Printf("Serving static frontend from %s", resolvedStaticDir)
+	app.Static("/", resolvedStaticDir, fiber.Static{
 		Compress:      true,
 		Browse:        false,
 		CacheDuration: 24 * time.Hour,
@@ -469,7 +486,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to bind: %v", err)
 	}
-	log.Printf("Starting server on port %s...", port)
 	if err := app.Listener(ln); err != nil {
 		log.Printf("Server error: %+v", err)
 	}
@@ -534,7 +550,7 @@ func fetchAllData(token string) (map[string]interface{}, error) {
 func isPublicRoute(path string) bool {
 	path = strings.TrimSuffix(path, "/")
 	switch path {
-	case "/api/login", "/api/health", "/api/admin/logout-all", "/api/logout":
+	case "/api/login", "/api/health", "/api/admin/logout-all", "/api/logout", "/api/ai/chat":
 		return true
 	default:
 		return false
@@ -562,6 +578,53 @@ func ensureStaticIndex(indexPath string) {
 	} else {
 		log.Printf("Static index ready at %s (%d bytes)", indexPath, info.Size())
 	}
+}
+
+func resolveStaticDir(configured string) string {
+	candidates := []string{
+		configured,
+		filepath.Join(".", "static"),
+		filepath.Join(".", "backend", "static"),
+	}
+
+	if wd, err := os.Getwd(); err == nil {
+		candidates = append(candidates,
+			filepath.Join(wd, "static"),
+			filepath.Join(wd, "backend", "static"),
+			filepath.Join(wd, "..", "static"),
+		)
+	}
+
+	if exePath, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exePath)
+		candidates = append(candidates,
+			filepath.Join(exeDir, "static"),
+			filepath.Join(exeDir, "..", "static"),
+			filepath.Join(exeDir, "..", "backend", "static"),
+		)
+	}
+
+	seen := make(map[string]struct{}, len(candidates))
+	for _, candidate := range candidates {
+		if candidate == "" {
+			continue
+		}
+		absCandidate, err := filepath.Abs(candidate)
+		if err != nil {
+			continue
+		}
+		if _, ok := seen[absCandidate]; ok {
+			continue
+		}
+		seen[absCandidate] = struct{}{}
+
+		info, err := os.Stat(filepath.Join(absCandidate, "admin.html"))
+		if err == nil && !info.IsDir() {
+			return absCandidate
+		}
+	}
+
+	return configured
 }
 
 func serveSPAIndex(c *fiber.Ctx, indexPath string) error {
