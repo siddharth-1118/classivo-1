@@ -72,7 +72,11 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="mt-8 text-center">
+          <div className="mt-8 flex flex-col items-center gap-4">
+            <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-emerald-400 animate-pulse">
+              <span className="h-1 w-1 rounded-full bg-emerald-400" />
+              System Status: Online
+            </div>
             <Link
               href="/app/admin/queries"
               className="text-[11px] uppercase tracking-[0.2em] text-zinc-600 hover:text-zinc-400 transition-colors"
