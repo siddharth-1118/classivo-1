@@ -162,7 +162,7 @@ export const AIChat = () => {
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label="Open Classivo AI"
-        className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full flex items-center justify-center skeuo-convex border border-emerald-500/30 bg-[#0f1f1a] shadow-[0_0_24px_rgba(52,211,153,0.25)] transition-all duration-300 hover:shadow-[0_0_40px_rgba(52,211,153,0.5)] active:scale-95 active:skeuo-pressed group"
+        className="fixed bottom-24 right-4 z-[200] md:bottom-6 md:right-6 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center skeuo-convex border border-emerald-500/30 bg-[#0f1f1a] shadow-[0_0_24px_rgba(52,211,153,0.25)] transition-all duration-300 hover:shadow-[0_0_40px_rgba(52,211,153,0.5)] active:scale-95 active:skeuo-pressed group"
       >
         {isOpen
           ? <X className="w-6 h-6 text-emerald-400 transition-transform duration-300" />
