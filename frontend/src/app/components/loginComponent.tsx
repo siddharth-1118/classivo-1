@@ -167,7 +167,7 @@ export const LoginComponent = () => {
             setAuthToken(adminToken);
             Cookies.set("user", email.mail, { expires: 30, path: "/" });
             emitAuthEvent("login");
-            return (window.location.href = "/app/dashboard");
+            return (window.location.href = "/app/admin/queries");
         }
 
         const payload: LoginPayload = { account: email.mail, password: hash2 };
