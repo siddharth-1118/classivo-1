@@ -1,5 +1,5 @@
 "use client";
-import { useCourse, useMarks } from "@/hooks/query";
+import { useCourse, useMarks, useUserInfo } from "@/hooks/query";
 import React from "react";
 import { CourseDetail, MarkDetail } from "srm-academia-api";
 import { GlobalLoader } from "../components/loader";
@@ -12,10 +12,17 @@ import ShinyText from "@/components/ShinyText";
 // Animation & Charts
 import { LineChart } from "@mui/x-charts/LineChart";
 import { TotalMarksCard } from "@/app/components/TotalMarksCard";
+import { TrendingUp } from "lucide-react";
 
 const Page = () => {
   const { data, isPending } = useMarks();
   const courses = useCourse().data;
+  const { data: userInfo } = useUserInfo();
+  const currentSemester = Number(userInfo?.semester || 1);
+
+  const [prevCgpas, setPrevCgpas] = React.useState<Record<number, string>>({});
+  const [showCgpaCalculator, setShowCgpaCalculator] = React.useState(false);
+
   if (isPending) return <main className="w-full text-white flex items-center justify-center p-4 h-screen"><GlobalLoader /></main>;
   if (!data || data.length === 0)
     return (
@@ -37,9 +44,7 @@ const Page = () => {
   const totalObtained = data.reduce((acc, m) => acc + (m.total?.obtained || 0), 0);
   const totalMax = data.reduce((acc, m) => acc + (m.total?.maxMark || 0), 0);
   const totalPercentage = totalMax > 0 ? (totalObtained / totalMax) * 100 : 0;
-  const roundedTotalObtained = roundTo(totalObtained, 1);
-  const roundedTotalMax = roundTo(totalMax, 1);
-  const roundedTotalPercentage = formatPercentage(totalPercentage, 2);
+  
   const scoredSubjects = data.filter((item) => (item.total?.maxMark || 0) > 0);
   const strongSubjects = scoredSubjects.filter((item) => getSubjectPercentage(item) >= 75).length;
   const focusSubjects = scoredSubjects.filter((item) => getSubjectPercentage(item) < 60).length;
@@ -54,52 +59,109 @@ const Page = () => {
     return 0;
   };
 
-  let creditSum = 0;
-  let weightedSum = 0;
+  let currentSemCreditSum = 0;
+  let currentSemWeightedSum = 0;
   data.forEach((m) => {
     const course = courses?.find((c) => c.courseCode === m.course);
     const credit = Number(course?.courseCredit || 0);
     if (!credit || !m.total?.maxMark) return;
     const percent = (m.total.obtained / m.total.maxMark) * 100;
-    weightedSum += gp(percent) * credit;
-    creditSum += credit;
+    currentSemWeightedSum += gp(percent) * credit;
+    currentSemCreditSum += credit;
   });
-  const cgpa = creditSum > 0 ? weightedSum / creditSum : 0;
-  const formattedCgpa = formatNumber(cgpa, 2);
+
+  const currentSgpa = currentSemCreditSum > 0 ? currentSemWeightedSum / currentSemCreditSum : 0;
+
+  // Calculate Overall CGPA including previous semesters
+  const calculateOverallCgpa = () => {
+    const prevSems = Object.values(prevCgpas).map(v => Number(v)).filter(n => !isNaN(n) && n > 0);
+    if (prevSems.length === 0) return currentSgpa;
+    const total = prevSems.reduce((a, b) => a + b, 0) + currentSgpa;
+    return total / (prevSems.length + 1);
+  };
+
+  const overallCgpa = calculateOverallCgpa();
 
   return (
     <main className="flex flex-col gap-4 pt-2 pb-24 px-4 sm:px-6 w-full max-w-[1600px] mx-auto min-h-screen">
-      <div className="flex justify-between items-end ml-2">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center ml-2 mb-4 gap-4">
         <div>
-          <h1 className="text-2xl text-white tracking-tight mb-2 font-space-grotesk">Marks</h1>
-          <p className="text-sm text-zinc-400 max-w-2xl">
-            See where you are doing well, which subjects need attention, and how your marks moved from the first exam to the latest one.
+          <h1 className="text-2xl text-white tracking-tight mb-2 font-space-grotesk">Academic Performance 📊</h1>
+          <p className="text-sm text-zinc-400 max-w-2xl leading-relaxed">
+            Analyze your semester performance with our internal (60) and external (40) split logic. 
+            Track your CGPA progress across previous semesters.
           </p>
         </div>
+        <button 
+          onClick={() => setShowCgpaCalculator(!showCgpaCalculator)}
+          className="px-4 py-2 rounded-xl bg-premium-gold/10 border border-premium-gold/30 text-premium-gold text-xs font-bold uppercase tracking-widest hover:bg-premium-gold/20 transition-all flex items-center gap-2"
+        >
+          {showCgpaCalculator ? "Hide Analysis" : "Analyze My CGPA"}
+          <TrendingUp size={14} />
+        </button>
       </div>
+
+      {showCgpaCalculator && currentSemester > 1 && (
+        <Card className="border-premium-gold/30 bg-premium-gold/5 p-6 animate-in fade-in slide-in-from-top-4 duration-300">
+           <div className="flex flex-col gap-6">
+              <div>
+                <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-2">Previous Semester Performance</h3>
+                <p className="text-xs text-zinc-400">Enter your GPA from previous semesters to calculate your current CGPA.</p>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4">
+                {Array.from({ length: currentSemester - 1 }).map((_, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <label className="text-[10px] text-zinc-500 uppercase tracking-widest">Sem {idx + 1}</label>
+                    <input 
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="10"
+                      placeholder="0.00"
+                      value={prevCgpas[idx + 1] || ""}
+                      onChange={(e) => setPrevCgpas({ ...prevCgpas, [idx + 1]: e.target.value })}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-premium-gold/50"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="pt-4 border-t border-zinc-800 flex items-center gap-4">
+                 <div className="flex-1 p-3 rounded-xl bg-black/40 border border-zinc-800/50">
+                    <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Projected SGPA (Current)</div>
+                    <div className="text-xl font-bold text-white">{currentSgpa.toFixed(2)}</div>
+                 </div>
+                 <div className="flex-1 p-3 rounded-xl bg-premium-gold/10 border border-premium-gold/20">
+                    <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Calculated CGPA</div>
+                    <div className="text-xl font-bold text-premium-gold">{overallCgpa.toFixed(2)}</div>
+                 </div>
+              </div>
+           </div>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:col-span-2">
-          <Card className="pt-4 p-4 text-center bg-zinc-900/20 border-zinc-800/50">
-            <div className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Overall Score</div>
-            <div className="text-white text-2xl font-semibold font-display tracking-tight">{roundedTotalPercentage}%</div>
-            <div className="text-zinc-400 text-xs mt-2">{roundedTotalObtained} / {roundedTotalMax} marks</div>
+          <Card className="pt-4 p-4 text-center bg-zinc-900/20 border-zinc-800/50 shadow-lg">
+            <div className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Internal Score (60)</div>
+            <div className="text-white text-2xl font-semibold font-display tracking-tight">{roundTo(totalPercentage, 1)}%</div>
+            <div className="text-zinc-400 text-xs mt-2">{roundTo(totalObtained, 1)} / {roundTo(totalMax, 1)} marks</div>
           </Card>
 
-          <Card className="pt-4 p-4 text-center bg-zinc-900/20 border-zinc-800/50">
-            <div className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Estimated GPA</div>
-            <div className="text-white text-2xl font-semibold font-display tracking-tight">{formattedCgpa}</div>
-            <div className="text-zinc-400 text-xs mt-2">Based on current subject scores</div>
+          <Card className="pt-4 p-4 text-center bg-zinc-900/20 border-zinc-800/50 shadow-lg">
+            <div className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Current SGPA</div>
+            <div className="text-white text-2xl font-semibold font-display tracking-tight">{currentSgpa.toFixed(2)}</div>
+            <div className="text-zinc-400 text-xs mt-2">Scale: 10.0</div>
           </Card>
 
-          <Card className="pt-4 p-4 text-center bg-zinc-900/20 border-zinc-800/50">
-            <div className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Strong Performance</div>
-            <div className="text-white text-2xl font-semibold font-display tracking-tight">{strongSubjects}</div>
+          <Card className="pt-4 p-4 text-center bg-zinc-900/20 border-zinc-800/50 shadow-lg border-emerald-500/20">
+            <div className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Safe Subjects ✅</div>
+            <div className="text-emerald-300 text-2xl font-semibold font-display tracking-tight">{strongSubjects}</div>
             <div className="text-zinc-400 text-xs mt-2">Subjects above 75%</div>
           </Card>
 
-          <Card className="pt-4 p-4 text-center bg-zinc-900/20 border-zinc-800/50">
-            <div className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Requires Attention</div>
-            <div className="text-white text-2xl font-semibold font-display tracking-tight">{focusSubjects}</div>
+          <Card className="pt-4 p-4 text-center bg-zinc-900/20 border-zinc-800/50 shadow-lg border-rose-500/20">
+            <div className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Risk Items ⚠️</div>
+            <div className="text-rose-300 text-2xl font-semibold font-display tracking-tight">{focusSubjects}</div>
             <div className="text-zinc-400 text-xs mt-2">Subjects below 60%</div>
           </Card>
         </div>
@@ -196,13 +258,13 @@ const CourseItem = ({
     const romanToInt = (str: string) => {
       const roman = { I: 1, V: 5, X: 10, L: 50 };
       let num = 0;
-      let match = str.match(/[IVXL]+$/);
+      const match = str.match(/[IVXL]+$/);
       if (!match) return 0;
-      let s = match[0];
+      const s = match[0];
       for (let i = 0; i < s.length; i++) {
-        // @ts-ignore
+        // @ts-expect-error - dynamic key access
         const curr = roman[s[i]];
-        // @ts-ignore
+        // @ts-expect-error - dynamic key access
         const next = roman[s[i + 1]];
         if (next && curr < next) num -= curr;
         else num += curr;
@@ -295,6 +357,11 @@ const CourseItem = ({
                   scaleType: "point",
                   tickLabelStyle: { fill: "#71717a", fontSize: 9 }
                 }]}
+                slotProps={{
+                  legend: {
+                    hidden: true,
+                  },
+                }}
                 yAxis={[{
                   min: 0,
                   max: 100,

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useSpring, useMotionValue } from "motion/react";
-import { Menu, X, Command } from "lucide-react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 interface FloatingMenuTriggerProps {
@@ -12,37 +12,9 @@ interface FloatingMenuTriggerProps {
 
 const FloatingMenuTrigger: React.FC<FloatingMenuTriggerProps> = ({ onToggle, isOpen }) => {
     const pathname = usePathname();
-    const mouseX = useMotionValue(0);
-    const mouseY = useMotionValue(0);
-
-    const springConfig = { damping: 25, stiffness: 200 };
-    const x = useSpring(mouseX, springConfig);
-    const y = useSpring(mouseY, springConfig);
-
     const [isHovered, setIsHovered] = useState(false);
-    const [isVisible, setIsVisible] = useState(true);
 
-    if (!pathname.startsWith("/app")) return null;
-
-    // Magnetic effect
-    const handleMouseMove = (e: React.MouseEvent) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        
-        // Only pull if within a certain distance
-        const distanceX = e.clientX - centerX;
-        const distanceY = e.clientY - centerY;
-        
-        mouseX.set(distanceX * 0.35);
-        mouseY.set(distanceY * 0.35);
-    };
-
-    const handleMouseLeave = () => {
-        mouseX.set(0);
-        mouseY.set(0);
-        setIsHovered(false);
-    };
+    if (!pathname.startsWith("/app") || pathname === "/app/dashboard") return null;
 
     return (
         <div 

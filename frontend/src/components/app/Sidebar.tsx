@@ -8,7 +8,6 @@ import {
     LayoutDashboard,
     Calendar,
     BookOpen,
-    GraduationCap,
     Settings,
     LogOut,
     Hourglass,
@@ -18,7 +17,8 @@ import {
     Calculator,
     User,
     Users,
-    X
+    X,
+    Sparkles
 } from "lucide-react";
 import { useUserInfo } from "@/hooks/query";
 
@@ -45,6 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         { name: "Mess Menu", href: "/app/messmenu", icon: Calendar },
         { name: "Profile", href: "/app/profile", icon: User },
         { name: "Join Community", href: "https://chat.whatsapp.com/KCbxvabSvRbK96h67JF3Io", icon: Users },
+        { name: "Clubs", href: "/app/clubs", icon: Sparkles },
         { name: "Settings", href: "/app/settings", icon: Settings },
     ];
 

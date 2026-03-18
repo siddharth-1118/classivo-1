@@ -1,34 +1,48 @@
-"use client";
 import React from "react";
 import Link from "next/link";
 import {
   Zap,
   MapPin,
   RotateCcw,
-  Calendar as CalendarIcon,
   Sparkles,
   Clock3,
   ChartNoAxesCombined,
   BellRing,
+  CalendarClock,
+  BookOpenText,
+  TrendingUp,
+  Calendar,
+  GraduationCap,
+  User,
+  Users,
+  Settings,
+  PartyPopper,
 } from "lucide-react";
-import { useAttendance, useTimetable, useMarks, useUserInfo, useDayOrder } from "@/hooks/query";
+import { useAttendance, useTimetable, useMarks, useUserInfo, useDayOrder, useCalendar } from "@/hooks/query";
 import { subscribeToPushNotifications } from "@/app/lib/pushNotifications";
 import { Card } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { TotalMarksCard } from "@/app/components/TotalMarksCard";
 
+const CALENDAR_MONTH_LABELS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
+
 const parseTime = (timeStr: string) => {
   try {
     const [startStr] = timeStr.split("-").map((t) => t.trim());
     const parseToMinutes = (t: string) => {
       const [time, modifier] = t.split(" ");
-      let [hours, minutes] = time.split(":").map(Number);
+      const [hoursStr, minutesStr] = time.split(":");
+      let hours = Number(hoursStr);
+      const minutes = Number(minutesStr);
       if (modifier === "PM" && hours < 12) hours += 12;
       if (modifier === "AM" && hours === 12) hours = 0;
       return hours * 60 + minutes;
     };
-    return parseToMinutes(startStr);
+    return parseToMinutes(startStr!);
   } catch {
     return 0;
   }
@@ -40,6 +54,7 @@ const DashboardPage = () => {
   const { data: marksData } = useMarks();
   const { data: userInfo } = useUserInfo();
   const { data: dayOrderData, refetch: refetchDayOrder, isFetching: isFetchingDayOrder } = useDayOrder();
+  const { data: calendarData } = useCalendar();
   const [pushStatus, setPushStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
 
   const handleSubscribe = async () => {
@@ -60,7 +75,7 @@ const DashboardPage = () => {
       ? (attendanceData.reduce((acc, curr) => acc + Number(curr.courseAttendance), 0) / attendanceData.length).toFixed(1)
       : "0.0";
 
-  let todayScheduleRaw = [] as any[];
+  let todayScheduleRaw: any[] = [];
   let dayOrderLabel = "";
   let isHoliday = false;
 
@@ -85,6 +100,23 @@ const DashboardPage = () => {
     dayOrderLabel = timetableData && timetableData.length > 0 ? (timetableData[0]?.dayOrder ?? "") : "";
   }
 
+  // Tomorrow Holiday Logic
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowDayNum = tomorrow.getDate();
+  const tomorrowMonthIdx = tomorrow.getMonth();
+  const tomorrowYearSuffix = String(tomorrow.getFullYear()).slice(-2);
+  const tomorrowMonthLabel = `${CALENDAR_MONTH_LABELS[tomorrowMonthIdx]} '${tomorrowYearSuffix}`;
+
+  const tomorrowMonthData = calendarData?.find(m => m.month === tomorrowMonthLabel);
+  const tomorrowDayData = tomorrowMonthData?.days.find(d => {
+     const dMatch = d.date.match(/\d+/);
+     return dMatch && parseInt(dMatch[0]!) === tomorrowDayNum;
+  });
+
+  const isTomorrowHoliday = tomorrowDayData?.dayOrder === "0" || tomorrowDayData?.event?.toLowerCase().includes("holiday");
+  const tomorrowEvent = tomorrowDayData?.event || "Holiday";
+
   const sortedSchedule = [...(todayScheduleRaw || [])]
     .filter((cls) => cls.isClass && cls.courseTitle)
     .sort((a, b) => parseTime(a.time) - parseTime(b.time));
@@ -100,13 +132,35 @@ const DashboardPage = () => {
     .slice(0, 2)
     .toUpperCase();
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return { text: "Good Morning", emoji: "🌅" };
+    if (hour < 17) return { text: "Good Afternoon", emoji: "☀️" };
+    return { text: "Good Evening", emoji: "🌙" };
+  };
+
+  const greeting = getGreeting();
+
+  const navItems = [
+    { name: "Timetable", href: "/app/timetable", icon: Clock3, color: "text-blue-400", emoji: "📅" },
+    { name: "Attendance", href: "/app/attendance", icon: ChartNoAxesCombined, color: "text-emerald-400", emoji: "✅" },
+    { name: "Marks", href: "/app/marks", icon: TrendingUp, color: "text-purple-400", emoji: "📊" },
+    { name: "Subjects", href: "/app/marks", icon: BookOpenText, color: "text-orange-400", emoji: "📚" },
+    { name: "Placements", href: "/app/placements", icon: GraduationCap, color: "text-pink-400", emoji: "🎓" },
+    { name: "Mess Menu", href: "/app/messmenu", icon: Calendar, color: "text-yellow-400", emoji: "🍲" },
+    { name: "Profile", href: "/app/profile", icon: User, color: "text-zinc-400", emoji: "👤" },
+    { name: "Community", href: "https://chat.whatsapp.com/KCbxvabSvRbK96h67JF3Io", icon: Users, color: "text-green-400", emoji: "💬" },
+    { name: "Clubs", href: "/app/clubs", icon: Sparkles, color: "text-pink-400", emoji: "✨" },
+    { name: "Settings", href: "/app/settings", icon: Settings, color: "text-slate-400", emoji: "⚙️" },
+  ];
+
   return (
-    <main className="relative min-h-screen w-full overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] text-white shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
+    <main className="relative min-h-screen w-full overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] text-white shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl px-2 sm:px-0">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.16),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(56,189,248,0.12),transparent_30%)]" />
       <div className="relative z-10 flex h-full flex-col p-3 sm:p-6 md:p-8">
         <header className="mb-6 rounded-[28px] border border-white/10 bg-black/20 px-4 py-4 backdrop-blur-xl sm:px-6">
           <div className="flex items-start justify-between gap-4">
-            <div>
+            <div className="flex-1">
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="border-premium-gold/25 bg-premium-gold/10 text-[10px] uppercase tracking-[0.22em] text-premium-gold">
                   Dashboard
@@ -115,9 +169,21 @@ const DashboardPage = () => {
                   Academic overview
                 </span>
               </div>
-              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                Welcome{userInfo?.name ? `, ${userInfo.name.split(" ")[0]}` : ""}.
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl font-space-grotesk">
+                {greeting.text}{userInfo?.name ? `, ${userInfo.name.split(" ")[0]}` : ""}{greeting.emoji}
               </h1>
+
+              {isTomorrowHoliday && (
+                <div className="mt-4 p-3 rounded-2xl bg-premium-gold/10 border border-premium-gold/20 flex items-center gap-3 animate-pulse shadow-[0_0_20px_rgba(212,175,55,0.1)]">
+                  <div className="p-2 rounded-xl bg-premium-gold/20 text-premium-gold">
+                    <PartyPopper size={18} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-premium-gold uppercase tracking-widest">Holiday Alert! 🎉</p>
+                    <p className="text-sm text-white/80">Tomorrow is a holiday ({tomorrowEvent}). Enjoy your day off!</p>
+                  </div>
+                </div>
+              )}
               <p className="mt-2 max-w-2xl text-sm leading-7 text-zinc-300">
                 Review today&apos;s academic summary, access attendance and marks quickly, and monitor scheduled classes from a refined premium interface.
               </p>
@@ -154,7 +220,7 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="mt-5 grid gap-3 grid-cols-1 sm:grid-cols-3">
             <DashInfo icon={<Sparkles size={12} />} label="Today" value={dayName} subValue={`Date ${dateNum}`} />
             <DashInfo
               icon={<Clock3 size={12} />}
@@ -171,13 +237,43 @@ const DashboardPage = () => {
           </div>
         </header>
 
-        <div className="flex-1 flex flex-col gap-5 sm:gap-6 min-h-0 overflow-y-auto custom-scrollbar relative z-10">
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 shrink-0 h-auto">
+        <div className="flex-1 flex flex-col gap-5 sm:gap-8 min-h-0 overflow-y-auto custom-scrollbar relative z-10 pb-20">
+          {/* Navigation Grid */}
+          <section>
+            <div className="flex items-center gap-2 mb-4 px-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-premium-gold animate-pulse" />
+              <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-[0.2em]">Quick Access</h2>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3 sm:gap-4">
+              {navItems.map((item) => (
+                <Card
+                  key={item.name}
+                  className="group relative overflow-hidden bg-zinc-900/40 border-zinc-800/50 hover:border-premium-gold/30 transition-all duration-300 p-4 cursor-pointer"
+                >
+                  <Link href={item.href} className="flex flex-col items-center justify-center text-center gap-3">
+                    <div className={`p-3 rounded-2xl bg-zinc-950/50 border border-zinc-800/80 group-hover:scale-110 group-hover:bg-premium-gold/10 transition-all ${item.color}`}>
+                      <item.icon size={24} strokeWidth={1.5} />
+                    </div>
+                    <div className="flex items-center gap-1.5 justify-center">
+                       <span className="text-xs font-bold text-white tracking-wide uppercase">{item.name}</span>
+                       <span className="text-sm opacity-60 group-hover:opacity-100 transition-opacity">{item.emoji}</span>
+                    </div>
+                  </Link>
+                  
+                  {/* Visual flourish for premium feel */}
+                  <div className="absolute -right-2 -bottom-2 w-12 h-12 bg-premium-gold/5 blur-xl group-hover:bg-premium-gold/10 transition-all rounded-full" />
+                </Card>
+              ))}
+            </div>
+          </section>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 shrink-0 h-auto">
             <Link href="/app/attendance" className="block">
-              <Card className="p-5 sm:p-6 relative overflow-hidden group bg-white/8 border-white/10 backdrop-blur-xl hover:border-premium-gold/30 hover:bg-white/10 transition-all flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.2)] cursor-pointer">
+              <Card className="p-5 sm:p-6 h-full relative overflow-hidden group bg-white/8 border-white/10 backdrop-blur-xl hover:border-premium-gold/30 hover:bg-white/10 transition-all flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.2)] cursor-pointer">
                 <div className="relative z-10 h-full flex flex-col justify-between">
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-zinc-400 text-[11px] font-medium uppercase tracking-[0.16em]">Attendance</h3>
+                    <h3 className="text-zinc-400 text-[11px] font-medium uppercase tracking-[0.16em]">Average Attendance</h3>
+                    <CalendarClock className="text-premium-gold opacity-50 group-hover:opacity-100 transition-opacity" size={16} />
                   </div>
                   <div className="mt-2">
                     <div className="flex items-baseline gap-1.5 mb-3">
@@ -192,27 +288,33 @@ const DashboardPage = () => {
             </Link>
 
             <Link href="/app/marks" className="block">
-              <div className="cursor-pointer">
+              <div className="cursor-pointer h-full">
                 <TotalMarksCard marks={marksData || []} />
               </div>
             </Link>
           </div>
 
           <Card className="flex-1 p-0 flex flex-col bg-black/20 border-white/10 backdrop-blur-xl overflow-hidden shrink-0 sm:shrink shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
-            <div className="p-4 sm:p-6 border-b border-white/10 flex justify-between items-center shrink-0">
-              <div>
-                <h2 className="text-base sm:text-lg font-medium text-white font-display">Today&apos;s Schedule</h2>
-                <div className="flex items-center gap-2 text-zinc-400 text-sm">
-                  <CalendarIcon size={14} />
-                  <span>{dayOrderLabel}</span>
+            <div className="p-4 sm:p-6 border-b border-white/10 flex flex-col md:flex-row md:items-end justify-between items-start shrink-0">
+              <div className="mb-4 md:mb-0">
+                <div className="flex items-center gap-2 mb-2">
+                   <span className="text-2xl">{greeting.emoji}</span>
+                   <h1 className="text-3xl font-display font-medium tracking-tight text-white m-0">
+                     {greeting.text}, {userInfo?.name?.split(" ")[0]}
+                   </h1>
                 </div>
+                <p className="text-sm text-zinc-400 m-0">
+                  Welcome back to your academic hub. Everything is up to date.
+                </p>
               </div>
-              <span className="text-xs text-zinc-400 uppercase tracking-wider font-medium">
-                {isHoliday ? "Holiday" : `${sortedSchedule.length} Events`}
-              </span>
+              <div className="hidden md:flex gap-3">
+                 <div className="px-4 py-2 rounded-2xl bg-zinc-900 border border-zinc-800 text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
+                    SRM Institute of Science and Technology
+                 </div>
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar relative min-h-0 pb-32">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar relative min-h-0">
               <div className="hidden sm:block absolute left-20 top-6 bottom-6 w-px bg-white/10 z-0" />
               <div className="space-y-4 sm:space-y-6 relative z-10">
                 {sortedSchedule.length > 0 ? (
