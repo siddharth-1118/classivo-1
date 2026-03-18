@@ -285,6 +285,9 @@ const AttendancePage = () => {
   );
 };
 
+export default AttendancePage;
+
+
 interface RangePredictResult {
   newPercent: string;
   added: number;

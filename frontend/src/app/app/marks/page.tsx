@@ -357,11 +357,9 @@ const CourseItem = ({
                   scaleType: "point",
                   tickLabelStyle: { fill: "#71717a", fontSize: 9 }
                 }]}
-                slotProps={{
-                  legend: {
-                    hidden: true,
-                  },
-                }}
+                hideLegend
+
+
                 yAxis={[{
                   min: 0,
                   max: 100,
