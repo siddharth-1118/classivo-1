@@ -126,7 +126,7 @@ export const AIChat = () => {
 
       // Always use the local backend for the AI proxy — it holds the NVIDIA key securely
       // In production this should point to your deployed backend URL with NVIDIA_API_KEY set
-      const aiBase = process.env.NEXT_PUBLIC_AI_BASE || 'http://localhost:8080';
+      const aiBase = process.env.NEXT_PUBLIC_AI_BASE || process.env.NEXT_PUBLIC_API_BASE || '';
 
       const response = await fetch(`${aiBase}/api/ai/chat`, {
         method: 'POST',

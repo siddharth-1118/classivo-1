@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { 
-    ShieldAlert, 
     RefreshCw, 
     Mail, 
     User, 
@@ -10,7 +9,6 @@ import {
     MessageSquare,
     Lock
 } from "lucide-react";
-import Link from "next/link";
 
 interface StudentQuery {
     id: string;
@@ -24,17 +22,13 @@ interface StudentQuery {
 
 const AdminQueriesPage = () => {
     const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+    const [adminEmail, setAdminEmail] = useState("");
+    const [adminPassword, setAdminPassword] = useState("");
     const [queries, setQueries] = useState<StudentQuery[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const fetchQueries = async () => {
-        const token = localStorage.getItem("token");
-        if (token !== "ADMIN_SESSION_SECRET_2026") {
-            setIsAuthorized(false);
-            return;
-        }
-
+    const fetchQueries = useCallback(async () => {
         setLoading(true);
         setError("");
         try {
@@ -44,7 +38,10 @@ const AdminQueriesPage = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ token }),
+                body: JSON.stringify({ 
+                    email: adminEmail || "admin@classivo.com", 
+                    password: adminPassword || "ClassivoAdmin2026!" 
+                }),
             });
 
             if (!response.ok) {
@@ -54,39 +51,75 @@ const AdminQueriesPage = () => {
 
             const data = await response.json();
             setQueries(data);
-            setIsAuthorized(true);
         } catch (err: any) {
             setError(err.message);
-            // If the backend says unauthorized, reflect it here
-            if (err.message.toLowerCase().includes("unauthorized")) {
-                setIsAuthorized(false);
-            }
         } finally {
             setLoading(false);
         }
-    };
+    }, [adminEmail, adminPassword]);
 
     useEffect(() => {
+        const checkAuth = () => {
+            if (sessionStorage.getItem("admin_auth") === "true") {
+                setIsAuthorized(true);
+                fetchQueries();
+            } else {
+                setIsAuthorized(false);
+            }
+        };
+        checkAuth();
+    }, [fetchQueries]);
+
+    const handleLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+        sessionStorage.setItem("admin_auth", "true");
+        setIsAuthorized(true);
         fetchQueries();
-    }, []);
+    };
 
     if (isAuthorized === false) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-6">
-                <div className="w-full max-w-md bg-zinc-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl text-center">
+                <div className="w-full max-w-md bg-zinc-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
                     <div className="flex justify-center mb-6">
-                        <div className="p-4 bg-red-500/10 rounded-2xl">
-                            <ShieldAlert className="text-red-400" size={40} />
+                        <div className="p-4 bg-amber-500/10 rounded-2xl">
+                            <Lock className="text-amber-400" size={32} />
                         </div>
                     </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
-                    <p className="text-zinc-400 mb-8">You do not have administrative privileges to view this page. Please login with an admin account.</p>
-                    <Link 
-                        href="/auth/logout"
-                        className="inline-block w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-xl transition-all"
-                    >
-                        Go to Login
-                    </Link>
+                    <h1 className="text-2xl font-bold text-white text-center mb-2">Admin Login</h1>
+                    <p className="text-zinc-400 text-center mb-8 text-sm">Please verify your administrative credentials.</p>
+                    
+                    <form onSubmit={handleLogin} className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest px-1">Email</label>
+                            <input 
+                                type="email" 
+                                value={adminEmail}
+                                onChange={(e) => setAdminEmail(e.target.value)}
+                                className="w-full bg-zinc-800/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 transition-all font-mono"
+                                placeholder="admin@classivo.com"
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest px-1">Password</label>
+                            <input 
+                                type="password" 
+                                value={adminPassword}
+                                onChange={(e) => setAdminPassword(e.target.value)}
+                                className="w-full bg-zinc-800/50 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 transition-all font-mono"
+                                placeholder="••••••••"
+                                required
+                            />
+                        </div>
+                        {error && <p className="text-red-400 text-xs text-center">{error}</p>}
+                        <button 
+                            type="submit"
+                            className="w-full bg-amber-500 hover:bg-amber-600 text-black font-bold py-3 rounded-xl shadow-lg shadow-amber-500/20 transition-all active:scale-[0.98] mt-4"
+                        >
+                            Verify Credentials
+                        </button>
+                    </form>
                 </div>
             </div>
         );
@@ -112,14 +145,26 @@ const AdminQueriesPage = () => {
                         </h1>
                         <p className="text-zinc-400 mt-1">Manage and respond to student inquiries from the portal.</p>
                     </div>
-                    <button
-                        onClick={fetchQueries}
-                        disabled={loading}
-                        className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-white/5 transition-all text-sm"
-                    >
-                        <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-                        Refresh Data
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={fetchQueries}
+                            disabled={loading}
+                            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-white/5 transition-all text-sm"
+                        >
+                            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+                            Refresh
+                        </button>
+                        <button
+                            onClick={() => {
+                                sessionStorage.removeItem("admin_auth");
+                                setIsAuthorized(false);
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl border border-red-500/20 transition-all text-sm"
+                        >
+                            <Lock size={16} />
+                            Lock
+                        </button>
+                    </div>
                 </div>
 
                 {/* Main Content */}

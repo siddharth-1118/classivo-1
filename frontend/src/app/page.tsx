@@ -68,9 +68,13 @@ export default function Home() {
           </span>
         </div>
 
-        <div className="mt-12 text-[11px] uppercase tracking-[0.2em] text-zinc-500">
+        <Link 
+          href="/app/admin/queries"
+          className="mt-12 text-[11px] uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-400 transition-colors inline-flex items-center gap-1 group w-fit"
+        >
           made by vss
-        </div>
+          <span className="w-1 h-1 rounded-full bg-zinc-800 group-hover:bg-zinc-600 transition-colors" />
+        </Link>
       </div>
     </main>
     <AIChat />

@@ -161,7 +161,7 @@ func (db *DatabaseHelper) ReadData(table string, query map[string]interface{}) (
 		}
 	}
 
-	_, _, err := db.client.From(table).Select("*", "", false).Match(queryAsString).Execute()
+	_, err := db.client.From(table).Select("*", "", false).Match(queryAsString).ExecuteTo(&results)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func (db *DatabaseHelper) GetCachedDataByKey(token string, dataKey string) (inte
 		return nil, false, false, err
 	}
 
-	if cachedData == nil || len(cachedData) == 0 {
+	if len(cachedData) == 0 {
 		return nil, false, false, nil
 	}
 
@@ -334,4 +334,17 @@ func (db *DatabaseHelper) VerifySession(hash string) (bool, error) {
 		return false, err
 	}
 	return len(results) > 0, nil
-}
+}
+
+func (db *DatabaseHelper) VerifyAdmin(email, password string) (bool, error) {
+	var results []map[string]interface{}
+	query := map[string]string{
+		"email":    email,
+		"password": password,
+	}
+	_, err := db.client.From("admins").Select("*", "", false).Match(query).ExecuteTo(&results)
+	if err != nil {
+		return false, err
+	}
+	return len(results) > 0, nil
+}

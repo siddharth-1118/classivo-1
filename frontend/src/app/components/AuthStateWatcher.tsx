@@ -30,8 +30,8 @@ const enforceRouteForState = (hasToken: boolean, forceReload = false) => {
   const onProtectedRoute = pathname.startsWith(PROTECTED_PREFIX);
   const onAuthRoute = pathname.startsWith(AUTH_PREFIX);
   const isRoot = pathname === "/";
-  
   const isLogoutPage = pathname === "/auth/logout" || pathname === "/auth/logout/";
+  const isAdminRoute = pathname.startsWith("/app/admin");
   const authRouteAllowed = AUTH_ALLOW_LIST.some((route) => pathname.startsWith(normalizePath(route)));
 
   console.log("[AuthStateWatcher]", { 
@@ -40,7 +40,8 @@ const enforceRouteForState = (hasToken: boolean, forceReload = false) => {
     onProtectedRoute, 
     onAuthRoute, 
     isRoot,
-    authRouteAllowed 
+    authRouteAllowed,
+    isAdminRoute
   });
 
   if (hasToken) {
@@ -50,7 +51,7 @@ const enforceRouteForState = (hasToken: boolean, forceReload = false) => {
     }
   } else {
     // NOT logged in
-    if (onProtectedRoute && !isLogoutPage) {
+    if (onProtectedRoute && !isLogoutPage && !isAdminRoute) {
       console.log("[AuthStateWatcher] Redirecting to /auth/logout (Not logged in on protected route)");
       redirectTo("/auth/logout");
     }

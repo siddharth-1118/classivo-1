@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/zustand";
 import { serverLogin } from "@/server/action";
 import type { Json } from "@/lib/api";
 import { Eye, EyeOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import React, { useState, useMemo } from "react";
 import Cookies from "js-cookie";
 import { Loader } from "../app/components/loader";
 import { DEV_TOKEN_PREFIX } from "@/utils/devMode";
@@ -160,16 +160,6 @@ export const LoginComponent = () => {
             return;
           }
         }
-        const adminEmail = "admin@classivo.com";
-        const adminPassword = "ClassivoAdmin2026!";
-        if (email.mail.toLowerCase() === adminEmail && hash2 === adminPassword) {
-            const adminToken = "ADMIN_SESSION_SECRET_2026";
-            setAuthToken(adminToken);
-            Cookies.set("user", email.mail, { expires: 30, path: "/" });
-            emitAuthEvent("login");
-            return (window.location.href = "/app/admin/queries");
-        }
-
         const payload: LoginPayload = { account: email.mail, password: hash2 };
         if (captchaDigest && captchaCode) {
           payload.cdigest = captchaDigest;

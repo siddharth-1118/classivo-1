@@ -113,11 +113,27 @@ func HandleGetQueries(c *fiber.Ctx) error {
 	}
 
 	// Support both direct Email/Password (deprecated soon) and the new Unified Token
-	isAuthorized := (body.Email == "admin@classivo.com" && body.Password == "ClassivoAdmin2026!") || 
-					(body.Token == "ADMIN_SESSION_SECRET_2026")
+	valid := false
+	if body.Email != "" && body.Password != "" {
+		// 1. Try Supabase verification
+		db, err := databases.NewDatabaseHelper()
+		if err == nil {
+			valid, _ = db.VerifyAdmin(body.Email, body.Password)
+		}
 
-	if !isAuthorized {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid admin credentials"})
+		// 2. Fallback to hardcoded admin (backup)
+		if !valid && body.Email == "admin@classivo.com" && body.Password == "ClassivoAdmin2026!" {
+			valid = true
+		}
+	} else if body.Token == "ADMIN_SESSION_SECRET_2026" {
+		// 3. Special token check (already bypasses middleware, but double check here)
+		valid = true
+	}
+
+	if !valid {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Invalid administrative credentials or session token.",
+		})
 	}
 
 	db, err := databases.NewDatabaseHelper()
