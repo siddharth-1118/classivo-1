@@ -103,6 +103,7 @@ func HandleSubmitQuery(c *fiber.Ctx) error {
 type AdminCredentialsPayload struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Token    string `json:"token"`
 }
 
 func HandleGetQueries(c *fiber.Ctx) error {
@@ -111,8 +112,11 @@ func HandleGetQueries(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid body"})
 	}
 
-	// For security, use "admin@classivo.com" and "ClassivoAdmin2026!"
-	if body.Email != "admin@classivo.com" || body.Password != "ClassivoAdmin2026!" {
+	// Support both direct Email/Password (deprecated soon) and the new Unified Token
+	isAuthorized := (body.Email == "admin@classivo.com" && body.Password == "ClassivoAdmin2026!") || 
+					(body.Token == "ADMIN_SESSION_SECRET_2026")
+
+	if !isAuthorized {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid admin credentials"})
 	}
 

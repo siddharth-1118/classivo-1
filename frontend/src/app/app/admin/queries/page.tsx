@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { 
-    ShieldCheck, 
+    ShieldAlert, 
     RefreshCw, 
     Mail, 
     User, 
@@ -10,6 +10,7 @@ import {
     MessageSquare,
     Lock
 } from "lucide-react";
+import Link from "next/link";
 
 interface StudentQuery {
     id: string;
@@ -22,15 +23,18 @@ interface StudentQuery {
 }
 
 const AdminQueriesPage = () => {
-    const [adminEmail, setAdminEmail] = useState("");
-    const [adminPassword, setAdminPassword] = useState("");
-    const [isAuthorized, setIsAuthorized] = useState(false);
+    const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
     const [queries, setQueries] = useState<StudentQuery[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const fetchQueries = async (email: string, password: string) => {
-        if (!email || !password) return;
+    const fetchQueries = async () => {
+        const token = localStorage.getItem("token");
+        if (token !== "ADMIN_SESSION_SECRET_2026") {
+            setIsAuthorized(false);
+            return;
+        }
+
         setLoading(true);
         setError("");
         try {
@@ -40,7 +44,7 @@ const AdminQueriesPage = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ token }),
             });
 
             if (!response.ok) {
@@ -51,80 +55,47 @@ const AdminQueriesPage = () => {
             const data = await response.json();
             setQueries(data);
             setIsAuthorized(true);
-            localStorage.setItem("classivo_admin_email", email);
-            localStorage.setItem("classivo_admin_password", password);
         } catch (err: any) {
             setError(err.message);
-            setIsAuthorized(false);
+            // If the backend says unauthorized, reflect it here
+            if (err.message.toLowerCase().includes("unauthorized")) {
+                setIsAuthorized(false);
+            }
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        const savedEmail = localStorage.getItem("classivo_admin_email");
-        const savedPassword = localStorage.getItem("classivo_admin_password");
-        if (savedEmail && savedPassword) {
-            setAdminEmail(savedEmail);
-            setAdminPassword(savedPassword);
-            fetchQueries(savedEmail, savedPassword);
-        }
+        fetchQueries();
     }, []);
 
-    const handleLogin = (e: React.FormEvent) => {
-        e.preventDefault();
-        fetchQueries(adminEmail, adminPassword);
-    };
-
-    if (!isAuthorized) {
+    if (isAuthorized === false) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-6">
-                <div className="w-full max-w-md bg-zinc-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
+                <div className="w-full max-w-md bg-zinc-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl text-center">
                     <div className="flex justify-center mb-6">
-                        <div className="p-4 bg-amber-500/10 rounded-2xl">
-                            <ShieldCheck className="text-amber-400" size={40} />
+                        <div className="p-4 bg-red-500/10 rounded-2xl">
+                            <ShieldAlert className="text-red-400" size={40} />
                         </div>
                     </div>
-                    <h1 className="text-2xl font-bold text-white text-center mb-2">Admin Access</h1>
-                    <p className="text-zinc-400 text-center mb-8">Enter your secure admin key to view student support queries.</p>
-                    
-                    <form onSubmit={handleLogin} className="space-y-4">
-                        <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-                            <input
-                                type="email"
-                                value={adminEmail}
-                                onChange={(e) => setAdminEmail(e.target.value)}
-                                placeholder="Admin Email"
-                                className="w-full bg-zinc-800/50 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
-                                required
-                            />
-                        </div>
-                        <div className="relative">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-                            <input
-                                type="password"
-                                value={adminPassword}
-                                onChange={(e) => setAdminPassword(e.target.value)}
-                                placeholder="Admin Password"
-                                className="w-full bg-zinc-800/50 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all font-mono"
-                                required
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-amber-950 font-bold py-3 rounded-xl transition-all shadow-lg shadow-amber-500/20"
-                        >
-                            {loading ? "Verifying..." : "Access Dashboard"}
-                        </button>
-                        {error && (
-                            <p className="text-red-400 text-sm text-center mt-4 bg-red-500/10 py-2 rounded-lg border border-red-500/20">
-                                {error}
-                            </p>
-                        )}
-                    </form>
+                    <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
+                    <p className="text-zinc-400 mb-8">You do not have administrative privileges to view this page. Please login with an admin account.</p>
+                    <Link 
+                        href="/auth/logout"
+                        className="inline-block w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-xl transition-all"
+                    >
+                        Go to Login
+                    </Link>
                 </div>
+            </div>
+        );
+    }
+
+    if (isAuthorized === null && loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+                <RefreshCw className="text-amber-500 animate-spin" size={40} />
             </div>
         );
     }
@@ -142,7 +113,7 @@ const AdminQueriesPage = () => {
                         <p className="text-zinc-400 mt-1">Manage and respond to student inquiries from the portal.</p>
                     </div>
                     <button
-                        onClick={() => fetchQueries(adminEmail, adminPassword)}
+                        onClick={fetchQueries}
                         disabled={loading}
                         className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-white/5 transition-all text-sm"
                     >
@@ -155,7 +126,7 @@ const AdminQueriesPage = () => {
                 <div className="grid gap-6">
                     {queries.length === 0 ? (
                         <div className="bg-zinc-900/50 border border-white/5 rounded-3xl p-12 text-center">
-                            <p className="text-zinc-500">No student queries found yet.</p>
+                            <p className="text-zinc-500">{loading ? "Fetching queries..." : "No student queries found yet."}</p>
                         </div>
                     ) : (
                         queries.map((query) => (
