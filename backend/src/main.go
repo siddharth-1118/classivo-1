@@ -559,7 +559,7 @@ func fetchAllData(token string) (map[string]interface{}, error) {
 func isPublicRoute(path string) bool {
 	path = strings.TrimSuffix(path, "/")
 	switch path {
-	case "/api/login", "/api/health", "/api/admin/logout-all", "/api/logout", "/api/ai/chat":
+	case "/api/login", "/api/health", "/api/admin/logout-all", "/api/logout", "/api/ai/chat", "/api/admin/queries", "/api/notifications/subscribe":
 		return true
 	default:
 		return false

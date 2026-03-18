@@ -14,7 +14,8 @@ import {
     LogOut,
     Settings,
     HelpCircle,
-    BellRing
+    BellRing,
+    ShieldCheck
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -101,6 +102,17 @@ const Sidebar = () => {
                              "Enable Mess Alerts"}
                         </div>
                     </button>
+
+                    <Link
+                        href="/app/admin/queries"
+                        className="p-3 rounded-xl text-zinc-400 hover:text-purple-400 hover:bg-purple-500/10 transition-all duration-300 group relative flex justify-center w-full"
+                    >
+                        <ShieldCheck size={20} />
+                        <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 border border-zinc-800 rounded-md text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                            Admin Dashboard
+                        </div>
+                    </Link>
+
                     <button
                         onClick={() => setIsQueryModalOpen(true)}
                         className="p-3 rounded-xl text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-300 group relative flex justify-center w-full"
