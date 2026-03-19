@@ -86,10 +86,10 @@ export default function AxonLabsPage() {
                 Join WhatsApp Updates <ArrowRight size={16} />
               </Link>
               <Link
-                href="/app/dashboard"
+                href="/app/projects"
                 className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10"
               >
-                Back to Dashboard
+                Back to Projects
               </Link>
             </div>
           </Card>

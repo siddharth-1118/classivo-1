@@ -219,7 +219,7 @@ export default function DashboardPage() {
     { name: "Subjects", href: "/app/marks", icon: BookOpenText, color: "text-orange-400" },
     { name: "Chat", href: "/app/chat", icon: MessageSquare, color: "text-indigo-400" },
     { name: "Queries", href: "/app/queries", icon: MessageSquare, color: "text-cyan-300" },
-    { name: "Axon Labs", href: "/app/axon-labs", icon: AxonLabsIcon, color: "text-cyan-300" },
+    { name: "Projects", href: "/app/projects", icon: AxonLabsIcon, color: "text-cyan-300" },
     { name: "Placements", href: "/app/placements", icon: GraduationCap, color: "text-pink-400" },
     { name: "Mess Menu", href: "/app/messmenu", icon: Calendar, color: "text-yellow-400" },
     { name: "Profile", href: "/app/profile", icon: User, color: "text-zinc-400" },
