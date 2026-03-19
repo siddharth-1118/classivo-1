@@ -9,6 +9,7 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import { clearAuthToken } from "@/utils/authStorage";
+import { trackEvent } from "@/lib/analytics";
 
 const Page = () => {
   const router = useRouter();
@@ -16,6 +17,7 @@ const Page = () => {
   useEffect(() => {
     const clearSession = async () => {
       const token = getCookie();
+      trackEvent("logout", { hadToken: Boolean(token) });
       if (token) {
         try {
           await getLogout(token);

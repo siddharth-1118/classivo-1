@@ -13,6 +13,7 @@ import { updateUserCache } from "@/lib/userCache";
 import { token } from "@/utils/Tokenize";
 import { ClassivoLogo } from "@/components/ui/ClassivoLogo";
 import { setAuthToken } from "@/utils/authStorage";
+import { trackEvent } from "@/lib/analytics";
 
 
 type LoginPayload = {
@@ -152,6 +153,7 @@ export const LoginComponent = () => {
             const devToken = `${DEV_TOKEN_PREFIX}${Math.random().toString(36).slice(2)}`;
             setAuthToken(devToken);
             Cookies.set("user", email.mail, { expires: 30, path: "/" });
+            trackEvent("login_success", { mode: "dev" });
             emitAuthEvent("login");
             return (window.location.href = "/app/dashboard");
           } else {
@@ -229,6 +231,7 @@ export const LoginComponent = () => {
           setCaptchaImage(null);
           setCaptchaDigest(null);
           setCaptchaCode("");
+          trackEvent("login_success", { mode: "srm" });
           emitAuthEvent("login");
           return (window.location.href = "/app/dashboard");
         }

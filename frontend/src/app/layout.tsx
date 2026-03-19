@@ -14,6 +14,7 @@ import NavigationWrapper from "./components/NavigationWrapper";
 import QueryProvider from "./app/components/provider";
 import { AIChat } from "./components/AIChat";
 import NotificationPrompt from "./components/NotificationPrompt";
+import { AuthAnalytics } from "./components/AuthAnalytics";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -112,6 +113,7 @@ export default function RootLayout({
         >
           <SwRegister />
           <AuthStateWatcher />
+          <AuthAnalytics />
           <ToasterClientComponent />
           
           <QueryProvider>
