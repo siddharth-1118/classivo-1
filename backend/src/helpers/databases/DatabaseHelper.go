@@ -43,7 +43,7 @@ func NewDatabaseHelper() (*DatabaseHelper, error) {
 	if supabaseUrl == "" || supabaseKey == "" {
 		fmt.Printf("[DB DEBUG] Missing credentials: URL=%v, Key(source:%s)=%v\n", supabaseUrl != "", source, supabaseKey != "")
 	} else {
-		fmt.Printf("[DB DEBUG] Initializing Supabase with URL: %s... Key source: %s, Key length: %d\n", 
+		fmt.Printf("[DB DEBUG] Initializing Supabase with URL: %s... Key source: %s, Key length: %d\n",
 			supabaseUrl[:min(10, len(supabaseUrl))], source, len(supabaseKey))
 	}
 
@@ -68,7 +68,6 @@ func min(a, b int) int {
 func (db *DatabaseHelper) Client() *supabase.Client {
 	return db.client
 }
-
 
 func (db *DatabaseHelper) encrypt(text string) (string, error) {
 	block, err := aes.NewCipher(db.key)
@@ -338,6 +337,15 @@ func (db *DatabaseHelper) VerifySession(hash string) (bool, error) {
 		return false, err
 	}
 	return len(results) > 0, nil
+}
+
+func (db *DatabaseHelper) SaveMessage(room, text string) error {
+	data := map[string]interface{}{
+		"room": room,
+		"text": text,
+	}
+	_, _, err := db.client.From("messages").Insert(data, false, "", "", "").Execute()
+	return err
 }
 
 func (db *DatabaseHelper) VerifyAdmin(email, password string) (bool, error) {

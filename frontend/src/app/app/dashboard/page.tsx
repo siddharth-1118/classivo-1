@@ -216,6 +216,7 @@ export default function DashboardPage() {
     { name: "Attendance", href: "/app/attendance", icon: ChartNoAxesCombined, color: "text-emerald-400" },
     { name: "Marks", href: "/app/marks", icon: TrendingUp, color: "text-purple-400" },
     { name: "Subjects", href: "/app/marks", icon: BookOpenText, color: "text-orange-400" },
+    { name: "Chat", href: "/app/chat", icon: MessageSquare, color: "text-indigo-400" },
     { name: "Queries", href: "/app/queries", icon: MessageSquare, color: "text-cyan-300" },
     { name: "Placements", href: "/app/placements", icon: GraduationCap, color: "text-pink-400" },
     { name: "Mess Menu", href: "/app/messmenu", icon: Calendar, color: "text-yellow-400" },

@@ -6,6 +6,7 @@ import {
     X,
     Bolt,
     Utensils,
+    MessageSquare,
     LucideIcon,
 } from "lucide-react";
 
@@ -18,12 +19,14 @@ export interface NavItem {
 export const navItems: NavItem[] = [
     { name: "Home", href: "/app/dashboard", icon: Home },
     { name: "Attend", href: "/app/attendance", icon: CalendarCheck },
+    { name: "Chat", href: "/app/chat", icon: MessageSquare },
     { name: "Timetable", href: "/app/timetable", icon: Clock },
 ];
 
 export const allPages: NavItem[] = [
     { name: "Dashboard", href: "/app/dashboard", icon: Home },
     { name: "Attendance", href: "/app/attendance", icon: CalendarCheck },
+    { name: "Chat", href: "/app/chat", icon: MessageSquare },
     { name: "Timetable", href: "/app/timetable", icon: Clock },
     { name: "Marks", href: "/app/marks", icon: GraduationCap },
     { name: "Calendar", href: "/app/calendar", icon: CalendarCheck },

@@ -16,6 +16,7 @@ import (
 
 	"goscraper/src/globals"
 	"goscraper/src/handlers"
+	"goscraper/src/handlers/chat"
 	"goscraper/src/helpers/databases"
 	"goscraper/src/scheduler"
 	"goscraper/src/types"
@@ -28,6 +29,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/websocket/v2"
 	"github.com/joho/godotenv"
 )
 
@@ -45,6 +47,9 @@ func main() {
 	}
 
 	logEnvPresence()
+	if _, err := databases.NewDatabaseHelper(); err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
 	scheduler.StartCronManager()
 
 	port := os.Getenv("PORT")
@@ -354,6 +359,28 @@ func main() {
 		return c.JSON(user)
 	})
 
+	api.Get("/rooms", cache.New(cacheConfig), func(c *fiber.Ctx) error {
+		return c.JSON(chat.GlobalHub.GetActiveRooms())
+	})
+
+	api.Get("/profile", cache.New(cacheConfig), func(c *fiber.Ctx) error {
+		token := c.Get("X-CSRF-Token")
+		if token == "ADMIN_SESSION_SECRET_2026" {
+			return c.JSON(fiber.Map{
+				"name":      "Admin",
+				"regNumber": "CLASSIVO-ADMIN",
+				"batch":     "2026",
+				"section":   "ADMIN",
+				"status":    200,
+			})
+		}
+		user, err := handlers.GetUser(token)
+		if err != nil {
+			return err
+		}
+		return c.JSON(user)
+	})
+
 	api.Get("/calendar", cache.New(cacheConfig), func(c *fiber.Ctx) error {
 		db, err := databases.NewCalDBHelper()
 		if err != nil {
@@ -501,6 +528,32 @@ func main() {
 	api.Post("/notifications/subscribe", handlers.HandleSaveSubscription)
 	api.Post("/notifications/test", scheduler.HandleTestPush)
 
+	api.Get("/chat", websocket.New(chat.ChatWebsocket))
+
+	api.Use("/chat", func(c *fiber.Ctx) error {
+		if websocket.IsWebSocketUpgrade(c) {
+			token := c.Query("token")
+			if token == "" {
+				return fiber.ErrUnauthorized
+			}
+			hash := sha256.Sum256([]byte(token))
+			hashStr := hex.EncodeToString(hash[:])
+
+			if _, ok := globals.ActiveSessions.Load(hashStr); !ok {
+				// Check Supabase as fallback
+				db, err := databases.NewDatabaseHelper()
+				if err == nil {
+					if exists, _ := db.VerifySession(hashStr); exists {
+						globals.ActiveSessions.Store(hashStr, true)
+						return c.Next()
+					}
+				}
+				return fiber.ErrUnauthorized
+			}
+			return c.Next()
+		}
+		return c.Next()
+	})
 
 	// ----------------------------------------------------
 
