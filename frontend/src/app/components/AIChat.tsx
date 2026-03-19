@@ -1,7 +1,9 @@
 'use client';
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Bot, User, Loader2, X, BookOpen, Bell, Utensils } from 'lucide-react';
 import menuData from '../../../public/mess_menu.json';
+import { getApiBase } from '@/lib/api';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -12,6 +14,11 @@ type MealType = 'Breakfast' | 'Lunch' | 'Snacks' | 'Dinner';
 type DayType = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
 interface DayMenu { Breakfast: string[]; Lunch: string[]; Snacks: string[]; Dinner: string[]; }
 interface MenuDataType { [key: string]: DayMenu; }
+interface CachedMark {
+  subject?: string;
+  course?: string;
+  total?: { obtained?: number; maxMark?: number };
+}
 
 const dayNames: DayType[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -19,12 +26,14 @@ function getTodayMeal(): { day: DayType; meal: MealType; items: string[] } {
   const now = new Date();
   const day = dayNames[now.getDay()];
   const totalMinutes = now.getHours() * 60 + now.getMinutes();
+
   let meal: MealType = 'Breakfast';
   if (totalMinutes > 22 * 60 + 30) meal = 'Breakfast';
   else if (totalMinutes <= 9 * 60 + 30) meal = 'Breakfast';
   else if (totalMinutes <= 14 * 60 + 30) meal = 'Lunch';
   else if (totalMinutes <= 18 * 60) meal = 'Snacks';
   else meal = 'Dinner';
+
   const data = menuData as MenuDataType;
   const items = data[day]?.[meal] ?? [];
   return { day, meal, items };
@@ -32,12 +41,11 @@ function getTodayMeal(): { day: DayType; meal: MealType; items: string[] } {
 
 function getStudentContext(): string {
   try {
-    // React-query persists data in localStorage under 'REACT_QUERY_OFFLINE_CACHE'
     const raw = localStorage.getItem('REACT_QUERY_OFFLINE_CACHE');
     if (!raw) return '';
+
     const cache = JSON.parse(raw);
     const queries = cache?.clientState?.queries ?? [];
-
     let context = '';
 
     for (const q of queries) {
@@ -56,10 +64,61 @@ function getStudentContext(): string {
         if (name) context += `\n\nSTUDENT NAME: ${name}`;
       }
     }
+
     return context;
   } catch {
     return '';
   }
+}
+
+function getCachedMarks(): CachedMark[] {
+  try {
+    const raw = localStorage.getItem('REACT_QUERY_OFFLINE_CACHE');
+    if (!raw) return [];
+
+    const cache = JSON.parse(raw);
+    const queries = cache?.clientState?.queries ?? [];
+    for (const q of queries) {
+      const key = JSON.stringify(q.queryKey ?? q.queryHash ?? '');
+      const data = q.state?.data;
+      if (data && (key.includes('marks') || key.includes('Marks')) && Array.isArray(data)) {
+        return data as CachedMark[];
+      }
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+function buildLocalFallbackResponse(prompt: string): string | null {
+  const promptText = prompt.toLowerCase();
+  const marks = getCachedMarks();
+
+  if ((promptText.includes('mark') || promptText.includes('score') || promptText.includes('performance')) && marks.length > 0) {
+    const scored = marks
+      .map((mark) => {
+        const obtained = Number(mark.total?.obtained ?? 0);
+        const max = Number(mark.total?.maxMark ?? 0);
+        const percentage = max > 0 ? (obtained / max) * 100 : 0;
+        return {
+          subject: mark.subject || mark.course || 'Subject',
+          percentage,
+        };
+      })
+      .filter((mark) => mark.percentage > 0)
+      .sort((a, b) => b.percentage - a.percentage);
+
+    if (scored.length === 0) return null;
+
+    const average = scored.reduce((sum, item) => sum + item.percentage, 0) / scored.length;
+    const strongest = scored[0];
+    const weakest = scored[scored.length - 1];
+
+    return `Here is a quick marks analysis from your local data.\n\nOverall average: ${average.toFixed(1)}%\nStrongest subject: ${strongest.subject} at ${strongest.percentage.toFixed(1)}%\nNeeds attention: ${weakest.subject} at ${weakest.percentage.toFixed(1)}%\n\nYou are doing ${average >= 75 ? 'well overall' : average >= 60 ? 'decently, but there is room to improve' : 'below a comfortable level right now'}. Focus first on lifting your weakest subject while maintaining your strongest one.`;
+  }
+
+  return null;
 }
 
 function buildSystemPrompt(): string {
@@ -80,7 +139,9 @@ You can help with:
 
 If asked about something completely unrelated to academics or campus life (e.g., entertainment gossip, personal relationships etc.), politely decline and redirect to study/campus topics.
 
-Be concise, warm, and student-friendly. Use the student's name when available. When analysing marks or attendance, be specific and actionable — highlight risks and opportunities.
+If someone asks who made this website, who built this website, or who created Classivo, clearly answer: "This website was made by vss."
+
+Be concise, warm, and student-friendly. Use the student's name when available. When analysing marks or attendance, be specific and actionable - highlight risks and opportunities.
 ${studentCtx}${messInfo}`;
 }
 
@@ -92,7 +153,7 @@ export const AIChat = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: `📚 Hi! I'm Classivo AI — your personal campus assistant powered by NVIDIA Mistral.\n\nI can:\n• Analyse your marks & attendance\n• Help you study and prepare for exams\n• Tell you what's on the mess menu today\n• Send you academic reminders\n\nWhat would you like to know?`
+      content: `Hi! I'm Classivo AI, your personal campus assistant.\n\nI can:\n- Analyse your marks and attendance\n- Help you study and prepare for exams\n- Tell you today's mess menu\n- Guide your daily academic priorities\n\nWhat would you like to know?`
     }
   ]);
   const [input, setInput] = useState('');
@@ -103,7 +164,9 @@ export const AIChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  useEffect(() => { scrollToBottom(); }, [messages, isOpen, scrollToBottom]);
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isOpen, scrollToBottom]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,10 +187,7 @@ export const AIChat = () => {
         }))
       ];
 
-      // Always use the local backend for the AI proxy — it holds the NVIDIA key securely
-      // In production this should point to your deployed backend URL with NVIDIA_API_KEY set
-      const aiBase = process.env.NEXT_PUBLIC_AI_BASE || process.env.NEXT_PUBLIC_API_BASE || '';
-
+      const aiBase = process.env.NEXT_PUBLIC_AI_BASE || getApiBase();
       const response = await fetch(`${aiBase}/api/ai/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -139,6 +199,7 @@ export const AIChat = () => {
       });
 
       if (!response.ok) throw new Error(`API returned ${response.status}`);
+
       const data = await response.json();
       if (data.choices?.length > 0) {
         setMessages((prev) => [...prev, { role: 'assistant', content: data.choices[0].message.content }]);
@@ -147,10 +208,16 @@ export const AIChat = () => {
       }
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages((prev) => [...prev, {
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Make sure the backend is running on port 8080. Try again shortly.'
-      }]);
+      const fallback = buildLocalFallbackResponse(userMsg.content);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: fallback || (error instanceof Error
+            ? `Sorry, I hit an error while responding: ${error.message}`
+            : 'Sorry, I hit an error while responding. Please try again in a moment.')
+        }
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -158,133 +225,145 @@ export const AIChat = () => {
 
   return (
     <>
-      {/* Floating AI Button */}
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label="Open Classivo AI"
-        className="fixed bottom-24 right-4 z-[200] md:bottom-6 md:right-6 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center skeuo-convex border border-emerald-500/30 bg-[#0f1f1a] shadow-[0_0_24px_rgba(52,211,153,0.25)] transition-all duration-300 hover:shadow-[0_0_40px_rgba(52,211,153,0.5)] active:scale-95 active:skeuo-pressed group"
+        className="fixed bottom-24 right-4 z-[220] flex h-14 w-14 items-center justify-center rounded-full border border-emerald-400/30 bg-[linear-gradient(180deg,rgba(9,18,16,0.98),rgba(12,38,30,0.96))] shadow-[0_0_28px_rgba(52,211,153,0.28),0_16px_40px_rgba(0,0,0,0.45)] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_46px_rgba(52,211,153,0.45),0_24px_50px_rgba(0,0,0,0.5)] active:scale-95 group md:bottom-6 md:right-6 md:h-16 md:w-16"
       >
         {isOpen
-          ? <X className="w-6 h-6 text-emerald-400 transition-transform duration-300" />
-          : <Bot className="w-6 h-6 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] group-hover:scale-110 transition-transform duration-300" />
+          ? <X className="h-6 w-6 text-emerald-300 transition-transform duration-300" />
+          : <Bot className="h-6 w-6 text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] transition-transform duration-300 group-hover:scale-110" />
         }
         {!isOpen && <span className="absolute inset-0 rounded-full border border-emerald-400/25 animate-ping" />}
       </button>
 
-      {/* Chat Panel */}
       {isOpen && (
-        <div className="fixed bottom-28 right-6 z-50 w-[380px] sm:w-[420px] flex flex-col h-[560px] rounded-2xl skeuo-flat border border-white/5 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
-          {/* Header */}
-          <div className="flex items-center gap-3 p-4 bg-[#0a0a0a] border-b border-white/5 flex-shrink-0">
-            <div className="w-9 h-9 rounded-full bg-[#0f1f1a] skeuo-pressed flex items-center justify-center flex-shrink-0">
-              <Bot className="w-5 h-5 text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.7)]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-white/90 leading-none">Classivo AI</h3>
-              <div className="flex items-center gap-1.5 mt-1">
-                <BookOpen className="w-3 h-3 text-emerald-500" />
-                <p className="text-[10px] text-emerald-500 font-medium tracking-wide uppercase">Study & Campus Assistant · NVIDIA</p>
-              </div>
-            </div>
-            <button onClick={() => setIsOpen(false)} className="text-white/30 hover:text-white/70 transition-colors p-1">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+        <>
+          <button
+            aria-label="Close AI chat"
+            className="fixed inset-0 z-[205] bg-[radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.12),transparent_25%),linear-gradient(180deg,rgba(3,6,10,0.52),rgba(3,6,10,0.72))] backdrop-blur-[6px]"
+            onClick={() => setIsOpen(false)}
+          />
 
-          {/* Mess Notification Banner */}
-          {showMessBanner && items.length > 0 && (
-            <div className="px-4 py-2.5 bg-amber-950/50 border-b border-amber-800/30 flex items-start gap-2 flex-shrink-0">
-              <Utensils className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider mb-0.5">
-                  🍽 Today&apos;s {meal} · {day}
-                </p>
-                <p className="text-[11px] text-amber-200/80 leading-relaxed truncate">
-                  {items.slice(0, 4).join(' · ')}{items.length > 4 ? ' · ...' : ''}
-                </p>
+          <div className="fixed bottom-28 right-3 z-[210] flex h-[580px] w-[calc(100vw-1.5rem)] max-w-[430px] flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,14,18,0.96),rgba(5,8,12,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.04),0_0_50px_rgba(16,185,129,0.08)] backdrop-blur-2xl md:bottom-6 md:right-6 md:w-[430px]">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.12),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_28%)]" />
+
+            <div className="relative z-10 flex flex-shrink-0 items-center gap-3 border-b border-white/10 bg-black/35 px-4 py-4">
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-emerald-400/20 bg-[linear-gradient(180deg,rgba(10,35,28,1),rgba(8,18,16,1))] shadow-[0_0_20px_rgba(52,211,153,0.12)]">
+                <Bot className="h-5 w-5 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.7)]" />
               </div>
-              <button onClick={() => setShowMessBanner(false)} className="text-amber-500/50 hover:text-amber-400 transition-colors flex-shrink-0">
-                <X className="w-3 h-3" />
+              <div className="min-w-0 flex-1">
+                <h3 className="leading-none font-semibold text-white">Classivo AI</h3>
+                <div className="mt-1 flex items-center gap-1.5">
+                  <BookOpen className="h-3 w-3 text-emerald-400" />
+                  <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-emerald-300/90">Study and Campus Assistant</p>
+                </div>
+              </div>
+              <div className="hidden rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-zinc-300 sm:block">
+                Premium Mode
+              </div>
+              <button onClick={() => setIsOpen(false)} className="p-1 text-white/40 transition-colors hover:text-white/80">
+                <X className="h-4 w-4" />
               </button>
             </div>
-          )}
 
-          {/* Capability chips */}
-          <div className="px-3 py-2 bg-black/20 border-b border-white/5 flex gap-1.5 overflow-x-auto flex-shrink-0">
-            {[
-              { icon: Bell, label: 'My Marks', prompt: 'Analyse my marks and tell me how I am doing.' },
-              { icon: BookOpen, label: 'Attendance', prompt: 'Check my attendance and tell me which subjects are risky.' },
-              { icon: Utensils, label: 'Mess Menu', prompt: `What is today's mess menu for ${meal}?` },
-            ].map(({ icon: Icon, label, prompt }) => (
-              <button
-                key={label}
-                onClick={() => { setInput(prompt); }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-white/60 hover:text-white/90 transition-all flex-shrink-0"
-              >
-                <Icon className="w-3 h-3" />
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-black/30 min-h-0">
-            {messages.map((msg, idx) => (
-              <div key={idx} className={`flex gap-2.5 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center skeuo-pressed bg-[#111]">
-                  {msg.role === 'user'
-                    ? <User className="w-3.5 h-3.5 text-white/60" />
-                    : <Bot className="w-3.5 h-3.5 text-emerald-400" />}
+            {showMessBanner && items.length > 0 && (
+              <div className="relative z-10 mx-4 mt-4 flex flex-shrink-0 items-start gap-3 rounded-2xl border border-amber-400/15 bg-[linear-gradient(180deg,rgba(120,53,15,0.28),rgba(69,26,3,0.24))] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-amber-400/10 text-amber-300">
+                  <Utensils className="h-3.5 w-3.5" />
                 </div>
-                <div className={`max-w-[82%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed whitespace-pre-wrap ${
-                  msg.role === 'user'
-                    ? 'bg-[#1a1a1a] text-white/90 skeuo-convex rounded-tr-sm'
-                    : 'bg-[#0d0d0d] text-white/80 skeuo-flat rounded-tl-sm'
-                }`}>
-                  {msg.content}
+                <div className="min-w-0 flex-1">
+                  <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-300">
+                    Today&apos;s {meal} | {day}
+                  </p>
+                  <p className="truncate text-[11px] leading-relaxed text-amber-100/80">
+                    {items.slice(0, 4).join(' | ')}{items.length > 4 ? ' | ...' : ''}
+                  </p>
                 </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-[#111] skeuo-pressed flex-shrink-0 flex items-center justify-center">
-                  <Loader2 className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
-                </div>
-                <div className="rounded-2xl px-4 py-3 text-[13px] bg-[#0d0d0d] text-white/50 skeuo-flat rounded-tl-sm flex items-center gap-1.5">
-                  Thinking<span className="animate-pulse">...</span>
-                </div>
+                <button onClick={() => setShowMessBanner(false)} className="flex-shrink-0 text-amber-200/45 transition-colors hover:text-amber-200">
+                  <X className="h-3 w-3" />
+                </button>
               </div>
             )}
-            <div ref={messagesEndRef} />
-          </div>
 
-          {/* Input Area */}
-          <div className="p-3 bg-[#0a0a0a] border-t border-white/5 flex-shrink-0">
-            <form onSubmit={handleSubmit} className="flex gap-2">
-              <div className="flex-1 rounded-xl bg-[#111] skeuo-pressed outline outline-1 outline-white/5 focus-within:outline-white/15 transition-all">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask about marks, attendance, mess..."
-                  className="w-full bg-transparent text-white/90 text-[13px] px-3 py-2.5 focus:outline-none placeholder:text-white/25"
-                  disabled={isLoading}
-                />
+            <div className="relative z-10 mx-4 mt-3 flex flex-shrink-0 gap-2 overflow-x-auto pb-1">
+              {[
+                { icon: Bell, label: 'My Marks', prompt: 'Analyse my marks and tell me how I am doing.' },
+                { icon: BookOpen, label: 'Attendance', prompt: 'Check my attendance and tell me which subjects are risky.' },
+                { icon: Utensils, label: 'Mess Menu', prompt: `What is today's mess menu for ${meal}?` },
+              ].map(({ icon: Icon, label, prompt }) => (
+                <button
+                  key={label}
+                  onClick={() => setInput(prompt)}
+                  className="flex flex-shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/6 px-3 py-2 text-[11px] text-white/70 transition-all hover:border-emerald-400/20 hover:bg-white/10 hover:text-white"
+                >
+                  <Icon className="h-3 w-3" />
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative z-10 mt-3 flex min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+              <div className="w-full space-y-4 rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                {messages.map((msg, idx) => (
+                  <div key={idx} className={`flex gap-2.5 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/8 bg-[#101317]">
+                      {msg.role === 'user'
+                        ? <User className="h-3.5 w-3.5 text-white/70" />
+                        : <Bot className="h-3.5 w-3.5 text-emerald-400" />}
+                    </div>
+                    <div className={`max-w-[84%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-[13px] leading-relaxed shadow-[0_10px_30px_rgba(0,0,0,0.18)] ${
+                      msg.role === 'user'
+                        ? 'rounded-tr-sm border border-white/10 bg-[linear-gradient(180deg,rgba(38,38,38,0.9),rgba(20,20,20,0.95))] text-white/92'
+                        : 'rounded-tl-sm border border-emerald-400/10 bg-[linear-gradient(180deg,rgba(9,24,20,0.92),rgba(10,12,14,0.96))] text-white/84'
+                    }`}>
+                      {msg.content}
+                    </div>
+                  </div>
+                ))}
+
+                {isLoading && (
+                  <div className="flex gap-2.5">
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/8 bg-[#101317]">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-400" />
+                    </div>
+                    <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm border border-emerald-400/10 bg-[linear-gradient(180deg,rgba(9,24,20,0.92),rgba(10,12,14,0.96))] px-4 py-3 text-[13px] text-white/55 shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
+                      Thinking<span className="animate-pulse">...</span>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
               </div>
-              <button
-                type="submit"
-                disabled={!input.trim() || isLoading}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 flex-shrink-0 ${
-                  !input.trim() || isLoading
-                    ? 'bg-[#111] text-white/20 skeuo-flat cursor-not-allowed'
-                    : 'bg-[#0f1f1a] text-emerald-400 skeuo-convex border border-emerald-900/50 hover:border-emerald-700/50 active:scale-95 active:skeuo-pressed'
-                }`}
-              >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              </button>
-            </form>
+            </div>
+
+            <div className="relative z-10 flex-shrink-0 border-t border-white/8 bg-black/25 p-4">
+              <form onSubmit={handleSubmit} className="flex gap-2">
+                <div className="flex-1 rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,18,0.95),rgba(10,10,10,0.98))] px-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] outline outline-1 outline-transparent transition-all focus-within:border-emerald-400/15 focus-within:outline-emerald-400/20">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask about marks, attendance, mess..."
+                    className="w-full bg-transparent px-3 py-3 text-[13px] text-white/90 placeholder:text-white/30 focus:outline-none"
+                    disabled={isLoading}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={!input.trim() || isLoading}
+                  className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl transition-all duration-200 ${
+                    !input.trim() || isLoading
+                      ? 'cursor-not-allowed border border-white/8 bg-[#111315] text-white/20'
+                      : 'border border-emerald-400/25 bg-[linear-gradient(180deg,rgba(14,51,41,0.98),rgba(8,28,22,0.98))] text-emerald-300 shadow-[0_12px_28px_rgba(16,185,129,0.16)] hover:scale-[1.02] hover:border-emerald-300/35 hover:text-white active:scale-95'
+                  }`}
+                >
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </button>
+              </form>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );

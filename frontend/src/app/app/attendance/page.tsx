@@ -73,6 +73,20 @@ const AttendancePage = () => {
     }
     return acc;
   }, 0);
+  const attendanceSorted = [...data].sort((a, b) => Number(a.courseAttendance) - Number(b.courseAttendance));
+  const highestAttendance = [...data].sort((a, b) => Number(b.courseAttendance) - Number(a.courseAttendance))[0];
+  const mostCriticalSubject = attendanceSorted[0];
+  const mustAttendTotal = data.reduce((acc, item) => {
+    if (item.courseAttendanceStatus?.status === "required") {
+      return acc + Number(item.courseAttendanceStatus.classes || 0);
+    }
+    return acc;
+  }, 0);
+  const oneClassStressCount = data.filter((item) => {
+    const attended = item.courseConducted - item.courseAbsent;
+    const projected = ((attended / (item.courseConducted + 1)) * 100);
+    return projected < 75;
+  }).length;
 
   const attendanceGraphData = [...data]
     .sort((a, b) => Number(b.courseAttendance) - Number(a.courseAttendance))
@@ -239,6 +253,52 @@ const AttendancePage = () => {
         </Card>
       </div>
 
+      <Card className="relative overflow-hidden border-premium-gold/20 bg-[linear-gradient(180deg,rgba(212,175,55,0.08),rgba(255,255,255,0.02))] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
+        <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-premium-gold/10 blur-3xl" />
+        <div className="relative z-10">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="text-xs uppercase tracking-[0.24em] text-premium-gold">Predictor Cockpit</div>
+              <h2 className="mt-2 text-xl font-display text-white">What happens next if attendance slips?</h2>
+              <p className="mt-1 max-w-3xl text-sm text-zinc-300">
+                This quick predictor turns your current data into decisions students actually need: what is critical, what is safe, and how fragile your buffer is.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <PredictorInsight
+              title="Critical Subject"
+              value={mostCriticalSubject ? `${mostCriticalSubject.courseCode} at ${mostCriticalSubject.courseAttendance}%` : "No subject data"}
+              caption={mostCriticalSubject?.courseAttendanceStatus?.status === "required"
+                ? `Need ${mostCriticalSubject.courseAttendanceStatus.classes} class${mostCriticalSubject.courseAttendanceStatus.classes === 1 ? "" : "es"} to recover`
+                : "This is currently your lowest attendance subject"}
+              tone="danger"
+            />
+            <PredictorInsight
+              title="Best Buffer"
+              value={highestAttendance ? `${highestAttendance.courseCode} at ${highestAttendance.courseAttendance}%` : "No subject data"}
+              caption={highestAttendance?.courseAttendanceStatus?.status === "margin"
+                ? `Can still miss ${highestAttendance.courseAttendanceStatus.classes} more`
+                : "Strongest subject right now"}
+              tone="safe"
+            />
+            <PredictorInsight
+              title="Must-Attend Total"
+              value={`${mustAttendTotal}`}
+              caption="Combined classes you need across shortage subjects"
+              tone="warning"
+            />
+            <PredictorInsight
+              title="1-Class Stress Test"
+              value={`${oneClassStressCount}`}
+              caption="Subjects that fall below 75% if one more class is missed"
+              tone="default"
+            />
+          </div>
+        </div>
+      </Card>
+
       <div className="space-y-4">
         <h2 className="text-sm font-bold text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2 px-1">
           <div className="w-1.5 h-1.5 rounded-full bg-premium-gold shadow-[0_0_8px_rgba(212,175,55,0.5)]"></div>
@@ -286,6 +346,33 @@ const AttendancePage = () => {
 };
 
 export default AttendancePage;
+
+const PredictorInsight = ({
+  title,
+  value,
+  caption,
+  tone,
+}: {
+  title: string;
+  value: string;
+  caption: string;
+  tone: "danger" | "safe" | "warning" | "default";
+}) => {
+  const toneClass = {
+    danger: "border-red-400/15 bg-red-500/8 text-red-200",
+    safe: "border-emerald-400/15 bg-emerald-500/8 text-emerald-200",
+    warning: "border-amber-400/15 bg-amber-500/8 text-amber-100",
+    default: "border-white/10 bg-white/5 text-white",
+  }[tone];
+
+  return (
+    <div className={`rounded-2xl border p-4 ${toneClass}`}>
+      <div className="text-[10px] uppercase tracking-[0.22em] text-zinc-500">{title}</div>
+      <div className="mt-2 text-lg font-semibold">{value}</div>
+      <div className="mt-2 text-sm leading-6 text-zinc-300">{caption}</div>
+    </div>
+  );
+};
 
 
 interface RangePredictResult {
