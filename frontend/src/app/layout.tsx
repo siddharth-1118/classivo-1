@@ -76,11 +76,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico" },
+      { url: "/favicon-16.png", type: "image/png", sizes: "16x16" },
+      { url: "/favicon-32.png", type: "image/png", sizes: "32x32" },
       { url: "/favicon-512.png", type: "image/png", sizes: "512x512" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
     ],
-    shortcut: "/favicon-512.png",
-    apple: "/favicon-512.png",
+    shortcut: ["/favicon.ico"],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 
@@ -91,9 +94,12 @@ export default function RootLayout({
 }>) {
   return (
     <ViewTransitions>
-      <html lang="en" suppressHydrationWarning>
+      <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
         <head>
-          <link rel="icon" href="/favicon-512.png" type="image/png" />
+          <link rel="icon" href="/favicon.ico" sizes="any" />
+          <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+          <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+          <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
           <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
           <link rel="manifest" href="/site.webmanifest?v=9" />
           <meta name="theme-color" content="#09090b" />
