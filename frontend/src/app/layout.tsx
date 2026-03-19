@@ -76,14 +76,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico" },
-      { url: "/favicon-16.png", type: "image/png", sizes: "16x16" },
-      { url: "/favicon-32.png", type: "image/png", sizes: "32x32" },
-      { url: "/favicon-512.png", type: "image/png", sizes: "512x512" },
-      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico?v=10" },
+      { url: "/favicon-16.png?v=10", type: "image/png", sizes: "16x16" },
+      { url: "/favicon-32.png?v=10", type: "image/png", sizes: "32x32" },
+      { url: "/favicon-512.png?v=10", type: "image/png", sizes: "512x512" },
+      { url: "/favicon.svg?v=10", type: "image/svg+xml" },
     ],
-    shortcut: ["/favicon.ico"],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/favicon.ico?v=10"],
+    apple: [{ url: "/apple-touch-icon.png?v=10", sizes: "180x180", type: "image/png" }],
   },
 };
 
@@ -96,12 +96,12 @@ export default function RootLayout({
     <ViewTransitions>
       <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
         <head>
-          <link rel="icon" href="/favicon.ico" sizes="any" />
-          <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
-          <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
-          <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-          <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-          <link rel="manifest" href="/site.webmanifest?v=9" />
+          <link rel="icon" href="/favicon.ico?v=10" sizes="any" />
+          <link rel="icon" href="/favicon-32.png?v=10" type="image/png" sizes="32x32" />
+          <link rel="icon" href="/favicon-16.png?v=10" type="image/png" sizes="16x16" />
+          <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=10" />
+          <link rel="icon" href="/favicon.svg?v=10" type="image/svg+xml" />
+          <link rel="manifest" href="/site.webmanifest?v=10" />
           <meta name="theme-color" content="#09090b" />
         </head>
         <body
