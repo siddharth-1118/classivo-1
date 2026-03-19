@@ -1,0 +1,63 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="1200" fill="url(#bg)"/>
+  <rect x="66" y="92" width="1068" height="156" rx="28" fill="#312E81"/>
+  <text x="600" y="175" text-anchor="middle" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="74" font-weight="700">SRM STUDENTS</text>
+  <text x="600" y="235" text-anchor="middle" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="62" font-weight="700">CREATIVE PROJECTS</text>
+  <g opacity="0.95">
+    <path d="M184 340C320 250 497 257 596 354C674 431 722 454 864 434C956 421 1022 447 1070 508V925H138V416C144 389 157 363 184 340Z" fill="#67E8F9"/>
+    <path d="M106 312C278 166 499 181 642 310C747 405 816 431 958 402C1035 386 1092 402 1146 442V108H48V290C63 286 82 291 106 312Z" fill="#F59E0B"/>
+    <path d="M382 316C462 306 535 333 621 434C699 525 785 542 911 497C989 469 1056 477 1134 528V769C1038 708 942 704 839 746C707 801 605 770 505 643C425 540 373 505 267 506C191 507 130 532 74 585V391C149 340 250 324 382 316Z" fill="#F9A8D4" fill-opacity="0.68"/>
+  </g>
+  <text x="435" y="418" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="70" font-weight="700">Physics</text>
+  <text x="435" y="510" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="70" font-weight="700">Semiconductor</text>
+  <text x="435" y="602" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="70" font-weight="700">EEE</text>
+  <text x="435" y="694" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="70" font-weight="700">COA</text>
+  <text x="435" y="786" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="70" font-weight="700">EMT</text>
+  <text x="435" y="878" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="70" font-weight="700">IoT</text>
+  <text x="435" y="970" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="70" font-weight="700">Arduino</text>
+  <text x="435" y="1038" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="70" font-weight="700">Based Projects</text>
+  <circle cx="388" cy="396" r="10" fill="#312E81"/>
+  <circle cx="388" cy="488" r="10" fill="#312E81"/>
+  <circle cx="388" cy="580" r="10" fill="#312E81"/>
+  <circle cx="388" cy="672" r="10" fill="#312E81"/>
+  <circle cx="388" cy="764" r="10" fill="#312E81"/>
+  <circle cx="388" cy="856" r="10" fill="#312E81"/>
+  <circle cx="388" cy="948" r="10" fill="#312E81"/>
+  <g stroke="#312E81" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="196" cy="430" r="52"/>
+    <circle cx="196" cy="430" r="16"/>
+    <path d="M196 362V498"/>
+    <path d="M136 398H256"/>
+    <path d="M150 470C177 448 215 448 242 470"/>
+    <rect x="124" y="549" width="120" height="120" rx="18"/>
+    <path d="M160 585H208V633H160V585Z"/>
+    <path d="M95 786C95 735 136 694 187 694C238 694 279 735 279 786C279 837 238 878 187 878C136 878 95 837 95 786Z"/>
+    <path d="M152 781H223"/>
+    <path d="M187 746C214 746 237 769 237 796"/>
+    <path d="M179 976H244V1041H179V976Z"/>
+    <path d="M211 944V1073"/>
+    <circle cx="760" cy="631" r="42"/>
+    <path d="M760 559V607"/>
+    <path d="M760 655V703"/>
+    <path d="M688 631H736"/>
+    <path d="M784 631H832"/>
+    <path d="M924 392H1040V508H924V392Z"/>
+    <path d="M982 422L1006 466H958L982 422Z"/>
+    <path d="M902 760C902 718 936 684 978 684C1020 684 1054 718 1054 760"/>
+    <path d="M934 760C934 736 954 716 978 716C1002 716 1022 736 1022 760"/>
+    <rect x="890" y="882" width="184" height="124" rx="18"/>
+    <path d="M934 940H1030"/>
+    <path d="M934 970H1000"/>
+  </g>
+  <rect x="62" y="1070" width="1076" height="112" rx="24" fill="#312E81"/>
+  <text x="600" y="1146" text-anchor="middle" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="64" font-weight="700">DM or Call: 93445 40354</text>
+  <defs>
+    <linearGradient id="bg" x1="51" y1="33" x2="1125" y2="1169" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0EA5E9"/>
+      <stop offset="0.24" stop-color="#F97316"/>
+      <stop offset="0.56" stop-color="#A855F7"/>
+      <stop offset="0.82" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#FACC15"/>
+    </linearGradient>
+  </defs>
+</svg>

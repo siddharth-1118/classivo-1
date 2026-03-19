@@ -21,7 +21,7 @@ import {
     Sparkles
 } from "lucide-react";
 import { useUserInfo } from "@/hooks/query";
-import { AxonLabsIcon } from "@/components/ui/AxonLabsIcon";
+import { ProjectsHubIcon } from "@/components/ui/ProjectsHubIcon";
 
 interface SidebarProps {
     isOpen: boolean;
@@ -43,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         { name: "Courses", href: "/app/course", icon: BookOpen },
         { name: "Calendar", href: "/app/calendar", icon: Calendar },
         { name: "GradeX", href: "/app/gradex", icon: Calculator },
-        { name: "Projects", href: "/app/projects", icon: AxonLabsIcon },
+        { name: "Projects", href: "/app/projects", icon: ProjectsHubIcon },
         { name: "Mess Menu", href: "/app/messmenu", icon: Calendar },
         { name: "Profile", href: "/app/profile", icon: User },
         { name: "Join Community", href: "https://chat.whatsapp.com/KCbxvabSvRbK96h67JF3Io", icon: Users },

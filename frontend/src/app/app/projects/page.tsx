@@ -6,6 +6,8 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { Badge } from "@/app/components/ui/Badge";
 import { Card } from "@/app/components/ui/Card";
 import { AxonLabsIcon } from "@/components/ui/AxonLabsIcon";
+import { MinimixIcon } from "@/components/ui/MinimixIcon";
+import { ProjectsHubIcon } from "@/components/ui/ProjectsHubIcon";
 
 const projectPartners = [
   {
@@ -16,6 +18,17 @@ const projectPartners = [
     badge: "Live Now",
     image: "/axon-labs-poster.svg",
     imageAlt: "Axon Labs poster",
+    icon: AxonLabsIcon,
+  },
+  {
+    name: "Minimix",
+    href: "/app/minimix",
+    description:
+      "Affordable SRM engineering projects with full support, direct calling access, WhatsApp group updates, and a strong first impression for labs and viva.",
+    badge: "New Partner",
+    image: "/minimix-poster.svg",
+    imageAlt: "Minimix poster",
+    icon: MinimixIcon,
   },
 ];
 
@@ -28,7 +41,7 @@ export default function ProjectsPage() {
         <Card className="border-white/10 bg-white/5 p-6 sm:p-8">
           <div className="flex items-center gap-3">
             <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 p-3">
-              <AxonLabsIcon className="h-12 w-12" />
+              <ProjectsHubIcon className="h-12 w-12" />
             </div>
             <div>
               <Badge variant="outline" className="border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
@@ -39,8 +52,8 @@ export default function ProjectsPage() {
           </div>
 
           <p className="mt-5 max-w-3xl text-sm leading-7 text-zinc-300 sm:text-base">
-            Discover student-friendly project partners inside Classivo. Start with Axon Labs now, and this hub can
-            grow with more labs and builders later.
+            Discover student-friendly project partners inside Classivo. Start with Axon Labs and Minimix now, and this
+            hub can keep growing as more labs join.
           </p>
         </Card>
 
@@ -59,16 +72,19 @@ export default function ProjectsPage() {
                 </div>
 
                 <div className="flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline" className="border-emerald-400/20 bg-emerald-400/10 text-emerald-200">
-                        {partner.badge}
-                      </Badge>
-                      <span className="text-xs uppercase tracking-[0.22em] text-zinc-500">Project Partner</span>
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <Badge variant="outline" className="border-emerald-400/20 bg-emerald-400/10 text-emerald-200">
+                          {partner.badge}
+                        </Badge>
+                        <span className="text-xs uppercase tracking-[0.22em] text-zinc-500">Project Partner</span>
+                      </div>
+                      <div className="mt-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+                        <partner.icon className="h-7 w-7" />
+                      </div>
+                      <h2 className="mt-4 text-2xl font-semibold text-white">{partner.name}</h2>
+                      <p className="mt-3 text-sm leading-7 text-zinc-300">{partner.description}</p>
                     </div>
-                    <h2 className="mt-4 text-2xl font-semibold text-white">{partner.name}</h2>
-                    <p className="mt-3 text-sm leading-7 text-zinc-300">{partner.description}</p>
-                  </div>
 
                   <Link
                     href={partner.href}
@@ -81,7 +97,7 @@ export default function ProjectsPage() {
             </Card>
           ))}
 
-          <Card className="border-dashed border-white/10 bg-white/5 p-6">
+          <Card className="border-dashed border-white/10 bg-white/5 p-6 lg:col-span-2">
             <div className="flex items-center gap-3 text-cyan-200">
               <Sparkles size={18} />
               More labs can be added here

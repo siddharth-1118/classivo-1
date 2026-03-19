@@ -27,7 +27,7 @@ import { Card } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { ClassivoLogo } from "@/components/ui/ClassivoLogo";
-import { AxonLabsIcon } from "@/components/ui/AxonLabsIcon";
+import { ProjectsHubIcon } from "@/components/ui/ProjectsHubIcon";
 import { TotalMarksCard } from "@/app/components/TotalMarksCard";
 
 const CALENDAR_MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -219,7 +219,7 @@ export default function DashboardPage() {
     { name: "Subjects", href: "/app/marks", icon: BookOpenText, color: "text-orange-400" },
     { name: "Chat", href: "/app/chat", icon: MessageSquare, color: "text-indigo-400" },
     { name: "Queries", href: "/app/queries", icon: MessageSquare, color: "text-cyan-300" },
-    { name: "Projects", href: "/app/projects", icon: AxonLabsIcon, color: "text-cyan-300" },
+    { name: "Projects", href: "/app/projects", icon: ProjectsHubIcon, color: "text-cyan-300" },
     { name: "Placements", href: "/app/placements", icon: GraduationCap, color: "text-pink-400" },
     { name: "Mess Menu", href: "/app/messmenu", icon: Calendar, color: "text-yellow-400" },
     { name: "Profile", href: "/app/profile", icon: User, color: "text-zinc-400" },
