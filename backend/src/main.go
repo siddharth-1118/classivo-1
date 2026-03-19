@@ -238,6 +238,7 @@ func main() {
 	})
 
 	api.Post("/admin/queries", handlers.HandleGetQueries)
+	api.Post("/admin/analytics", handlers.HandleGetAnalytics)
 
 	// Universal error handling middleware
 	app.Use(func(c *fiber.Ctx) error {
@@ -292,6 +293,9 @@ func main() {
 		session, err := lf.Login(creds.Username, creds.Password, creds.Cdigest, creds.Captcha)
 		if err != nil {
 			return err
+		}
+		if session != nil && session.Authenticated {
+			go handlers.RecordLoginSuccess(creds.Username)
 		}
 
 		return c.JSON(session)
@@ -525,6 +529,7 @@ func main() {
 	})
 
 	api.Post("/queries", handlers.HandleSubmitQuery)
+	api.Post("/analytics/pageview", handlers.HandleTrackPageView)
 	api.Post("/notifications/subscribe", handlers.HandleSaveSubscription)
 	api.Post("/notifications/test", scheduler.HandleTestPush)
 
@@ -654,7 +659,7 @@ func fetchAllData(token string) (map[string]interface{}, error) {
 func isPublicRoute(path string) bool {
 	path = strings.TrimSuffix(path, "/")
 	switch path {
-	case "/api/login", "/api/health", "/api/admin/logout-all", "/api/logout", "/api/ai/chat", "/api/admin/queries", "/api/notifications/subscribe":
+	case "/api/login", "/api/health", "/api/admin/logout-all", "/api/logout", "/api/ai/chat", "/api/admin/queries", "/api/admin/analytics", "/api/notifications/subscribe", "/api/analytics/pageview":
 		return true
 	default:
 		return false

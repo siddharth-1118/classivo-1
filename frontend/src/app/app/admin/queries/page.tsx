@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { 
     RefreshCw, 
     Mail, 
@@ -9,6 +10,8 @@ import {
     MessageSquare,
     Lock
 } from "lucide-react";
+import { getApiBase } from "@/lib/api";
+import { clearAdminSession, getAdminSession, isAdminAuthenticated, setAdminSession } from "@/utils/adminSession";
 
 interface StudentQuery {
     id: string;
@@ -32,15 +35,15 @@ const AdminQueriesPage = () => {
         setLoading(true);
         setError("");
         try {
-            const apiBase = process.env.NEXT_PUBLIC_API_BASE || "https://siddu1118-classivo-backend.hf.space";
-            const response = await fetch(`${apiBase}/api/admin/queries`, {
+            const session = getAdminSession();
+            const response = await fetch(`${getApiBase()}/api/admin/queries`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({ 
-                    email: adminEmail || "admin@classivo.com", 
-                    password: adminPassword || "ClassivoAdmin2026!" 
+                    email: session.email || adminEmail || "admin@classivo.com", 
+                    password: session.password || adminPassword || "ClassivoAdmin2026!" 
                 }),
             });
 
@@ -60,7 +63,10 @@ const AdminQueriesPage = () => {
 
     useEffect(() => {
         const checkAuth = () => {
-            if (sessionStorage.getItem("admin_auth") === "true") {
+            const session = getAdminSession();
+            if (session.email) setAdminEmail(session.email);
+            if (session.password) setAdminPassword(session.password);
+            if (isAdminAuthenticated()) {
                 setIsAuthorized(true);
                 fetchQueries();
             } else {
@@ -72,7 +78,7 @@ const AdminQueriesPage = () => {
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
-        sessionStorage.setItem("admin_auth", "true");
+        setAdminSession(adminEmail, adminPassword);
         setIsAuthorized(true);
         fetchQueries();
     };
@@ -146,6 +152,12 @@ const AdminQueriesPage = () => {
                         <p className="text-zinc-400 mt-1">Manage and respond to student inquiries from the portal.</p>
                     </div>
                     <div className="flex gap-2">
+                        <Link
+                            href="/app/admin/analytics"
+                            className="flex items-center gap-2 px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 rounded-xl border border-cyan-500/20 transition-all text-sm"
+                        >
+                            Analytics
+                        </Link>
                         <button
                             onClick={fetchQueries}
                             disabled={loading}
@@ -156,7 +168,7 @@ const AdminQueriesPage = () => {
                         </button>
                         <button
                             onClick={() => {
-                                sessionStorage.removeItem("admin_auth");
+                                clearAdminSession();
                                 setIsAuthorized(false);
                             }}
                             className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl border border-red-500/20 transition-all text-sm"

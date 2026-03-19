@@ -112,24 +112,7 @@ func HandleGetQueries(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid body"})
 	}
 
-	// Support both direct Email/Password (deprecated soon) and the new Unified Token
-	valid := false
-	if body.Email != "" && body.Password != "" {
-		// 1. Try Supabase verification
-		db, err := databases.NewDatabaseHelper()
-		if err == nil {
-			valid, _ = db.VerifyAdmin(body.Email, body.Password)
-		}
-
-		// 2. Fallback to hardcoded admin (backup)
-		if !valid && body.Email == "admin@classivo.com" && body.Password == "ClassivoAdmin2026!" {
-			valid = true
-		}
-	} else if body.Token == "ADMIN_SESSION_SECRET_2026" {
-		// 3. Special token check (already bypasses middleware, but double check here)
-		valid = true
-	}
-
+	valid, _ := validateAdminCredentials(body)
 	if !valid {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Invalid administrative credentials or session token.",
@@ -144,7 +127,8 @@ func HandleGetQueries(c *fiber.Ctx) error {
 	var results []map[string]interface{}
 	_, err = db.Client().From("queries").Select("*", "", false).ExecuteTo(&results)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch queries"})
+		log.Printf("[ADMIN QUERIES ERR] Failed to fetch queries: %v", err)
+		return c.Status(fiber.StatusOK).JSON([]interface{}{}) // Return empty instead of 500
 	}
 
 	return c.JSON(results)
