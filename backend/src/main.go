@@ -121,7 +121,7 @@ func main() {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing X-CSRF-Token"})
 		}
 
-		if rawToken == "ADMIN_SESSION_SECRET_2026" {
+		if rawToken == "vss" {
 			return c.Next()
 		}
 
@@ -231,7 +231,7 @@ func main() {
 
 	api.Get("/attendance", cache.New(cacheConfig), func(c *fiber.Ctx) error {
 		token := c.Get("X-CSRF-Token")
-		if token == "ADMIN_SESSION_SECRET_2026" {
+		if token == "vss" {
 			return c.JSON(fiber.Map{"attendance": []interface{}{}})
 		}
 		attendance, err := handlers.GetAttendance(token)
@@ -243,7 +243,7 @@ func main() {
 
 	api.Get("/marks", cache.New(cacheConfig), func(c *fiber.Ctx) error {
 		token := c.Get("X-CSRF-Token")
-		if token == "ADMIN_SESSION_SECRET_2026" {
+		if token == "vss" {
 			return c.JSON(fiber.Map{"markList": []interface{}{}})
 		}
 		marks, err := handlers.GetMarks(token)
@@ -255,7 +255,7 @@ func main() {
 
 	api.Get("/courses", cache.New(cacheConfig), func(c *fiber.Ctx) error {
 		token := c.Get("X-CSRF-Token")
-		if token == "ADMIN_SESSION_SECRET_2026" {
+		if token == "vss" {
 			return c.JSON(fiber.Map{"courseList": []interface{}{}})
 		}
 		courses, err := handlers.GetCourses(token)
@@ -267,7 +267,7 @@ func main() {
 
 	api.Get("/profile", cache.New(cacheConfig), func(c *fiber.Ctx) error {
 		token := c.Get("X-CSRF-Token")
-		if token == "ADMIN_SESSION_SECRET_2026" {
+		if token == "vss" {
 			return c.JSON(fiber.Map{"name": "Admin", "section": "ADMIN", "regNumber": "ADMIN"})
 		}
 		user, err := handlers.GetUser(token)
@@ -279,7 +279,7 @@ func main() {
 
 	api.Get("/timetable", cache.New(cacheConfig), func(c *fiber.Ctx) error {
 		token := c.Get("X-CSRF-Token")
-		if token == "ADMIN_SESSION_SECRET_2026" {
+		if token == "vss" {
 			return c.JSON(fiber.Map{"schedule": []interface{}{}})
 		}
 		tt, err := handlers.GetTimetable(token)
@@ -320,7 +320,7 @@ func main() {
 
 	api.Get("/get", cache.New(cacheConfig), func(c *fiber.Ctx) error {
 		token := c.Get("X-CSRF-Token")
-		if token == "ADMIN_SESSION_SECRET_2026" {
+		if token == "vss" {
 			return c.JSON(fiber.Map{"user": fiber.Map{"name": "Admin"}})
 		}
 		encodedToken := utils.Encode(token)
