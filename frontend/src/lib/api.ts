@@ -34,10 +34,16 @@ export function getApiBase(): string {
   if (memoizedBase !== undefined) {
     return memoizedBase;
   }
-  // Always use a relative path for the API base. 
-  // This will be correctly proxied by Next.js's rewrite configuration.
-  memoizedBase = "";
-  logApi("using same-origin relative /api routes");
+  
+  const envBase = process.env.NEXT_PUBLIC_API_BASE || "";
+  memoizedBase = sanitizeBase(resolveApiBase(envBase));
+  
+  if (!memoizedBase) {
+    logApi("using same-origin relative /api routes");
+  } else {
+    logApi(`using configured API base: ${memoizedBase}`);
+  }
+  
   return memoizedBase;
 }
 
