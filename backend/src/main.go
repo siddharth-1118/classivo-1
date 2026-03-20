@@ -268,7 +268,7 @@ func main() {
 	api.Get("/profile", cache.New(cacheConfig), func(c *fiber.Ctx) error {
 		token := c.Get("X-CSRF-Token")
 		if token == "vss" {
-			return c.JSON(fiber.Map{"name": "Admin", "section": "ADMIN", "regNumber": "ADMIN"})
+			return c.JSON(fiber.Map{"name": "vss", "section": "ADMIN", "regNumber": "ADMIN"})
 		}
 		user, err := handlers.GetUser(token)
 		if err != nil {
