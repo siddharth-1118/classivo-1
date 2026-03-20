@@ -1,6 +1,8 @@
 'use client';
 import React, { useState } from 'react';
 import { MessageSquare, Send, X, Loader2, CheckCircle } from 'lucide-react';
+import { getApiBase } from '@/lib/api';
+import { expireSession, getSessionToken } from '@/utils/sessionClient';
 
 interface QueryModalProps {
   isOpen: boolean;
@@ -24,20 +26,34 @@ export default function QueryModal({ isOpen, onClose }: QueryModalProps) {
     setStatus('idle');
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080';
-      const token = localStorage.getItem('classivo_token');
+      const apiBase = getApiBase();
+      const token = getSessionToken();
+
+      if (!token) {
+        throw new Error(expireSession());
+      }
       
       const response = await fetch(`${apiBase}/api/queries`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          ...(token ? { 
+            'Authorization': `Bearer ${token}`,
+            'X-CSRF-Token': token
+          } : {}),
         },
         body: JSON.stringify({ subject, message }),
       });
 
+      const result = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        throw new Error(expireSession(typeof result?.error === 'string' ? result.error : undefined));
+      }
+
       if (!response.ok) {
-        throw new Error('Failed to send query');
+        throw new Error(
+          typeof result?.error === 'string' ? result.error : 'Failed to send query'
+        );
       }
 
       setStatus('success');

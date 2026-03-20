@@ -339,13 +339,37 @@ func (db *DatabaseHelper) VerifySession(hash string) (bool, error) {
 	return len(results) > 0, nil
 }
 
-func (db *DatabaseHelper) SaveMessage(room, text string) error {
+func (db *DatabaseHelper) SaveChatMessage(room, text, senderId, senderAlias string) error {
 	data := map[string]interface{}{
-		"room": room,
-		"text": text,
+		"room":         room,
+		"text":         text,
+		"sender_id":    senderId,
+		"sender_alias": senderAlias,
+		"created_at":   time.Now().Format(time.RFC3339),
 	}
 	_, _, err := db.client.From("messages").Insert(data, false, "", "", "").Execute()
 	return err
+}
+
+func (db *DatabaseHelper) GetRecentMessages(room string, limit int) ([]map[string]interface{}, error) {
+	var results []map[string]interface{}
+	query := map[string]string{"room": room}
+	_, err := db.client.From("messages").
+		Select("*", "", false).
+		Match(query).
+		Limit(limit, "").
+		ExecuteTo(&results)
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	// Reverse to show in chronological order
+	for i, j := 0, len(results)-1; i < j; i, j = i+1, j-1 {
+		results[i], results[j] = results[j], results[i]
+	}
+	
+	return results, nil
 }
 
 func (db *DatabaseHelper) VerifyAdmin(email, password string) (bool, error) {

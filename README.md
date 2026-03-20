@@ -67,6 +67,24 @@ create table public.gocal (
 );
 ```
 
+**Create the `queries` table:**
+
+```sql
+create extension if not exists pgcrypto;
+
+create table public.queries (
+  id uuid primary key default gen_random_uuid(),
+  user_email text not null,
+  subject text not null,
+  message text not null,
+  status text not null default 'Open',
+  created_at timestamp with time zone not null default timezone('utc'::text, now())
+);
+
+grant usage on schema public to anon, authenticated, service_role;
+grant select, insert on public.queries to anon, authenticated, service_role;
+```
+
 ### 2\. CRON Jobs
 
 Enable the `pg_cron` extension in Supabase and schedule the following maintenance jobs.

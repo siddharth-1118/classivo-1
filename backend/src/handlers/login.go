@@ -555,9 +555,14 @@ func (lf *LoginFetcher) GetSession(password string, lookup map[string]interface{
 		return nil, err
 	}
 
-	// Return the full accumulated cookie jar, not just the cookies set on the
-	// final password request. Subsequent SRM page fetches rely on the complete set.
-	cookies := strings.ReplaceAll(jar.headerValue(), " ", "")
+	// Normalize cookies: split by semicolon, remove spaces from each pair, and sort for consistency
+	rawCookies := jar.headerValue()
+	parts := strings.Split(rawCookies, ";")
+	for i := range parts {
+		parts[i] = strings.ReplaceAll(parts[i], " ", "")
+	}
+	sort.Strings(parts)
+	cookies := strings.Join(parts, ";")
 
 	if cookies == "" {
 		fmt.Printf("Warning: No cookies found in accumulated login jar\n")

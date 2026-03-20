@@ -2,14 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 
 const useWebSocket = (url: string, token?: string) => {
   const [messages, setMessages] = useState<string[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
   const webSocketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const wsUrl = token ? `${url}?token=${token}` : url;
+    if (!url) return;
+
+    const wsUrl = token ? `${url}?token=${encodeURIComponent(token)}` : url;
     const ws = new WebSocket(wsUrl);
     webSocketRef.current = ws;
 
     ws.onopen = () => {
+      setIsConnected(true);
       console.log('WebSocket connection established');
     };
 
@@ -18,11 +22,15 @@ const useWebSocket = (url: string, token?: string) => {
     };
 
     ws.onclose = () => {
+      setIsConnected(false);
       console.log('WebSocket connection closed');
     };
 
     return () => {
-      ws.close();
+      if (webSocketRef.current) {
+        webSocketRef.current.close();
+      }
+      setIsConnected(false);
     };
   }, [url, token]);
 
@@ -32,7 +40,7 @@ const useWebSocket = (url: string, token?: string) => {
     }
   };
 
-  return { messages, sendMessage };
+  return { messages, sendMessage, isConnected };
 };
 
 export default useWebSocket;

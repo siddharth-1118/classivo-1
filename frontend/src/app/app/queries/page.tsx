@@ -1,30 +1,41 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BookOpenText, CheckCircle2, Send } from "lucide-react";
+import { toast } from "sonner";
 import { Card } from "@/app/components/ui/Card";
 import { getApiBase } from "@/lib/api";
+import { expireSession, getSessionToken } from "@/utils/sessionClient";
 
 export default function QueriesPage() {
-  const [subject, setSubject] = React.useState("");
-  const [message, setMessage] = React.useState("");
-  const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
-  const [error, setError] = React.useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setToken(getSessionToken() ?? null);
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!subject.trim() || !message.trim()) return;
+    if (!subject.trim() || !message.trim()) {
+      toast.error("Subject and message cannot be empty.");
+      return;
+    }
+    if (!token) {
+      toast.error(expireSession());
+      return;
+    }
 
-    setStatus("loading");
-    setError("");
-
+    setIsLoading(true);
     try {
-      const token = localStorage.getItem("classivo_token");
       const response = await fetch(`${getApiBase()}/api/queries`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${token}`,
+          "X-CSRF-Token": token,
         },
         body: JSON.stringify({
           subject: subject.trim(),
@@ -32,18 +43,22 @@ export default function QueriesPage() {
         }),
       });
 
+      const result = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        throw new Error(expireSession(typeof result?.error === "string" ? result.error : undefined));
+      }
       if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        throw new Error((payload && typeof payload.error === "string" && payload.error) || "Failed to send query");
+        throw new Error(result.error || "Failed to send query.");
       }
 
-      setStatus("success");
+      toast.success(result.message || "Query sent successfully!");
       setSubject("");
       setMessage("");
-      setTimeout(() => setStatus("idle"), 3000);
-    } catch (err) {
-      setStatus("error");
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -89,25 +104,15 @@ export default function QueriesPage() {
               />
             </div>
 
-            {status === "error" ? (
-              <div className="rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-200">
-                {error}
-              </div>
-            ) : null}
 
-            {status === "success" ? (
-              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">
-                Query sent successfully. Admin will receive it in the dashboard.
-              </div>
-            ) : null}
 
             <button
               type="submit"
-              disabled={status === "loading" || !subject.trim() || !message.trim()}
+              disabled={isLoading || !subject.trim() || !message.trim()}
               className="inline-flex items-center justify-center gap-2 rounded-2xl border border-premium-gold/20 bg-premium-gold px-5 py-3 text-sm font-semibold text-black transition-all hover:bg-[#f3cf63] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Send size={16} />
-              {status === "loading" ? "Sending..." : "Send Query"}
+              {isLoading ? "Sending..." : "Send Query"}
             </button>
           </form>
         </Card>

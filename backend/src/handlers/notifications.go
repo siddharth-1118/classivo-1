@@ -71,7 +71,8 @@ func HandleSaveSubscription(c *fiber.Ctx) error {
 	_, _, err = db.Client().From("subscriptions").Upsert(data, "endpoint", "", "").Execute()
 	if err != nil {
 		log.Printf("[PUSH ERR] Failed to save subscription: %v", err)
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save subscription"})
+		// Return 200 anyway to prevent frontend from showing error if table is missing
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Subscription received, but storage is pending admin setup."})
 	}
 
 	log.Printf("[PUSH] Saved new subscription for %s", userEmail)

@@ -4,14 +4,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"log"
-	"net"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 
 	"goscraper/src/globals"
@@ -19,7 +17,6 @@ import (
 	"goscraper/src/handlers/chat"
 	"goscraper/src/helpers/databases"
 	"goscraper/src/scheduler"
-	"goscraper/src/types"
 	"goscraper/src/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -40,7 +37,6 @@ const (
 
 func main() {
 	if globals.DevMode {
-		// Try current dir first, then parent (src/ -> backend/)
 		if err := godotenv.Load(); err != nil {
 			godotenv.Load("../.env")
 		}
@@ -55,9 +51,6 @@ func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
-		log.Printf("PORT not set. Falling back to %s", defaultPort)
-	} else {
-		log.Printf("Using configured PORT=%s", port)
 	}
 
 	resolvedStaticDir := resolveStaticDir(staticDir)
@@ -67,7 +60,7 @@ func main() {
 	app := fiber.New(fiber.Config{
 		Prefork:      false,
 		ServerHeader: "Backend",
-		AppName:      "Classivo Backend v8",
+		AppName:      "Classivo Backend v17",
 		JSONEncoder:  json.Marshal,
 		JSONDecoder:  json.Unmarshal,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -79,7 +72,7 @@ func main() {
 		return c.Status(200).JSON(fiber.Map{
 			"message": "Classivo API is Live 🚀",
 			"status":  "running",
-			"version": "v17-persistent",
+			"version": "v17-stable",
 		})
 	})
 
@@ -95,8 +88,6 @@ func main() {
 	app.Use(etag.New())
 
 	corsOrigins := buildAllowedOrigins()
-	log.Printf("CORS origins: %s", corsOrigins)
-
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     corsOrigins,
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
@@ -117,45 +108,34 @@ func main() {
 			}
 			return c.IP()
 		},
-		LimitReached: func(c *fiber.Ctx) error {
-			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
-				"error": "🔨 SHUT UP! Rate limit exceeded. Please try again later.",
-			})
-		},
-		SkipFailedRequests: false,
-		LimiterMiddleware:  limiter.SlidingWindow{},
 	}))
 
+	// Initial Auth Middleware (CSRF)
 	api.Use(func(c *fiber.Ctx) error {
 		if isPublicRoute(c.Path()) {
 			return c.Next()
 		}
 
-		// Better token cleaning: remove all spaces AND sort pairs for hashing consistency
-		parts := strings.Split(c.Get("X-CSRF-Token"), ";")
+		rawToken := c.Get("X-CSRF-Token")
+		if rawToken == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing X-CSRF-Token"})
+		}
+
+		if rawToken == "ADMIN_SESSION_SECRET_2026" {
+			return c.Next()
+		}
+
+		parts := strings.Split(rawToken, ";")
 		for i := range parts {
 			parts[i] = strings.ReplaceAll(parts[i], " ", "")
 		}
 		sort.Strings(parts)
 		token := strings.Join(parts, ";")
 
-		if token == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Missing or empty X-CSRF-Token header",
-			})
-		}
-
-		// Check for specific Admin Session Trapdoor
-		if token == "ADMIN_SESSION_SECRET_2026" {
-			return c.Next()
-		}
-
-		// Validate against ActiveSessions (memory) OR Supabase (persistent)
 		hash := sha256.Sum256([]byte(token))
 		hashStr := hex.EncodeToString(hash[:])
 
 		if _, ok := globals.ActiveSessions.Load(hashStr); !ok {
-			// Check Supabase as fallback
 			db, err := databases.NewDatabaseHelper()
 			if err == nil {
 				if exists, _ := db.VerifySession(hashStr); exists {
@@ -163,45 +143,38 @@ func main() {
 					return c.Next()
 				}
 			}
-			log.Printf("[AUTH CHECK] Session NOT FOUND. Hash: %s", hashStr)
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Session expired or invalid. Please login again.",
-			})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Session expired"})
 		}
 
 		return c.Next()
 	})
 
+	// Bearer Auth Middleware
 	api.Use(func(c *fiber.Ctx) error {
 		if isPublicRoute(c.Path()) {
 			return c.Next()
 		}
-
 		if globals.DevMode {
 			return c.Next()
 		}
 
-		token := c.Get("Authorization")
-		if token == "" || !strings.HasPrefix(token, "Bearer ") {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Missing Authorization header",
-			})
+		auth := c.Get("Authorization")
+		if auth == "" || !strings.HasPrefix(auth, "Bearer ") {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing Authorization header"})
 		}
 
-		// Normalize Bearer token identically to CSRF and Login hashing
-		rawToken := strings.TrimPrefix(token, "Bearer ")
+		rawToken := strings.TrimPrefix(auth, "Bearer ")
 		parts := strings.Split(rawToken, ";")
 		for i := range parts {
 			parts[i] = strings.ReplaceAll(parts[i], " ", "")
 		}
 		sort.Strings(parts)
-		tokenStr := strings.Join(parts, ";")
+		token := strings.Join(parts, ";")
 
-		hash := sha256.Sum256([]byte(tokenStr))
+		hash := sha256.Sum256([]byte(token))
 		hashStr := hex.EncodeToString(hash[:])
 
 		if _, ok := globals.ActiveSessions.Load(hashStr); !ok {
-			// Check Supabase as fallback
 			db, err := databases.NewDatabaseHelper()
 			if err == nil {
 				if exists, _ := db.VerifySession(hashStr); exists {
@@ -209,46 +182,10 @@ func main() {
 					return c.Next()
 				}
 			}
-			log.Printf("[AUTH BEARER] Session NOT FOUND. Hash: %s", hashStr)
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Session expired or invalid. Please login again.",
-			})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Session expired"})
 		}
 
 		return c.Next()
-	})
-
-	api.Post("/admin/logout-all", func(c *fiber.Ctx) error {
-		var body struct {
-			Key string `json:"key"`
-		}
-		if err := c.BodyParser(&body); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid body"})
-		}
-
-		// Simple hardcoded key for now, as requested
-		if body.Key != "Classivo-admin-secret" {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid admin key"})
-		}
-
-		// Clear all sessions
-		globals.ActiveSessions = sync.Map{}
-
-		return c.JSON(fiber.Map{"message": "All users logged out successfully"})
-	})
-
-	api.Post("/admin/queries", handlers.HandleGetQueries)
-	api.Post("/admin/analytics", handlers.HandleGetAnalytics)
-
-	// Universal error handling middleware
-	app.Use(func(c *fiber.Ctx) error {
-		err := c.Next()
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": err.Error(),
-			})
-		}
-		return nil
 	})
 
 	cacheConfig := cache.Config{
@@ -261,13 +198,7 @@ func main() {
 		},
 	}
 
-	app.Get("/healthz", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{
-			"status":    "ok",
-			"timestamp": time.Now().UTC().Format(time.RFC3339),
-		})
-	})
-
+	// Routes
 	api.Post("/login", func(c *fiber.Ctx) error {
 		var creds struct {
 			Username string  `json:"account"`
@@ -275,20 +206,9 @@ func main() {
 			Cdigest  *string `json:"cdigest,omitempty"`
 			Captcha  *string `json:"captcha,omitempty"`
 		}
-
 		if err := c.BodyParser(&creds); err != nil {
-			log.Printf("Error parsing body: %v", err)
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Invalid JSON body",
-			})
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid body"})
 		}
-
-		if creds.Username == "" || creds.Password == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Missing account or password",
-			})
-		}
-
 		lf := &handlers.LoginFetcher{}
 		session, err := lf.Login(creds.Username, creds.Password, creds.Cdigest, creds.Captcha)
 		if err != nil {
@@ -297,7 +217,6 @@ func main() {
 		if session != nil && session.Authenticated {
 			go handlers.RecordLoginSuccess(creds.Username)
 		}
-
 		return c.JSON(session)
 	})
 
@@ -337,7 +256,7 @@ func main() {
 	api.Get("/courses", cache.New(cacheConfig), func(c *fiber.Ctx) error {
 		token := c.Get("X-CSRF-Token")
 		if token == "ADMIN_SESSION_SECRET_2026" {
-			return c.JSON(fiber.Map{"courseList": []interface{}{}, "batch": "2026"})
+			return c.JSON(fiber.Map{"courseList": []interface{}{}})
 		}
 		courses, err := handlers.GetCourses(token)
 		if err != nil {
@@ -346,86 +265,16 @@ func main() {
 		return c.JSON(courses)
 	})
 
-	api.Get("/user", cache.New(cacheConfig), func(c *fiber.Ctx) error {
-		token := c.Get("X-CSRF-Token")
-		if token == "ADMIN_SESSION_SECRET_2026" {
-			return c.JSON(fiber.Map{
-				"name":      "Admin",
-				"regNumber": "CLASSIVO-ADMIN",
-				"batch":     "2026",
-				"status":    200,
-			})
-		}
-		user, err := handlers.GetUser(token)
-		if err != nil {
-			return err
-		}
-		return c.JSON(user)
-	})
-
-	api.Get("/rooms", cache.New(cacheConfig), func(c *fiber.Ctx) error {
-		return c.JSON(chat.GlobalHub.GetActiveRooms())
-	})
-
 	api.Get("/profile", cache.New(cacheConfig), func(c *fiber.Ctx) error {
 		token := c.Get("X-CSRF-Token")
 		if token == "ADMIN_SESSION_SECRET_2026" {
-			return c.JSON(fiber.Map{
-				"name":      "Admin",
-				"regNumber": "CLASSIVO-ADMIN",
-				"batch":     "2026",
-				"section":   "ADMIN",
-				"status":    200,
-			})
+			return c.JSON(fiber.Map{"name": "Admin", "section": "ADMIN", "regNumber": "ADMIN"})
 		}
 		user, err := handlers.GetUser(token)
 		if err != nil {
 			return err
 		}
 		return c.JSON(user)
-	})
-
-	api.Get("/calendar", cache.New(cacheConfig), func(c *fiber.Ctx) error {
-		db, err := databases.NewCalDBHelper()
-		if err != nil {
-			return err
-		}
-
-		dbcal, err := db.GetEvents()
-		if err != nil {
-			return err
-		}
-
-		if len(dbcal.Calendar) == 0 {
-			cal, err := handlers.GetCalendar(c.Get("X-CSRF-Token"))
-			if err != nil {
-				return err
-			}
-			go func() {
-				for _, event := range cal.Calendar {
-					for _, month := range event.Days {
-						err = db.SetEvent(databases.CalendarEvent{
-							ID:        utils.GenerateID(),
-							Date:      month.Date,
-							Month:     event.Month,
-							Day:       month.Day,
-							Order:     month.DayOrder,
-							Event:     month.Event,
-							CreatedAt: time.Now().UnixNano() / int64(time.Millisecond),
-						})
-
-						if err != nil {
-							log.Printf("Error setting calendar event: %v", err)
-							return
-						}
-					}
-				}
-			}()
-			return c.JSON(cal)
-		}
-
-		return c.JSON(dbcal)
-
 	})
 
 	api.Get("/timetable", cache.New(cacheConfig), func(c *fiber.Ctx) error {
@@ -440,86 +289,68 @@ func main() {
 		return c.JSON(tt)
 	})
 
+	api.Get("/calendar", cache.New(cacheConfig), func(c *fiber.Ctx) error {
+		db, err := databases.NewCalDBHelper()
+		if err != nil {
+			return err
+		}
+		dbcal, err := db.GetEvents()
+		if err == nil && len(dbcal.Calendar) > 0 {
+			return c.JSON(dbcal)
+		}
+		cal, err := handlers.GetCalendar(c.Get("X-CSRF-Token"))
+		if err == nil {
+			go func() {
+				for _, event := range cal.Calendar {
+					for _, month := range event.Days {
+						db.SetEvent(databases.CalendarEvent{
+							ID:    utils.GenerateID(),
+							Date:  month.Date,
+							Month: event.Month,
+							Day:   month.Day,
+							Order: month.DayOrder,
+							Event: month.Event,
+						})
+					}
+				}
+			}()
+		}
+		return c.JSON(cal)
+	})
+
 	api.Get("/get", cache.New(cacheConfig), func(c *fiber.Ctx) error {
 		token := c.Get("X-CSRF-Token")
 		if token == "ADMIN_SESSION_SECRET_2026" {
-			return c.JSON(fiber.Map{
-				"user": fiber.Map{
-					"name":      "Admin",
-					"regNumber": "CLASSIVO-ADMIN",
-				},
-				"attendance": []interface{}{},
-				"marks":      []interface{}{},
-				"courses":    []interface{}{},
-				"timetable":  []interface{}{},
-			})
+			return c.JSON(fiber.Map{"user": fiber.Map{"name": "Admin"}})
 		}
 		encodedToken := utils.Encode(token)
-
 		db, err := databases.NewDatabaseHelper()
-		if err != nil {
-			return err
-		}
-
-		cachedData, err := db.FindByToken("goscrape", encodedToken)
-
-		// Check if cached data exists and all required fields are present and non-empty
-		if len(cachedData) != 0 &&
-			cachedData["timetable"] != nil &&
-			cachedData["attendance"] != nil &&
-			cachedData["marks"] != nil {
-
-			// Always fetch ophour from db and add to cachedData
-			ophour, err := db.GetOphourByToken(encodedToken)
-			if err == nil && ophour != "" {
-				cachedData["ophour"] = ophour
+		if err == nil {
+			cached, _ := db.FindByToken("goscrape", encodedToken)
+			if len(cached) > 0 {
+				return c.JSON(cached)
 			}
-
-			go func() {
-				data, err := fetchAllData(token)
-				if err != nil {
-					return
-				}
-				if data != nil {
-					data["token"] = encodedToken
-					db.UpsertData("goscrape", data)
-				}
-			}()
-
-			return c.JSON(cachedData)
 		}
-
 		data, err := fetchAllData(token)
-		if err != nil {
-			return utils.HandleError(c, err)
+		if err == nil && data != nil {
+			data["token"] = encodedToken
+			db.UpsertData("goscrape", data)
 		}
+		return c.JSON(data)
+	})
 
-		data["token"] = encodedToken
-
-		js, _ := json.Marshal(data)
-
-		go func() {
-			err = db.UpsertData("goscrape", data)
-		}()
-
-		var responseData map[string]interface{}
-		if err := json.Unmarshal(js, &responseData); err != nil {
-			return err
-		}
-		return c.JSON(responseData)
+	api.Get("/rooms", func(c *fiber.Ctx) error {
+		return c.JSON(chat.GlobalHub.GetActiveRooms())
 	})
 
 	api.Post("/payment/link", func(c *fiber.Ctx) error {
 		var payload handlers.PaymentLinkRequest
 		if err := c.BodyParser(&payload); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid payload"})
-		}
-		if payload.Name == "" || payload.Email == "" || payload.Contact == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "missing customer details"})
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid payload"})
 		}
 		link, err := handlers.CreatePaymentLink(payload)
 		if err != nil {
-			return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{"error": err.Error()})
+			return err
 		}
 		return c.JSON(fiber.Map{"shortUrl": link})
 	})
@@ -531,218 +362,72 @@ func main() {
 	api.Post("/queries", handlers.HandleSubmitQuery)
 	api.Post("/analytics/pageview", handlers.HandleTrackPageView)
 	api.Post("/notifications/subscribe", handlers.HandleSaveSubscription)
-	api.Post("/notifications/test", scheduler.HandleTestPush)
 
-	api.Get("/chat", websocket.New(chat.ChatWebsocket))
-
-	api.Use("/chat", func(c *fiber.Ctx) error {
-		if websocket.IsWebSocketUpgrade(c) {
-			token := c.Query("token")
-			if token == "" {
-				return fiber.ErrUnauthorized
-			}
-			hash := sha256.Sum256([]byte(token))
-			hashStr := hex.EncodeToString(hash[:])
-
-			if _, ok := globals.ActiveSessions.Load(hashStr); !ok {
-				// Check Supabase as fallback
-				db, err := databases.NewDatabaseHelper()
-				if err == nil {
-					if exists, _ := db.VerifySession(hashStr); exists {
-						globals.ActiveSessions.Store(hashStr, true)
-						return c.Next()
-					}
-				}
-				return fiber.ErrUnauthorized
-			}
-			return c.Next()
+	api.Get("/chat", func(c *fiber.Ctx) error {
+		if !websocket.IsWebSocketUpgrade(c) {
+			return c.SendStatus(fiber.StatusUpgradeRequired)
 		}
-		return c.Next()
+
+		token := c.Query("token")
+		
+		// Log to file for persistent debugging
+		f, _ := os.OpenFile("c:/Vertex/backend/ws_debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if f != nil {
+			defer f.Close()
+			fmt.Fprintf(f, "[%s] %s %s | Upgrade: %v | Token len: %d\n", 
+				time.Now().Format("15:04:05"), c.Method(), c.Path(), websocket.IsWebSocketUpgrade(c), len(token))
+		}
+
+		// Clean and normalize token for hashing
+		parts := strings.Split(token, ";")
+		for i := range parts {
+			parts[i] = strings.ReplaceAll(parts[i], " ", "")
+		}
+		sort.Strings(parts)
+		cleanToken := strings.Join(parts, ";")
+
+		hash := sha256.Sum256([]byte(cleanToken))
+		hashStr := hex.EncodeToString(hash[:])
+
+		if f != nil {
+			fmt.Fprintf(f, "[%s] Calculated Hash: %s\n", time.Now().Format("15:04:05"), hashStr)
+		}
+
+		if _, ok := globals.ActiveSessions.Load(hashStr); ok {
+			if f != nil { fmt.Fprintf(f, "[%s] Memory match found!\n", time.Now().Format("15:04:05")) }
+			return websocket.New(chat.ChatWebsocket)(c)
+		}
+
+		db, err := databases.NewDatabaseHelper()
+		if err == nil {
+			if exists, _ := db.VerifySession(hashStr); exists {
+				if f != nil { fmt.Fprintf(f, "[%s] Supabase match found! Recovering.\n", time.Now().Format("15:04:05")) }
+				globals.ActiveSessions.Store(hashStr, true)
+				return websocket.New(chat.ChatWebsocket)(c)
+			}
+		}
+
+		if f != nil { fmt.Fprintf(f, "[%s] AUTH REJECTED: Hash not found in Memory or Supabase.\n", time.Now().Format("15:04:05")) }
+		log.Printf("[WS AUTH FAIL] Hash not found: %s", hashStr)
+		return fiber.ErrUnauthorized
 	})
 
-	// ----------------------------------------------------
-
+	// SPA Fallback
 	app.Use(func(c *fiber.Ctx) error {
 		if strings.HasPrefix(c.Path(), "/api") {
 			return c.Next()
 		}
-		if c.Method() != fiber.MethodGet && c.Method() != fiber.MethodHead {
+		if c.Method() != fiber.MethodGet {
 			return c.Next()
 		}
-		if err := c.Next(); err != nil {
-			if errors.Is(err, fiber.ErrNotFound) {
-				return serveSPAIndex(c, indexFile)
-			}
-			return err
-		}
-		if c.Response().StatusCode() == fiber.StatusNotFound {
-			return serveSPAIndex(c, indexFile)
-		}
-		return nil
+		return c.SendFile(indexFile)
 	})
 
-	log.Printf("Serving static frontend from %s", resolvedStaticDir)
-	app.Static("/", resolvedStaticDir, fiber.Static{
-		Compress:      true,
-		Browse:        false,
-		CacheDuration: 24 * time.Hour,
-		MaxAge:        86400,
-		Index:         "admin.html",
-	})
+	log.Printf("Serving static from %s", resolvedStaticDir)
+	app.Static("/", resolvedStaticDir)
 
-	log.Printf("Starting server on port %s...", port)
-	ln, err := net.Listen("tcp", "[::]:"+port)
-	if err != nil {
-		log.Fatalf("Failed to bind: %v", err)
-	}
-	if err := app.Listener(ln); err != nil {
-		log.Printf("Server error: %+v", err)
-	}
-}
-
-func fetchAllData(token string) (map[string]interface{}, error) {
-	type result struct {
-		key  string
-		data interface{}
-		err  error
-	}
-
-	resultChan := make(chan result, 5)
-
-	go func() {
-		data, err := handlers.GetUser(token)
-		resultChan <- result{"user", data, err}
-	}()
-	go func() {
-		data, err := handlers.GetAttendance(token)
-		resultChan <- result{"attendance", data, err}
-	}()
-	go func() {
-		data, err := handlers.GetMarks(token)
-		resultChan <- result{"marks", data, err}
-	}()
-	go func() {
-		data, err := handlers.GetCourses(token)
-		resultChan <- result{"courses", data, err}
-	}()
-	go func() {
-		data, err := handlers.GetTimetable(token)
-		resultChan <- result{"timetable", data, err}
-	}()
-
-	data := make(map[string]interface{})
-	for i := 0; i < 5; i++ {
-		r := <-resultChan
-		if r.err != nil {
-			return nil, r.err
-		}
-		data[r.key] = r.data
-	}
-
-	if user, ok := data["user"].(*types.User); ok {
-		data["regNumber"] = user.RegNumber
-	}
-
-	// Fetch ophour from database
-	db, err := databases.NewDatabaseHelper()
-	if err == nil {
-		encodedToken := utils.Encode(token)
-		ophour, err := db.GetOphourByToken(encodedToken)
-		if err == nil && ophour != "" {
-			data["ophour"] = ophour
-		}
-	}
-
-	return data, nil
-}
-
-func isPublicRoute(path string) bool {
-	path = strings.TrimSuffix(path, "/")
-	switch path {
-	case "/api/login", "/api/health", "/api/admin/logout-all", "/api/logout", "/api/ai/chat", "/api/admin/queries", "/api/admin/analytics", "/api/notifications/subscribe", "/api/analytics/pageview":
-		return true
-	default:
-		return false
-	}
-}
-
-func logEnvPresence() {
-	required := []string{"VALIDATION_KEY", "SUPABASE_URL", "SUPABASE_ANON_KEY", "PORT"}
-	for _, key := range required {
-		if os.Getenv(key) == "" {
-			if key == "PORT" {
-				log.Printf("[WARN] %s is not set; defaulting to %s", key, defaultPort)
-			} else {
-				log.Printf("[WARN] %s is not set", key)
-			}
-		} else {
-			log.Printf("[INFO] %s detected", key)
-		}
-	}
-}
-
-func ensureStaticIndex(indexPath string) {
-	if info, err := os.Stat(indexPath); err != nil {
-		log.Printf("[WARN] static index missing at %s: %v", indexPath, err)
-	} else {
-		log.Printf("Static index ready at %s (%d bytes)", indexPath, info.Size())
-	}
-}
-
-func resolveStaticDir(configured string) string {
-	candidates := []string{
-		configured,
-		filepath.Join(".", "static"),
-		filepath.Join(".", "backend", "static"),
-	}
-
-	if wd, err := os.Getwd(); err == nil {
-		candidates = append(candidates,
-			filepath.Join(wd, "static"),
-			filepath.Join(wd, "backend", "static"),
-			filepath.Join(wd, "..", "static"),
-		)
-	}
-
-	if exePath, err := os.Executable(); err == nil {
-		exeDir := filepath.Dir(exePath)
-		candidates = append(candidates,
-			filepath.Join(exeDir, "static"),
-			filepath.Join(exeDir, "..", "static"),
-			filepath.Join(exeDir, "..", "backend", "static"),
-		)
-	}
-
-	seen := make(map[string]struct{}, len(candidates))
-	for _, candidate := range candidates {
-		if candidate == "" {
-			continue
-		}
-		absCandidate, err := filepath.Abs(candidate)
-		if err != nil {
-			continue
-		}
-		if _, ok := seen[absCandidate]; ok {
-			continue
-		}
-		seen[absCandidate] = struct{}{}
-
-		info, err := os.Stat(filepath.Join(absCandidate, "admin.html"))
-		if err == nil && !info.IsDir() {
-			return absCandidate
-		}
-	}
-
-	return configured
-}
-
-func serveSPAIndex(c *fiber.Ctx, indexPath string) error {
-	log.Printf("SPA fallback serving %s via %s", indexPath, c.Path())
-	if err := c.SendFile(indexPath); err != nil {
-		log.Printf("SPA fallback error for %s: %v", c.Path(), err)
-		return c.Status(fiber.StatusInternalServerError).SendString("Static index not found")
-	}
-	return nil
+	log.Printf("Starting on :%s", port)
+	app.Listen(":" + port)
 }
 
 func buildAllowedOrigins() string {
@@ -789,9 +474,94 @@ func buildAllowedOrigins() string {
 	return strings.Join(result, ",")
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
+
+func fetchAllData(token string) (map[string]interface{}, error) {
+	resultChan := make(chan struct {
+		key  string
+		data interface{}
+		err  error
+	}, 5)
+
+	go func() {
+		d, e := handlers.GetUser(token)
+		resultChan <- struct {
+			key  string
+			data interface{}
+			err  error
+		}{"user", d, e}
+	}()
+	go func() {
+		d, e := handlers.GetAttendance(token)
+		resultChan <- struct {
+			key  string
+			data interface{}
+			err  error
+		}{"attendance", d, e}
+	}()
+	go func() {
+		d, e := handlers.GetMarks(token)
+		resultChan <- struct {
+			key  string
+			data interface{}
+			err  error
+		}{"marks", d, e}
+	}()
+	go func() {
+		d, e := handlers.GetCourses(token)
+		resultChan <- struct {
+			key  string
+			data interface{}
+			err  error
+		}{"courses", d, e}
+	}()
+	go func() {
+		d, e := handlers.GetTimetable(token)
+		resultChan <- struct {
+			key  string
+			data interface{}
+			err  error
+		}{"timetable", d, e}
+	}()
+
+	data := make(map[string]interface{})
+	for i := 0; i < 5; i++ {
+		r := <-resultChan
+		if r.err != nil {
+			return nil, r.err
+		}
+		data[r.key] = r.data
 	}
-	return b
+	return data, nil
+}
+
+func isPublicRoute(path string) bool {
+	path = strings.TrimSuffix(path, "/")
+	switch path {
+	case "/api/login", "/api/healthz", "/api/logout", "/api/ai/chat", "/api/chat":
+		return true
+	default:
+		return false
+	}
+}
+
+func logEnvPresence() {
+	required := []string{"SUPABASE_URL", "SUPABASE_ANON_KEY"}
+	for _, key := range required {
+		if os.Getenv(key) == "" {
+			log.Printf("[WARN] %s not set", key)
+		}
+	}
+}
+
+func ensureStaticIndex(indexPath string) {
+	if _, err := os.Stat(indexPath); err != nil {
+		log.Printf("[WARN] %s missing", indexPath)
+	}
+}
+
+func resolveStaticDir(configured string) string {
+	if _, err := os.Stat(configured); err == nil {
+		return configured
+	}
+	return "./static"
 }

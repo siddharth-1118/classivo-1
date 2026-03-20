@@ -49,12 +49,15 @@ export async function subscribeToPushNotifications() {
   }
 
   const apiBase = getApiBase();
-  const token = localStorage.getItem("classivo_token");
+  const token = localStorage.getItem("token");
   const response = await fetch(`${apiBase}/api/notifications/subscribe`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(token ? { 
+        Authorization: `Bearer ${token}`,
+        "X-CSRF-Token": token
+      } : {}),
     },
     body: JSON.stringify(subscription),
   });

@@ -2,7 +2,6 @@
 
 
 import React from "react";
-import CommunityJoinModal from "./CommunityJoinModal";
 import ModernBottomNav from "./ModernBottomNav";
 
 interface NavigationWrapperProps {
@@ -12,9 +11,10 @@ interface NavigationWrapperProps {
 export default function NavigationWrapper({ children }: NavigationWrapperProps) {
   return (
     <>
-      <CommunityJoinModal />
       {children}
       <ModernBottomNav />
     </>
   );
 }
+
+

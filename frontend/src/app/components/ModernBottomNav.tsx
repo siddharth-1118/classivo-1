@@ -1,160 +1,111 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
-
 import { 
   Home, 
-  CalendarCheck, 
-  Clock, 
-  GraduationCap, 
-  MoreHorizontal,
   LayoutDashboard,
   Calendar,
-  Utensils,
   Settings,
-  Bell
+  CalendarCheck,
+  Clock,
+  GraduationCap,
+  Utensils,
+  Bell,
+  BookOpen,
+  MessageSquare,
+  HelpCircle,
+  User,
+  Users,
+  Book
 } from "lucide-react";
 
-const navItems = [
-  { name: "Home", href: "/app/dashboard", icon: LayoutDashboard },
-  { name: "Attend", href: "/app/attendance", icon: CalendarCheck },
-  { name: "Schedule", href: "/app/timetable", icon: Clock },
-  { name: "Marks", href: "/app/marks", icon: GraduationCap },
-];
-
-const allPages = [
-  { name: "Dashboard", href: "/app/dashboard", icon: Home },
-  { name: "Attendance", href: "/app/attendance", icon: CalendarCheck },
-  { name: "Timetable", href: "/app/timetable", icon: Clock },
-  { name: "Marks", href: "/app/marks", icon: GraduationCap },
-  { name: "Calendar", href: "/app/calendar", icon: Calendar },
-  { name: "Mess Menu", href: "/app/messmenu", icon: Utensils },
-  { name: "Settings", href: "/app/settings", icon: Settings },
-  { name: "Alerts", href: "/app/notifications", icon: Bell },
-];
 
 const ModernBottomNav = () => {
   const pathname = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const isActive = (href: string) => {
-    if (href === "/app/dashboard") {
-        return pathname === "/app/dashboard" || pathname === "/app";
-    }
-    return pathname.startsWith(href);
-  };
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (!pathname.startsWith("/app")) return null;
 
+  const menuItems = [
+    { name: "Attend", href: "/app/attendance", icon: CalendarCheck, color: "text-emerald-400" },
+    { name: "Schedule", href: "/app/timetable", icon: Clock, color: "text-blue-400" },
+    { name: "Marks", href: "/app/marks", icon: GraduationCap, color: "text-purple-400" },
+    { name: "Courses", href: "/app/course", icon: BookOpen, color: "text-amber-400" },
+    { name: "Subjects", href: "/app/subjects", icon: Book, color: "text-indigo-400" },
+    { name: "Dining", href: "/app/messmenu", icon: Utensils, color: "text-orange-400" },
+    { name: "Alerts", href: "/app/notifications", icon: Bell, color: "text-rose-400" },
+    { name: "Chat", href: "/app/chat", icon: MessageSquare, color: "text-sky-400" },
+    { name: "Queries", href: "/app/queries", icon: HelpCircle, color: "text-pink-400" },
+    { name: "Profile", href: "/app/profile", icon: User, color: "text-zinc-400" },
+    { name: "Community", href: "/app/community", icon: Users, color: "text-teal-400" },
+  ];
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[100] md:hidden px-4 pb-6 pt-10 pointer-events-none overflow-visible">
-      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none" />
-      
-      <div className="relative max-w-lg mx-auto flex flex-col items-center pointer-events-auto">
+    <div className="fixed bottom-0 left-0 right-0 z-[100] px-6 pb-8 pointer-events-none">
+      <div className="relative max-w-md mx-auto flex flex-col items-center justify-end pointer-events-auto">
+        
         {/* Expanded Menu */}
         <AnimatePresence>
-          {menuOpen && (
-            <motion.div
+          {isExpanded && (
+            <motion.div 
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              className="absolute bottom-20 w-full mb-2 p-3 rounded-[32px] bg-zinc-900/90 border border-white/10 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] grid grid-cols-4 gap-2"
+              className="absolute bottom-24 w-full grid grid-cols-4 gap-3 p-6 rounded-[2.5rem] bg-black/80 border border-white/10 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
             >
-              {allPages.map((page) => (
-                <Link
-                  key={page.href}
-                  href={page.href}
-                  onClick={() => setMenuOpen(false)}
-                  className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all ${
-                    isActive(page.href) ? "bg-premium-gold/10 text-premium-gold" : "text-zinc-400 hover:bg-white/5 active:scale-95"
-                  }`}
+              {menuItems.map((item) => (
+                <Link 
+                  key={item.href} 
+                  href={item.href}
+                  onClick={() => setIsExpanded(false)}
+                  className="flex flex-col items-center gap-1 group"
                 >
-                  <page.icon size={20} />
-                  <span className="text-[10px] font-medium mt-1 truncate w-full text-center">{page.name}</span>
+                  <div className={`h-12 w-12 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center transition-all group-active:scale-95 ${item.color}`}>
+                    <item.icon size={22} />
+                  </div>
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{item.name}</span>
                 </Link>
               ))}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Main Dock */}
-        <motion.nav 
-          initial={false}
-          animate={{
-            y: scrolled ? 0 : 0,
-            scale: 1,
-          }}
-          className="relative w-full h-16 rounded-full flex items-center justify-between px-2 bg-zinc-900/80 border border-white/10 backdrop-blur-xl shadow-[0_10px_40px_rgba(0,0,0,0.35)]"
-        >
-          {/* Moving Indicator */}
-          <div className="absolute inset-y-2 flex items-center px-2 pointer-events-none w-full">
-             <div className="relative w-full h-full">
-                {navItems.map((item, i) => (
-                  isActive(item.href) && (
-                    <motion.div
-                      key="indicator"
-                      layoutId="navIndicator"
-                      className="absolute top-0 bottom-0 rounded-full bg-premium-gold/15 border border-premium-gold/20"
-                      style={{ 
-                        left: `${(i / (navItems.length + 1)) * 100}%`,
-                        width: `${(1 / (navItems.length + 1)) * 100}%`
-                      }}
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                  )
-                ))}
-             </div>
-          </div>
+        <nav className="w-full h-[76px] rounded-[2.5rem] bg-[#0D0D0D]/90 border border-white/5 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between px-6">
+          <Link href="/app/dashboard" className={`p-2 transition-all ${pathname === "/app/dashboard" ? "text-premium-gold" : "text-zinc-600"}`}>
+            <Home size={26} strokeWidth={pathname === "/app/dashboard" ? 2.5 : 1.5} />
+          </Link>
+          
+          <Link href="/app/calendar" className={`p-2 transition-all ${pathname === "/app/calendar" ? "text-premium-gold" : "text-zinc-600"}`}>
+            <Calendar size={26} strokeWidth={pathname === "/app/calendar" ? 2.5 : 1.5} />
+            {pathname === "/app/calendar" && (
+              <div className="absolute top-4 right-3 h-1.5 w-1.5 rounded-full bg-premium-gold" />
+            )}
+          </Link>
 
-          {/* Nav Items */}
-          <div className="flex-1 flex items-center justify-around z-10">
-            {navItems.map((item) => {
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all ${
-                    active ? "text-premium-gold" : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
-                  <item.icon size={22} strokeWidth={active ? 2.5 : 1.5} />
-                  {active && (
-                    <motion.span 
-                      layoutId="navText"
-                      className="text-[8px] font-black uppercase tracking-widest mt-0.5"
-                    >
-                      {item.name}
-                    </motion.span>
-                  )}
-                </Link>
-              );
-            })}
+          {/* Prominent Plus Button */}
+          <button 
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`relative -top-6 h-16 w-16 rounded-full bg-premium-gold shadow-[0_10px_30px_rgba(212,175,55,0.3)] flex items-center justify-center text-black transition-all active:scale-90 overflow-hidden group ${isExpanded ? "rotate-45" : "rotate-0"}`}
+          >
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-50" />
+            <div className="relative z-10 flex items-center justify-center h-8 w-8 rounded-lg bg-black/5">
+               <span className="text-3xl font-light">+</span>
+            </div>
+          </button>
 
-            {/* More Menu Trigger */}
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className={`flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all ${
-                menuOpen ? "text-premium-gold bg-premium-gold/10" : "text-zinc-500 hover:text-zinc-300"
-              }`}
-            >
-              <MoreHorizontal size={22} />
-            </button>
-          </div>
-        </motion.nav>
+          <Link href="/app/projects" className={`p-2 transition-all ${pathname === "/app/projects" ? "text-premium-gold" : "text-zinc-600"}`}>
+            <LayoutDashboard size={26} strokeWidth={pathname === "/app/projects" ? 2.5 : 1.5} />
+          </Link>
+
+          <Link href="/app/settings" className={`p-2 transition-all ${pathname === "/app/settings" ? "text-premium-gold" : "text-zinc-600"}`}>
+            <Settings size={26} strokeWidth={pathname === "/app/settings" ? 2.5 : 1.5} />
+          </Link>
+        </nav>
       </div>
+
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
