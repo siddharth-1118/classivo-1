@@ -322,17 +322,17 @@ func (db *DatabaseHelper) UpsertDataByKey(token string, regNumber string, dataKe
 
 func (db *DatabaseHelper) SaveSession(hash string) error {
 	data := map[string]interface{}{
-		"hash":       hash,
+		"hash_key":   hash,
 		"created_at": time.Now().Format(time.RFC3339),
 	}
-	_, _, err := db.client.From("sessions").Upsert(data, "hash", "", "").Execute()
+	_, _, err := db.client.From("sessions").Upsert(data, "hash_key", "", "").Execute()
 	return err
 }
 
 func (db *DatabaseHelper) VerifySession(hash string) (bool, error) {
 	var results []map[string]interface{}
-	query := map[string]string{"hash": hash}
-	_, err := db.client.From("sessions").Select("hash", "", false).Match(query).ExecuteTo(&results)
+	query := map[string]string{"hash_key": hash}
+	_, err := db.client.From("sessions").Select("hash_key", "", false).Match(query).ExecuteTo(&results)
 	if err != nil {
 		return false, err
 	}
