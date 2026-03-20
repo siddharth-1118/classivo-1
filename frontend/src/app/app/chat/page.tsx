@@ -14,6 +14,7 @@ import {
 import useWebSocket from "../../../hooks/useWebSocket";
 import useNotifications from "../../../hooks/useNotifications";
 import { getSessionToken } from "@/utils/sessionClient";
+import { api } from "@/lib/api";
 
 interface UserProfile {
   name: string;
@@ -170,35 +171,19 @@ const ChatPage = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       if (!token) return;
-      const res = await fetch("/api/profile", {
-        headers: {
-          "X-CSRF-Token": token,
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
-      setProfile(data);
-      const nextRoom = "campus";
-      setSelectedRoom((current) => current ?? nextRoom);
-    };
-
-    const fetchRooms = async () => {
-      if (!token) return;
-      const res = await fetch("/api/rooms", {
-        headers: {
-          "X-CSRF-Token": token,
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
-      setRooms(Array.isArray(data) ? data : []);
+      try {
+        const res: any = await api.user(token);
+        if (res?.userInfo) {
+          setProfile(res.userInfo as UserProfile);
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+      }
+      setSelectedRoom((current) => current ?? "campus");
     };
 
     fetchProfile();
-    fetchRooms();
 
-    const intervalId = window.setInterval(fetchRooms, 15000);
-    return () => window.clearInterval(intervalId);
   }, [token]);
 
   useEffect(() => {
