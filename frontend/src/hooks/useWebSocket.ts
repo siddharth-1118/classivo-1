@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-const useWebSocket = (url: string, token?: string) => {
+const useWebSocket = (url: string, token?: string, section?: string, regNumber?: string) => {
   const [messages, setMessages] = useState<string[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const webSocketRef = useRef<WebSocket | null>(null);
@@ -8,7 +8,13 @@ const useWebSocket = (url: string, token?: string) => {
   useEffect(() => {
     if (!url) return;
 
-    const wsUrl = token ? `${url}?token=${encodeURIComponent(token)}` : url;
+    const queryParams = new URLSearchParams();
+    if (token) queryParams.append("token", token);
+    if (section) queryParams.append("section", section);
+    if (regNumber) queryParams.append("reg", regNumber);
+    const queryString = queryParams.toString();
+    const wsUrl = queryString ? `${url}?${queryString}` : url;
+
     const ws = new WebSocket(wsUrl);
     webSocketRef.current = ws;
 
@@ -32,7 +38,7 @@ const useWebSocket = (url: string, token?: string) => {
       }
       setIsConnected(false);
     };
-  }, [url, token]);
+  }, [url, token, section, regNumber]);
 
   const sendMessage = (message: string) => {
     if (webSocketRef.current?.readyState === WebSocket.OPEN) {

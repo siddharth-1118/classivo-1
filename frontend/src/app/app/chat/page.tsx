@@ -160,8 +160,10 @@ const ChatPage = () => {
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const { showNotification } = useNotifications();
   const { messages, sendMessage, isConnected } = useWebSocket(
-    token ? getSocketBase() : "",
-    token || undefined
+    token && profile ? getSocketBase() : "",
+    token || undefined,
+    profile?.section,
+    profile?.regNumber
   );
 
   useEffect(() => {
