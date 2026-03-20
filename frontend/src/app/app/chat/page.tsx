@@ -274,7 +274,7 @@ const ChatPage = () => {
            <div className="max-w-3xl">
             <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.24em] text-premium-gold font-black">
               <Sparkles className="h-4 w-4" />
-              Campus Flux - Global Anonymous Hub
+              Stealth Tensor - Global Anonymous Hub
             </div>
             <h1 className="mt-4 text-4xl font-black tracking-tighter text-white uppercase sm:text-5xl">
               Talk freely. <span className="text-zinc-600 italic font-serif lowercase">Stay anonymus.</span>
