@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"goscraper/src/handlers"
 	"goscraper/src/helpers/databases"
 	"goscraper/src/types"
 
@@ -41,11 +40,14 @@ type anonymousIdentity struct {
 // ChatWebsocket handles websocket connections for the chat.
 func ChatWebsocket(c *websocket.Conn) {
 	log.Printf("[WS DEBUG] ChatWebsocket handler entered")
-	token := c.Query("token")
-	user, err := handlers.GetUser(token)
-	if err != nil {
-		log.Printf("error: %v", err)
-		return
+	// Token is strictly verified by main.go middleware before this handler is invoked.
+	// We receive lightweight identity parameters securely via WebSocket URL queries.
+	user := &types.User{
+		Section:   c.Query("section"),
+		RegNumber: c.Query("reg"),
+	}
+	if user.RegNumber == "" {
+		user.RegNumber = "UNKNOWN"
 	}
 
 	identity := buildAnonymousIdentity(user)
@@ -94,14 +96,22 @@ func ChatWebsocket(c *websocket.Conn) {
 			if err == nil {
 				history, err := db.GetRecentMessages(msg.Room, 50)
 				if err == nil {
-					for _, hMsg := range history {
+					// Send in reverse order so oldest appears first in the chat UI
+					for i := len(history) - 1; i >= 0; i-- {
+						hMsg := history[i]
+						roomStr, _ := hMsg["room"].(string)
+						textStr, _ := hMsg["text"].(string)
+						senderIDStr, _ := hMsg["sender_id"].(string)
+						senderAliasStr, _ := hMsg["sender_alias"].(string)
+						timestampStr, _ := hMsg["created_at"].(string)
+
 						hPayload, _ := json.Marshal(Message{
 							Action:      "message",
-							Room:        hMsg["room"].(string),
-							Text:        hMsg["text"].(string),
-							SenderID:    hMsg["sender_id"].(string),
-							SenderAlias: hMsg["sender_alias"].(string),
-							Timestamp:   hMsg["created_at"].(string),
+							Room:        roomStr,
+							Text:        textStr,
+							SenderID:    senderIDStr,
+							SenderAlias: senderAliasStr,
+							Timestamp:   timestampStr,
 						})
 						c.WriteMessage(websocket.TextMessage, hPayload)
 					}

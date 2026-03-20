@@ -67,9 +67,7 @@ func (h *Hub) run() {
 				// Remove the client from any rooms they were in
 				h.mu.Lock()
 				for room := range h.rooms {
-					if _, ok := h.rooms[room][client]; ok {
-						delete(h.rooms[room], client)
-					}
+					delete(h.rooms[room], client)
 				}
 				h.mu.Unlock()
 			}
