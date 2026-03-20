@@ -128,7 +128,7 @@ export default function DashboardPage() {
                </div>
             </div>
             <h1 className="text-2xl font-black tracking-tight flex items-baseline gap-1.5">
-              Welcome, <span className="text-premium-gold">{userInfo?.name?.split(" ")[0] || "Curator"}</span>
+              Welcome back, <span className="text-premium-gold">{userInfo?.name?.split(" ")[0] || "Curator"}</span>
             </h1>
           </div>
           <button className="h-10 w-10 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-400">

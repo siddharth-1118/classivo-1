@@ -67,7 +67,7 @@ const Page = () => {
                <span className="text-zinc-500 font-bold text-xs">{userInfo?.name?.[0] || "C"}</span>
             </div>
             <h1 className="text-xl font-black tracking-tight">
-              Welcome, <span className="text-premium-gold">{userInfo?.name?.split(" ")[0] || "Curator"}</span>
+              Welcome back, <span className="text-premium-gold">{userInfo?.name?.split(" ")[0] || "Curator"}</span>
             </h1>
           </div>
           <button className="h-10 w-10 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-400">
