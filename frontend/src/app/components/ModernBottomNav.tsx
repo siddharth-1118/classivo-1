@@ -8,7 +8,6 @@ import {
   Home, 
   LayoutDashboard,
   Calendar,
-  Settings,
   CalendarCheck,
   Clock,
   GraduationCap,
@@ -19,7 +18,8 @@ import {
   HelpCircle,
   User,
   Users,
-  Book
+  Book,
+  Target
 } from "lucide-react";
 
 
@@ -33,8 +33,10 @@ const ModernBottomNav = () => {
     { name: "Attend", href: "/app/attendance", icon: CalendarCheck, color: "text-emerald-400" },
     { name: "Schedule", href: "/app/timetable", icon: Clock, color: "text-blue-400" },
     { name: "Marks", href: "/app/marks", icon: GraduationCap, color: "text-purple-400" },
+    { name: "Planner", href: "/app/projects", icon: LayoutDashboard, color: "text-amber-300" },
+    { name: "GradeX", href: "/app/gradex", icon: Target, color: "text-amber-400" },
     { name: "Courses", href: "/app/course", icon: BookOpen, color: "text-amber-400" },
-    { name: "Subjects", href: "/app/subjects", icon: Book, color: "text-indigo-400" },
+    { name: "Percent", href: "/app/percentage", icon: Book, color: "text-indigo-400" },
     { name: "Dining", href: "/app/messmenu", icon: Utensils, color: "text-orange-400" },
     { name: "Alerts", href: "/app/notifications", icon: Bell, color: "text-rose-400" },
     { name: "Chat", href: "/app/chat", icon: MessageSquare, color: "text-sky-400" },
@@ -73,16 +75,13 @@ const ModernBottomNav = () => {
           )}
         </AnimatePresence>
 
-        <nav className="w-full h-[76px] rounded-[2.5rem] bg-[#0D0D0D]/90 border border-white/5 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between px-6">
-          <Link href="/app/dashboard" className={`p-2 transition-all ${pathname === "/app/dashboard" ? "text-premium-gold" : "text-zinc-600"}`}>
+        <nav className="grid w-full grid-cols-[1fr_1fr_auto_1fr_1fr_1fr] items-center gap-1 rounded-[2.5rem] border border-white/5 bg-[#0D0D0D]/90 px-4 h-[76px] backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+          <Link href="/app/dashboard" className={`relative flex justify-center p-2 transition-all ${pathname === "/app/dashboard" ? "text-premium-gold" : "text-zinc-600"}`}>
             <Home size={26} strokeWidth={pathname === "/app/dashboard" ? 2.5 : 1.5} />
           </Link>
           
-          <Link href="/app/calendar" className={`p-2 transition-all ${pathname === "/app/calendar" ? "text-premium-gold" : "text-zinc-600"}`}>
-            <Calendar size={26} strokeWidth={pathname === "/app/calendar" ? 2.5 : 1.5} />
-            {pathname === "/app/calendar" && (
-              <div className="absolute top-4 right-3 h-1.5 w-1.5 rounded-full bg-premium-gold" />
-            )}
+          <Link href="/app/attendance" className={`relative flex justify-center p-2 transition-all ${pathname === "/app/attendance" ? "text-premium-gold" : "text-zinc-600"}`}>
+            <CalendarCheck size={26} strokeWidth={pathname === "/app/attendance" ? 2.5 : 1.5} />
           </Link>
 
           {/* Prominent Plus Button */}
@@ -96,12 +95,19 @@ const ModernBottomNav = () => {
             </div>
           </button>
 
-          <Link href="/app/projects" className={`p-2 transition-all ${pathname === "/app/projects" ? "text-premium-gold" : "text-zinc-600"}`}>
-            <LayoutDashboard size={26} strokeWidth={pathname === "/app/projects" ? 2.5 : 1.5} />
+          <Link href="/app/marks" className={`relative flex justify-center p-2 transition-all ${pathname === "/app/marks" ? "text-premium-gold" : "text-zinc-600"}`}>
+            <GraduationCap size={26} strokeWidth={pathname === "/app/marks" ? 2.5 : 1.5} />
           </Link>
 
-          <Link href="/app/settings" className={`p-2 transition-all ${pathname === "/app/settings" ? "text-premium-gold" : "text-zinc-600"}`}>
-            <Settings size={26} strokeWidth={pathname === "/app/settings" ? 2.5 : 1.5} />
+          <Link href="/app/timetable" className={`relative flex justify-center p-2 transition-all ${pathname === "/app/timetable" ? "text-premium-gold" : "text-zinc-600"}`}>
+            <Clock size={26} strokeWidth={pathname === "/app/timetable" ? 2.5 : 1.5} />
+          </Link>
+
+          <Link href="/app/calendar" className={`relative flex justify-center p-2 transition-all ${pathname === "/app/calendar" ? "text-premium-gold" : "text-zinc-600"}`}>
+            <Calendar size={26} strokeWidth={pathname === "/app/calendar" ? 2.5 : 1.5} />
+            {pathname === "/app/calendar" && (
+              <div className="absolute top-4 right-5 h-1.5 w-1.5 rounded-full bg-premium-gold" />
+            )}
           </Link>
         </nav>
       </div>

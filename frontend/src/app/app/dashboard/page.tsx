@@ -1,15 +1,15 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import {
   User,
   ChevronRight,
   Bell,
   CheckCircle2,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 import { useDayOrder, useTimetable, useUserInfo, useAttendance, useMarks } from "@/hooks/query";
-
 
 type TimetableClass = {
   time: string;
@@ -19,8 +19,6 @@ type TimetableClass = {
   courseType: string;
   isClass: boolean;
 };
-
-
 
 const parseTime = (timeStr: string) => {
   try {
@@ -39,7 +37,6 @@ const parseTime = (timeStr: string) => {
   }
 };
 
-
 export default function DashboardPage() {
   const { data: timetableData } = useTimetable();
   const { data: dayOrderData } = useDayOrder();
@@ -47,62 +44,31 @@ export default function DashboardPage() {
   const { data: attendanceData } = useAttendance();
   const { data: marksData } = useMarks();
 
-
-  let todayScheduleRaw: TimetableClass[] = [];
-
-  if (dayOrderData && typeof dayOrderData.dayOrder !== "undefined") {
-    const d = Number(dayOrderData.dayOrder);
-    if (Number.isNaN(d) || d === 0) {
-      todayScheduleRaw = [];
-    } else {
-      const idx = d - 1;
-      if (timetableData && timetableData.length > idx && idx >= 0) {
-        todayScheduleRaw = (timetableData[idx]?.class ?? []) as TimetableClass[];
-      } else if (timetableData && timetableData.length > 0) {
-        todayScheduleRaw = (timetableData[0]?.class ?? []) as TimetableClass[];
-      }
+  const getScheduleForDayOrder = (dayOrder: number) => {
+    if (!timetableData || timetableData.length === 0 || Number.isNaN(dayOrder) || dayOrder <= 0) {
+      return [];
     }
-  } else {
-    todayScheduleRaw = timetableData && timetableData.length > 0 ? ((timetableData[0]?.class ?? []) as TimetableClass[]) : [];
-  }
 
+    const safeIndex = ((dayOrder - 1) % timetableData.length + timetableData.length) % timetableData.length;
 
-  const today = new Date();
-  const currentTimeMinutes = today.getHours() * 60 + today.getMinutes();
-
-  const parseEndTime = (timeStr: string) => {
-    try {
-      const parts = timeStr.split("-").map((t) => t.trim());
-      const endStr = parts[1];
-      if (!endStr) return 0;
-      
-      const [time, modifier] = endStr.split(" ");
-      const [hoursStr, minutesStr] = time!.split(":");
-      let hours = Number(hoursStr);
-      const minutes = Number(minutesStr);
-
-      if (modifier === "PM" && hours < 12) hours += 12;
-      if (modifier === "AM" && hours === 12) hours = 0;
-
-      return hours * 60 + minutes;
-    } catch {
-      return 0;
-    }
+    return ((timetableData[safeIndex]?.class ?? []) as TimetableClass[])
+      .filter((cls) => cls.isClass && cls.courseTitle)
+      .sort((a, b) => parseTime(a.time) - parseTime(b.time));
   };
 
-  const allTodayClasses = [...todayScheduleRaw]
-    .filter((cls) => cls.isClass && cls.courseTitle)
-    .sort((a, b) => parseTime(a.time) - parseTime(b.time));
+  const activeDayOrder = Number(dayOrderData?.dayOrder);
+  const totalDayOrders = timetableData?.length ?? 0;
+  const todayDayOrder = !Number.isNaN(activeDayOrder) && activeDayOrder > 0 ? activeDayOrder : 1;
+  const nextDayOrder = totalDayOrders > 0 ? (todayDayOrder % totalDayOrders) + 1 : todayDayOrder + 1;
 
-  const sortedSchedule = allTodayClasses
-    .filter((cls) => parseEndTime(cls.time) > currentTimeMinutes);
+  const allTodayClasses = getScheduleForDayOrder(todayDayOrder);
+  const nextDayClasses = getScheduleForDayOrder(nextDayOrder);
+  const nextDayLabel = `Day Order ${nextDayOrder}`;
 
-  // Calculate overall attendance
   const overallAttendance = attendanceData && attendanceData.length > 0
     ? (attendanceData.reduce((acc, curr) => acc + (Number(curr.courseAttendance) || 0), 0) / attendanceData.length).toFixed(1)
     : "0";
 
-  // Calculate total marks instead of average
   const totalMarksDisplay = marksData && marksData.length > 0
     ? (() => {
         const scoredSubjects = marksData.filter((item) => (item.total?.maxMark || 0) > 0);
@@ -114,177 +80,163 @@ export default function DashboardPage() {
       })()
     : "0/0";
 
+  const marksProgress = (() => {
+    const [obtained, max] = totalMarksDisplay.split("/").map(Number);
+    return max ? (obtained / max) * 100 : 0;
+  })();
 
   return (
-    <main className="relative min-h-screen w-full bg-[#0a0a0a] text-white px-6 pb-32 pt-12 overflow-y-auto font-sans">
-      <div className="relative z-10 flex flex-col gap-10 max-w-lg mx-auto">
-        
-        {/* Curator Header */}
-        <header className="flex items-center justify-between">
+    <main className="relative min-h-screen w-full overflow-y-auto px-4 pb-32 pt-10 text-white font-sans sm:px-6 sm:pt-12">
+      <div className="relative z-10 mx-auto flex max-w-lg flex-col gap-8 sm:gap-10">
+        <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-full border-2 border-premium-gold p-0.5">
-               <div className="h-full w-full rounded-full bg-zinc-800 flex items-center justify-center overflow-hidden">
-                  <User size={24} className="text-zinc-500" />
-               </div>
+              <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-zinc-800">
+                <User size={24} className="text-zinc-500" />
+              </div>
             </div>
-            <h1 className="text-2xl font-black tracking-tight flex items-baseline gap-1.5">
+            <h1 className="flex flex-wrap items-baseline gap-1.5 text-xl font-black tracking-tight sm:text-2xl">
               Welcome back, <span className="text-premium-gold">{userInfo?.name?.split(" ")[0] || "Curator"}</span>
             </h1>
           </div>
-          <button className="h-10 w-10 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center text-zinc-400">
+          <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/5 bg-zinc-900 text-zinc-400">
             <Bell size={20} />
           </button>
         </header>
 
-        {/* Hero Section: Mastering the Semester */}
         <section className="mt-2">
-           <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Academic Status</p>
-           <div className="relative">
-              <h2 className="text-[52px] font-black leading-[0.9] tracking-tighter">
-                Mastering<span className="text-emerald-400">.</span>
-              </h2>
-              <h2 className="text-4xl italic font-serif text-zinc-500 tracking-tight mt-1 opacity-80">
-                the Semester.
-              </h2>
-           </div>
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Academic Status</p>
+          <div className="relative">
+            <h2 className="text-[40px] font-black leading-[0.9] tracking-tighter sm:text-[52px]">
+              Mastering<span className="text-emerald-400">.</span>
+            </h2>
+            <h2 className="mt-1 text-3xl italic tracking-tight text-zinc-500 opacity-80 sm:text-4xl">
+              the Semester.
+            </h2>
+          </div>
         </section>
 
-        {/* Dual Stats Section */}
-        <section className="grid grid-cols-2 gap-5">
-           {/* Attendance Card */}
-           <div className="rounded-3xl bg-zinc-900/40 border border-white/5 p-6 backdrop-blur-md">
-              <div className="flex items-center justify-between mb-8">
-                 <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                    <CheckCircle2 size={22} />
-                 </div>
-                 <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Live</span>
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+          <Link
+            href="/app/attendance"
+            className="rounded-3xl border border-white/10 bg-zinc-900/45 p-5 backdrop-blur-md transition-all hover:border-emerald-400/30 hover:bg-zinc-900/60 active:scale-[0.99] sm:p-6"
+          >
+            <div className="mb-6 flex items-center justify-between sm:mb-8">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
+                <CheckCircle2 size={22} />
               </div>
-              <div className="space-y-1">
-                 <span className="text-4xl font-black tracking-tighter">{overallAttendance}%</span>
-                 <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">Attendance</p>
-              </div>
-              <div className="mt-6 h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
-                 <div 
-                   className="h-full bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.5)]" 
-                   style={{ width: `${Math.min(Number(overallAttendance), 100)}%` }}
-                 />
-              </div>
-           </div>
+              <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                Live <ChevronRight size={12} />
+              </span>
+            </div>
+            <div className="space-y-1">
+              <span className="text-4xl font-black tracking-tighter">{overallAttendance}%</span>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Attendance</p>
+              <p className="pt-1 text-xs text-zinc-400">Open attendance insights</p>
+            </div>
+            <div className="mt-6 h-1 w-full overflow-hidden rounded-full bg-zinc-800">
+              <div
+                className="h-full rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"
+                style={{ width: `${Math.min(Number(overallAttendance), 100)}%` }}
+              />
+            </div>
+          </Link>
 
-           {/* Marks Card */}
-           <div className="rounded-3xl bg-zinc-900/40 border border-white/5 p-6 backdrop-blur-md">
-              <div className="flex items-center justify-between mb-8">
-                 <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
-                    <Sparkles size={22} />
-                 </div>
-                 <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Peak</span>
+          <Link
+            href="/app/marks"
+            className="rounded-3xl border border-white/10 bg-zinc-900/45 p-5 backdrop-blur-md transition-all hover:border-purple-400/30 hover:bg-zinc-900/60 active:scale-[0.99] sm:p-6"
+          >
+            <div className="mb-6 flex items-center justify-between sm:mb-8">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400">
+                <Sparkles size={22} />
               </div>
-              <div className="space-y-1">
-                 <span className="text-3xl font-black tracking-tighter">{totalMarksDisplay}</span>
-                 <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">Total Marks</p>
-              </div>
-              <div className="mt-6 h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
-                 <div 
-                   className="h-full bg-purple-400 rounded-full shadow-[0_0_8px_rgba(192,132,252,0.5)]" 
-                   style={{ 
-                     width: `${(() => {
-                        const [obs, max] = totalMarksDisplay.split('/').map(Number);
-                        return max ? (obs! / max!) * 100 : 0;
-                     })()}%` 
-                   }}
-                 />
-              </div>
-           </div>
+              <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                Peak <ChevronRight size={12} />
+              </span>
+            </div>
+            <div className="space-y-1">
+              <span className="text-3xl font-black tracking-tighter">{totalMarksDisplay}</span>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Total Marks</p>
+              <p className="pt-1 text-xs text-zinc-400">Open marks breakdown</p>
+            </div>
+            <div className="mt-6 h-1 w-full overflow-hidden rounded-full bg-zinc-800">
+              <div
+                className="h-full rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.5)]"
+                style={{ width: `${marksProgress}%` }}
+              />
+            </div>
+          </Link>
         </section>
 
-        {/* Today's Schedule */}
         <section className="flex flex-col gap-6">
-           <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-black tracking-tight">Today&apos;s Schedule</h3>
-              <button className="text-[10px] font-black text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-0.5 flex items-center gap-1">
-                View Full
-              </button>
-           </div>
-           <div className="space-y-3">
-              {allTodayClasses.length > 0 ? (
-                allTodayClasses.map((cls, i) => (
-                  <div key={i} className="flex items-center gap-5 p-6 rounded-3xl bg-zinc-900/30 border border-white/5 group transition-all hover:bg-zinc-900/50">
-                     <div className="flex flex-col items-start min-w-[70px]">
-                        <span className="text-xl font-black tracking-tighter">{cls.time.split(" ")[0]}</span>
-                        <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">{cls.time.split(" ")[1]}</span>
-                     </div>
-                     <div className="h-12 w-[1px] bg-zinc-800 group-hover:bg-premium-gold/30 transition-colors" />
-                     <div className="flex-1">
-                        <span className="text-[9px] font-black text-emerald-500/80 uppercase tracking-[0.2em] mb-1 block">
-                           {cls.courseCode}
-                        </span>
-                        <h4 className="font-bold text-base leading-tight">{cls.courseTitle}</h4>
-                     </div>
-                     <ChevronRight size={18} className="text-zinc-700 group-hover:text-premium-gold transition-colors" />
+          <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-black tracking-tight">Today&apos;s Schedule</h3>
+            <Link href="/app/timetable" className="flex items-center gap-1 border-b border-zinc-800 pb-0.5 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+              View Full
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {allTodayClasses.length > 0 ? (
+              allTodayClasses.map((cls, i) => (
+                <div key={i} className="group flex items-center gap-4 rounded-3xl border border-white/5 bg-zinc-900/30 p-5 transition-all hover:bg-zinc-900/50 sm:gap-5 sm:p-6">
+                  <div className="flex min-w-[64px] flex-col items-start sm:min-w-[70px]">
+                    <span className="text-lg font-black tracking-tighter sm:text-xl">{cls.time.split(" ")[0]}</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">{cls.time.split(" ")[1]}</span>
                   </div>
-                ))
-              ) : (
-                <p className="text-zinc-600 text-sm italic py-4">No sessions scheduled for today in the gallery.</p>
-              )}
-           </div>
-        </section>
-
-        {/* Upcoming Section */}
-        <section className="flex flex-col gap-8">
-           <h3 className="text-[28px] font-black tracking-tight">Upcoming</h3>
-           
-           <div className="space-y-10 relative">
-              {/* Vertical timeline line */}
-              <div className="absolute left-2.5 top-2 bottom-0 w-[1.5px] bg-zinc-800" />
-
-              {sortedSchedule.length > 0 ? (
-                sortedSchedule.map((cls, i) => (
-                  <div key={i} className="relative pl-10">
-                     {/* Timeline marker */}
-                     <div className="absolute left-0 top-1.5 h-5 w-5 rounded-full bg-zinc-950 border-[3px] border-zinc-800 z-10 flex items-center justify-center">
-                        <div className="h-1.5 w-1.5 rounded-full bg-premium-gold shadow-[0_0_8px_rgba(212,175,55,1)]" />
-                     </div>
-
-                     <div className="flex flex-col gap-3">
-                        <div className="flex items-center justify-between">
-                           <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">
-                              {i === 0 ? "Tomorrow" : "Future"} • {cls.time.split(" ")[0]} {cls.time.split(" ")[1]}
-                           </span>
-                           <div className="flex -space-x-2">
-                              {[...Array(2)].map((_, j) => (
-                                <div key={j} className="h-7 w-7 rounded-full border-2 border-[#0a0a0a] bg-zinc-800 overflow-hidden">
-                                   <User size={14} className="text-zinc-600 ml-1.5 mt-1.5" />
-                                </div>
-                              ))}
-                              <div className="h-7 w-7 rounded-full border-2 border-[#0a0a0a] bg-zinc-800 flex items-center justify-center text-[8px] font-black text-zinc-500">
-                                 +3
-                              </div>
-                           </div>
-                        </div>
-                        <h4 className="text-2xl font-black tracking-tight">{cls.courseTitle}</h4>
-                        
-                        {i === 0 && (
-                          <div className="rounded-2xl bg-zinc-900/20 border border-white/5 p-5 mt-1">
-                             <p className="text-zinc-500 text-xs leading-relaxed font-medium">
-                                Preparation for the modular structure presentation. Ensure all data models are mapped at high fidelity.
-                             </p>
-                          </div>
-                        )}
-                     </div>
+                  <div className="h-12 w-[1px] bg-zinc-800 transition-colors group-hover:bg-premium-gold/30" />
+                  <div className="flex-1">
+                    <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/80">
+                      {cls.courseCode}
+                    </span>
+                    <h4 className="text-sm font-bold leading-tight sm:text-base">{cls.courseTitle}</h4>
                   </div>
-                ))
-              ) : (
-                <div className="pl-10">
-                   <p className="text-zinc-600 text-sm font-bold uppercase tracking-[0.2em]">All sessions completed currently.</p>
+                  <ChevronRight size={18} className="text-zinc-700 transition-colors group-hover:text-premium-gold" />
                 </div>
-              )}
-           </div>
+              ))
+            ) : (
+              <p className="py-4 text-sm italic text-zinc-600">No sessions scheduled for today in the gallery.</p>
+            )}
+          </div>
         </section>
 
+        <section className="flex flex-col gap-6">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <h3 className="text-2xl font-black tracking-tight">Upcoming</h3>
+              <p className="mt-1 text-xs uppercase tracking-[0.22em] text-zinc-500">{nextDayLabel}</p>
+            </div>
+            <Link
+              href={`/app/timetable?dayOrder=${nextDayOrder}`}
+              className="flex items-center gap-1 border-b border-zinc-800 pb-0.5 text-[10px] font-black uppercase tracking-widest text-zinc-500"
+            >
+              Open Day
+            </Link>
+          </div>
+
+          <div className="space-y-3">
+            {nextDayClasses.length > 0 ? (
+              nextDayClasses.map((cls, i) => (
+                <div key={i} className="group flex items-center gap-4 rounded-3xl border border-white/5 bg-zinc-900/30 p-5 transition-all hover:bg-zinc-900/50 sm:gap-5 sm:p-6">
+                  <div className="flex min-w-[64px] flex-col items-start sm:min-w-[70px]">
+                    <span className="text-lg font-black tracking-tighter sm:text-xl">{cls.time.split(" ")[0]}</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">{cls.time.split(" ")[1]}</span>
+                  </div>
+                  <div className="h-12 w-[1px] bg-zinc-800 transition-colors group-hover:bg-premium-gold/30" />
+                  <div className="flex-1">
+                    <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.2em] text-sky-400/80">
+                      {nextDayLabel} · {cls.courseCode}
+                    </span>
+                    <h4 className="text-sm font-bold leading-tight sm:text-base">{cls.courseTitle}</h4>
+                  </div>
+                  <ChevronRight size={18} className="text-zinc-700 transition-colors group-hover:text-premium-gold" />
+                </div>
+              ))
+            ) : (
+              <p className="py-4 text-sm italic text-zinc-600">No classes found for {nextDayLabel.toLowerCase()}.</p>
+            )}
+          </div>
+        </section>
       </div>
     </main>
   );
 }
-
-
-

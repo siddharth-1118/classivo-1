@@ -5,7 +5,10 @@ import { useAttendance, useUserInfo } from "@/hooks/query";
 import { AttendanceDetail } from "srm-academia-api";
 import { GlobalLoader } from "../components/loader";
 import {
-  Bell
+  AlertTriangle,
+  Bell,
+  ShieldAlert,
+  TrendingUp
 } from "lucide-react";
 import ShinyText from "@/components/ShinyText";
 
@@ -24,6 +27,11 @@ const AttendancePage = () => {
 
   const overallPercent = (data.reduce((acc, curr) => acc + (Number(curr.courseAttendance) || 0), 0) / data.length).toFixed(0);
   const isOverallSafe = Number(overallPercent) >= 75;
+  const criticalSubjects = data.filter((item) => Number(item.courseAttendance) < 75);
+  const safeSkipSubjects = data.filter((item) => item.courseAttendanceStatus?.status === "margin");
+  const totalRecoveryClasses = criticalSubjects.reduce((sum, item) => sum + (item.courseAttendanceStatus?.classes || 0), 0);
+  const totalSafeSkips = safeSkipSubjects.reduce((sum, item) => sum + (item.courseAttendanceStatus?.classes || 0), 0);
+  const lowestSubject = [...data].sort((a, b) => Number(a.courseAttendance) - Number(b.courseAttendance))[0];
 
   return (
     <main className="relative min-h-screen w-full bg-[#0a0a0a] text-white px-6 pb-32 pt-12 overflow-y-auto font-sans">
@@ -81,6 +89,42 @@ const AttendancePage = () => {
            </div>
         </section>
 
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <InsightCard
+            icon={criticalSubjects.length > 0 ? AlertTriangle : TrendingUp}
+            label="Danger Subjects"
+            value={String(criticalSubjects.length)}
+            tone={criticalSubjects.length > 0 ? "red" : "emerald"}
+            helper={criticalSubjects.length > 0 ? `${totalRecoveryClasses} recovery classes needed` : "No urgent attendance risks"}
+          />
+          <InsightCard
+            icon={ShieldAlert}
+            label="Safe To Skip"
+            value={String(totalSafeSkips)}
+            tone="sky"
+            helper="Total safe margins across subjects"
+          />
+          <InsightCard
+            icon={TrendingUp}
+            label="Lowest Subject"
+            value={lowestSubject?.courseCode || "--"}
+            tone="amber"
+            helper={lowestSubject ? `${lowestSubject.courseAttendance}% attendance` : "Waiting for attendance data"}
+          />
+        </section>
+
+        <section className="rounded-[32px] border border-red-400/15 bg-red-500/8 p-6 backdrop-blur-xl">
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-200/80">Attendance Predictor</p>
+          <h2 className="mt-2 text-xl font-black tracking-tight text-white">
+            {criticalSubjects.length > 0 ? "Action needed this week" : "You still have breathing room"}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-300">
+            {criticalSubjects.length > 0
+              ? `${criticalSubjects[0]?.courseTitle || "One subject"} is below 75%. Focus on the next ${criticalSubjects[0]?.courseAttendanceStatus?.classes || 0} class${(criticalSubjects[0]?.courseAttendanceStatus?.classes || 0) === 1 ? "" : "es"} to get back on track.`
+              : `You currently have ${totalSafeSkips} safe skip chances across all margin subjects. Use them carefully around labs, quizzes, and internal assessments.`}
+          </p>
+        </section>
+
         {/* Active Disciplines */}
         <section className="flex flex-col gap-6">
            <h2 className="text-2xl font-black tracking-tight">Active Disciplines</h2>
@@ -99,6 +143,7 @@ const AttendancePage = () => {
 const SubjectCard = ({ item }: { item: AttendanceDetail }) => {
   const isSafe = Number(item.courseAttendance) >= 75;
   const status = isSafe ? "SAFE" : "CRITICAL";
+  const classesCount = item.courseAttendanceStatus?.classes || 0;
   
   return (
     <div className="rounded-[32px] bg-zinc-900/30 border border-white/5 p-7 flex flex-col gap-6 group transition-all hover:bg-zinc-900/50">
@@ -120,8 +165,11 @@ const SubjectCard = ({ item }: { item: AttendanceDetail }) => {
              </div>
              <p className={`text-[10px] font-bold ${isSafe ? 'text-emerald-500/80' : 'text-red-500/80'}`}>
                 {item.courseAttendanceStatus?.status === "required" 
-                  ? `Predictor: ${item.courseAttendanceStatus.classes} class until threshold` 
-                  : `${item.courseAttendanceStatus?.classes || 0} classes until threshold`}
+                  ? `Need ${classesCount} more attended class${classesCount === 1 ? "" : "es"} to recover` 
+                  : `Can safely miss ${classesCount} class${classesCount === 1 ? "" : "es"} before 75%`}
+             </p>
+             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-600">
+               Conducted {item.courseConducted} · Absent {item.courseAbsent}
              </p>
           </div>
           
@@ -138,6 +186,38 @@ const SubjectCard = ({ item }: { item: AttendanceDetail }) => {
              ))}
           </div>
        </div>
+    </div>
+  );
+};
+
+const InsightCard = ({
+  icon: Icon,
+  label,
+  value,
+  helper,
+  tone,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  helper: string;
+  tone: "red" | "emerald" | "sky" | "amber";
+}) => {
+  const tones = {
+    red: "bg-red-500/10 text-red-300 border-red-400/15",
+    emerald: "bg-emerald-500/10 text-emerald-300 border-emerald-400/15",
+    sky: "bg-sky-500/10 text-sky-300 border-sky-400/15",
+    amber: "bg-amber-500/10 text-amber-200 border-amber-400/15",
+  };
+
+  return (
+    <div className={`rounded-[28px] border p-5 backdrop-blur-xl ${tones[tone]}`}>
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-400">{label}</p>
+        <Icon size={16} />
+      </div>
+      <div className="mt-4 text-2xl font-black tracking-tight text-white">{value}</div>
+      <p className="mt-2 text-xs leading-5 text-zinc-300">{helper}</p>
     </div>
   );
 };

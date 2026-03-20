@@ -9,7 +9,9 @@ import {
   Zap,
   Activity,
   Award,
-  ChevronRight
+  ChevronRight,
+  Target,
+  TrendingUp
 } from "lucide-react";
 import ShinyText from "@/components/ShinyText";
 
@@ -31,6 +33,13 @@ const MarksPage = () => {
   const totalObtained = data.reduce((acc, m) => acc + (m.total?.obtained || 0), 0);
   const totalMax = data.reduce((acc, m) => acc + (m.total?.maxMark || 0), 0);
   const formatMark = (n: number) => Number.isInteger(n) ? n.toString() : n.toFixed(1);
+  const scoredSubjects = data.filter((item) => (item.total?.maxMark || 0) > 0);
+  const overallPercentage = totalMax > 0 ? (totalObtained / totalMax) * 100 : 0;
+  const weakestSubject = [...scoredSubjects].sort(
+    (a, b) => ((a.total?.obtained || 0) / Math.max(a.total?.maxMark || 1, 1)) - ((b.total?.obtained || 0) / Math.max(b.total?.maxMark || 1, 1))
+  )[0];
+  const targetPercentage = 85;
+  const targetGap = Math.max(0, Math.ceil((targetPercentage * totalMax) / 100 - totalObtained));
 
   return (
     <main className="relative min-h-screen w-full bg-[#0a0a0a] text-white px-6 pb-32 pt-12 overflow-y-auto font-sans">
@@ -108,6 +117,40 @@ const MarksPage = () => {
            </div>
         </section>
 
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <MetricCard
+            icon={Target}
+            label="Target Gap"
+            value={`${targetGap}`}
+            helper={`Marks needed to reach ${targetPercentage}% overall`}
+            tone="amber"
+          />
+          <MetricCard
+            icon={TrendingUp}
+            label="Current Average"
+            value={`${overallPercentage.toFixed(1)}%`}
+            helper="Overall scored percentage"
+            tone="emerald"
+          />
+          <MetricCard
+            icon={Activity}
+            label="Weakest Subject"
+            value={weakestSubject?.course || "--"}
+            helper={weakestSubject ? `${(((weakestSubject.total?.obtained || 0) / Math.max(weakestSubject.total?.maxMark || 1, 1)) * 100).toFixed(0)}% currently` : "Waiting for marks data"}
+            tone="red"
+          />
+        </section>
+
+        <section className="rounded-[32px] border border-premium-gold/15 bg-premium-gold/5 p-6 backdrop-blur-xl">
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-premium-gold/80">Marks Target Planner</p>
+          <h2 className="mt-2 text-xl font-black tracking-tight text-white">What to improve next</h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-300">
+            {targetGap > 0
+              ? `You need roughly ${targetGap} more marks across upcoming evaluations to push the overall score to ${targetPercentage}%. Prioritize ${weakestSubject?.course || "your lowest-scoring subject"} first.`
+              : `You are already at or above the ${targetPercentage}% benchmark. Use GradeX to simulate even higher targets and GPA outcomes.`}
+          </p>
+        </section>
+
         {/* Subject Mastery */}
         <section className="flex flex-col gap-6">
            <h2 className="text-2xl font-black tracking-tight">Subject Mastery</h2>
@@ -120,6 +163,37 @@ const MarksPage = () => {
 
       </div>
     </main>
+  );
+};
+
+const MetricCard = ({
+  icon: Icon,
+  label,
+  value,
+  helper,
+  tone,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  helper: string;
+  tone: "amber" | "emerald" | "red";
+}) => {
+  const tones = {
+    amber: "border-amber-400/15 bg-amber-500/8 text-amber-200",
+    emerald: "border-emerald-400/15 bg-emerald-500/8 text-emerald-200",
+    red: "border-red-400/15 bg-red-500/8 text-red-200",
+  };
+
+  return (
+    <div className={`rounded-[28px] border p-5 backdrop-blur-xl ${tones[tone]}`}>
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-400">{label}</p>
+        <Icon size={16} />
+      </div>
+      <div className="mt-4 text-2xl font-black tracking-tight text-white">{value}</div>
+      <p className="mt-2 text-xs leading-5 text-zinc-300">{helper}</p>
+    </div>
   );
 };
 

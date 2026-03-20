@@ -11,10 +11,14 @@ export default function SwRegister() {
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator)) return;
     const isDevelopment = process.env.NODE_ENV !== "production";
+    const isSecureContextForSW =
+      window.isSecureContext ||
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
 
     let registrationRef: ServiceWorkerRegistration | null = null;
 
-    // Remove stale or incompatible workers, and fully disable SW in local dev.
+    // Remove stale or incompatible workers without disabling valid local registrations.
     async function cleanupWorkers({ unregisterAll = false }: { unregisterAll?: boolean } = {}) {
       try {
         const regs = await navigator.serviceWorker.getRegistrations();
@@ -113,17 +117,20 @@ export default function SwRegister() {
         if ("serviceWorker" in navigator) {
           navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
         }
-      } catch (_err) {
+      } catch {
         // Registration failed; ignore silently — site still works without SW
         // console.warn("SW registration failed", _err);
       }
     }
 
     (async () => {
-      if (isDevelopment) {
-        await cleanupWorkers({ unregisterAll: true });
+      if (!isSecureContextForSW) {
+        if (isDevelopment) {
+          console.log("Service Worker skipped: secure context required.");
+        }
         return;
       }
+
       await cleanupWorkers();
       await registerSW();
     })();
