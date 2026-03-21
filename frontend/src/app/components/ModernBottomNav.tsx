@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
   Home, 
-  LayoutDashboard,
+  FolderKanban,
   Calendar,
   CalendarCheck,
   Clock,
@@ -32,7 +32,7 @@ const ModernBottomNav = () => {
     { name: "Attend", href: "/app/attendance", icon: CalendarCheck, color: "text-slate-700" },
     { name: "Schedule", href: "/app/timetable", icon: Clock, color: "text-slate-700" },
     { name: "Marks", href: "/app/marks", icon: GraduationCap, color: "text-slate-700" },
-    { name: "Planner", href: "/app/projects", icon: LayoutDashboard, color: "text-slate-700" },
+    { name: "Projects", href: "/app/projects", icon: FolderKanban, color: "text-slate-700" },
     { name: "GradeX", href: "/app/gradex", icon: Target, color: "text-slate-700" },
     { name: "Courses", href: "/app/course", icon: BookOpen, color: "text-slate-700" },
     { name: "Percent", href: "/app/percentage", icon: Book, color: "text-slate-700" },
