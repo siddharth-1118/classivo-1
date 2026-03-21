@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Sparkles,
   BedDouble,
+  FolderKanban,
 } from "lucide-react";
 import { useCalendar, useDayOrder, useTimetable, useUserInfo, useAttendance, useMarks } from "@/hooks/query";
 import { fetchHostelRoommate } from "@/lib/studentHubApi";
@@ -411,6 +412,29 @@ export default function DashboardPage() {
                 className="h-full rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.5)]"
                 style={{ width: `${marksProgress}%` }}
               />
+            </div>
+          </Link>
+
+          <Link
+            href="/app/projects"
+            className="col-span-2 rounded-[24px] border border-white/10 bg-zinc-900/45 p-3 backdrop-blur-md transition-all hover:border-sky-400/30 hover:bg-zinc-900/60 active:scale-[0.99]"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
+                  <FolderKanban size={18} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">Projects</p>
+                  <h3 className="text-sm font-black tracking-tight text-white">Project Hub</h3>
+                  <p className="text-[10px] leading-5 text-zinc-400">
+                    Open project ideas, lab support, and partner options from one place.
+                  </p>
+                </div>
+              </div>
+              <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-zinc-500">
+                Open <ChevronRight size={11} />
+              </span>
             </div>
           </Link>
         </section>
