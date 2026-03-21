@@ -5,7 +5,7 @@
 // - cache trimming + versioning
 // - client notifications on update
 
-const CACHE_VERSION = "v4-20260317"; // bump this on every deploy (or inject during build)
+const CACHE_VERSION = "v5-20260321"; // bump this on every deploy (or inject during build)
 const PRECACHE = `Classivo-precache-${CACHE_VERSION}`;
 const RUNTIME = `Classivo-runtime-${CACHE_VERSION}`;
 const API_CACHE = `Classivo-api-${CACHE_VERSION}`;

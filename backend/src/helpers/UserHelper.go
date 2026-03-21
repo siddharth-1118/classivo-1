@@ -10,12 +10,21 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+const userProfileTableMarker = `<table border="0" align="left" cellpadding="1" cellspacing="1" style="width:900px;">`
+
 func GetUser(rawPage string) (*types.User, error) {
-	page := strings.Split(rawPage, `<table border="0" align="left" cellpadding="1" cellspacing="1" style="width:900px;">`)[1]
-	page = strings.Split(page, "</table>")[0]
+	sectionStart := strings.Index(rawPage, userProfileTableMarker)
+	if sectionStart == -1 {
+		return nil, fmt.Errorf("profile table marker not found in academic portal response")
+	}
 
-	page = `<table border="0" align="left" cellpadding="1" cellspacing="1" style="width:900px;">` + page + "</table>"
+	tableChunk := rawPage[sectionStart:]
+	sectionEnd := strings.Index(tableChunk, "</table>")
+	if sectionEnd == -1 {
+		return nil, fmt.Errorf("profile table closing tag not found in academic portal response")
+	}
 
+	page := tableChunk[:sectionEnd+len("</table>")]
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(page))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse HTML: %v", err)
@@ -30,14 +39,15 @@ func GetUser(rawPage string) (*types.User, error) {
 		data.RegNumber = regNumber
 	}
 
-	data.Year = getYear(data.RegNumber)
+	if data.RegNumber != "" {
+		data.Year = getYear(data.RegNumber)
+	}
 
 	doc.Find("tr").Each(func(i int, row *goquery.Selection) {
 		cells := row.Find("td")
-		for i := 0; i < cells.Length(); i += 2 {
-			key := cells.Eq(i).Text()
-			key = strings.TrimSuffix(key, ":")
-			value := cells.Eq(i + 1).Text()
+		for i := 0; i+1 < cells.Length(); i += 2 {
+			key := strings.TrimSpace(strings.TrimSuffix(cells.Eq(i).Text(), ":"))
+			value := strings.TrimSpace(cells.Eq(i + 1).Text())
 
 			switch key {
 			case "Name":
@@ -51,15 +61,31 @@ func GetUser(rawPage string) (*types.User, error) {
 			case "Semester":
 				data.Semester = utils.ParseInt(value)
 			case "Department":
-				arr := strings.Split(value, "-")
-				data.Department = strings.TrimSpace(arr[0])
-				section := strings.TrimSpace(arr[1])
-				section = strings.TrimPrefix(section, "(")
-				section = strings.TrimSuffix(section, " Section)")
-				data.Section = section
+				assignDepartmentAndSection(data, value)
 			}
 		}
 	})
 
 	return data, nil
+}
+
+func assignDepartmentAndSection(user *types.User, value string) {
+	cleanValue := strings.TrimSpace(value)
+	if cleanValue == "" {
+		return
+	}
+
+	parts := strings.SplitN(cleanValue, "-", 2)
+	user.Department = strings.TrimSpace(parts[0])
+
+	if len(parts) < 2 {
+		return
+	}
+
+	sectionPart := strings.TrimSpace(parts[1])
+	sectionPart = strings.TrimPrefix(sectionPart, "(")
+	sectionPart = strings.TrimSuffix(sectionPart, ")")
+	sectionPart = strings.TrimSuffix(sectionPart, " Section")
+	sectionPart = strings.TrimSuffix(sectionPart, " section")
+	user.Section = strings.TrimSpace(sectionPart)
 }
