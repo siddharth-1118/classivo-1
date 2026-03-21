@@ -69,9 +69,6 @@ func resolveStudentIdentity(c *fiber.Ctx) (*StudentIdentity, error) {
 
 	encodedToken := utils.Encode(token)
 	userData, err := db.FindByToken("goscrape", encodedToken)
-	if err != nil {
-		return nil, err
-	}
 
 	identity := &StudentIdentity{
 		Email:     "unknown@srmist.edu.in",
@@ -112,6 +109,27 @@ func resolveStudentIdentity(c *fiber.Ctx) (*StudentIdentity, error) {
 
 	if identity.RegNumber != "UNKNOWN" && strings.HasPrefix(identity.Email, "unknown") {
 		identity.Email = strings.ToLower(identity.RegNumber) + "@srmist.edu.in"
+	}
+
+	if identity.Name == "Anonymous Student" || identity.RegNumber == "UNKNOWN" {
+		if liveUser, liveErr := GetUser(token); liveErr == nil && liveUser != nil {
+			if strings.TrimSpace(liveUser.Name) != "" {
+				identity.Name = strings.TrimSpace(liveUser.Name)
+			}
+			if strings.TrimSpace(liveUser.RegNumber) != "" {
+				identity.RegNumber = strings.TrimSpace(liveUser.RegNumber)
+				identity.Email = strings.ToLower(identity.RegNumber) + "@srmist.edu.in"
+			}
+			if strings.TrimSpace(liveUser.Section) != "" {
+				identity.Section = strings.TrimSpace(liveUser.Section)
+			}
+			if strings.TrimSpace(liveUser.Department) != "" {
+				identity.Department = strings.TrimSpace(liveUser.Department)
+			}
+			if liveUser.Semester > 0 {
+				identity.Semester = liveUser.Semester
+			}
+		}
 	}
 
 	return identity, nil
