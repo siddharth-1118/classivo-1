@@ -395,7 +395,7 @@ export default function DashboardPage() {
           ) : null}
         </section>
 
-        <section className="grid min-h-0 flex-1 grid-cols-2 gap-3">
+        <section className="grid min-h-0 flex-1 grid-cols-1 gap-3">
           <div className="flex min-h-0 flex-col rounded-[24px] border border-white/10 bg-zinc-900/30 p-3 backdrop-blur-md">
             <div className="mb-2 flex items-center justify-between gap-2">
               <div>
