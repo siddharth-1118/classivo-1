@@ -373,6 +373,8 @@ func main() {
 	api.Get("/events", handlers.HandleListEvents)
 	api.Get("/hostel-roommate", handlers.HandleGetHostelRoommate)
 	api.Post("/hostel-roommate", handlers.HandleUpsertHostelRoommate)
+	api.Get("/hostel-rrommate", handlers.HandleGetHostelRoommate)
+	api.Post("/hostel-rrommate", handlers.HandleUpsertHostelRoommate)
 	api.Post("/admin/analytics", handlers.HandleGetAnalytics)
 	api.Post("/admin/queries", handlers.HandleGetQueries)
 	api.Post("/admin/moderation", handlers.HandleGetModeration)
