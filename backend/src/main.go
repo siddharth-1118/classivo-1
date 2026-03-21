@@ -49,6 +49,7 @@ func main() {
 	scheduler.StartCronManager()
 
 	port := os.Getenv("PORT")
+	port = strings.TrimSpace(port)
 	if port == "" {
 		port = defaultPort
 	}
@@ -360,6 +361,25 @@ func main() {
 	})
 
 	api.Post("/queries", handlers.HandleSubmitQuery)
+	api.Get("/notes", handlers.HandleListNotes)
+	api.Post("/notes/upload", handlers.HandleUploadNote)
+	api.Get("/community/posts", handlers.HandleListCommunityPosts)
+	api.Post("/community/posts", handlers.HandleCreateCommunityPost)
+	api.Get("/community/posts/:id/replies", handlers.HandleListCommunityReplies)
+	api.Post("/community/posts/:id/replies", handlers.HandleCreateCommunityReply)
+	api.Post("/community/reports", handlers.HandleReportContent)
+	api.Get("/faculty-reviews", handlers.HandleListFacultyReviews)
+	api.Post("/faculty-reviews", handlers.HandleCreateFacultyReview)
+	api.Get("/events", handlers.HandleListEvents)
+	api.Post("/admin/analytics", handlers.HandleGetAnalytics)
+	api.Post("/admin/queries", handlers.HandleGetQueries)
+	api.Post("/admin/moderation", handlers.HandleGetModeration)
+	api.Post("/admin/notes/:id/approve", handlers.HandleApproveNote)
+	api.Post("/admin/notes/:id/reject", handlers.HandleRejectNote)
+	api.Post("/admin/reports/:id/dismiss", handlers.HandleDismissReport)
+	api.Post("/admin/reports/:id/remove", handlers.HandleRemoveReportedContent)
+	api.Post("/admin/events", handlers.HandleCreateEvent)
+	api.Delete("/admin/events/:id", handlers.HandleDeleteEvent)
 	api.Post("/analytics/pageview", handlers.HandleTrackPageView)
 	api.Post("/notifications/subscribe", handlers.HandleSaveSubscription)
 
@@ -427,7 +447,9 @@ func main() {
 	app.Static("/", resolvedStaticDir)
 
 	log.Printf("Starting on :%s", port)
-	app.Listen(":" + port)
+	if err := app.Listen(":" + port); err != nil {
+		log.Printf("Fiber listen failed on :%s: %v", port, err)
+	}
 }
 
 func buildAllowedOrigins() string {
@@ -537,9 +559,12 @@ func fetchAllData(token string) (map[string]interface{}, error) {
 func isPublicRoute(path string) bool {
 	path = strings.TrimSuffix(path, "/")
 	switch path {
-	case "/api/login", "/api/healthz", "/api/logout", "/api/ai/chat", "/api/chat", "/api/analytics/pageview", "/api/admin/analytics", "/api/admin/queries":
+	case "/api/login", "/api/healthz", "/api/logout", "/api/ai/chat", "/api/chat", "/api/analytics/pageview", "/api/admin/analytics", "/api/admin/queries", "/api/admin/moderation", "/api/admin/events":
 		return true
 	default:
+		if strings.HasPrefix(path, "/api/admin/notes/") || strings.HasPrefix(path, "/api/admin/reports/") || strings.HasPrefix(path, "/api/admin/events/") {
+			return true
+		}
 		return false
 	}
 }

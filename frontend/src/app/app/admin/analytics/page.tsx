@@ -2,9 +2,10 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Activity, BarChart3, Lock, LogIn, RefreshCw, Users } from "lucide-react";
+import { Activity, BarChart3, Lock, LogIn, LogOut, RefreshCw, Users } from "lucide-react";
 import { getApiBase } from "@/lib/api";
 import { clearAdminSession, getAdminSession, isAdminAuthenticated, setAdminSession } from "@/utils/adminSession";
+import { getAuthToken } from "@/utils/authStorage";
 
 type AnalyticsSummary = {
   totalPageViews: number;
@@ -46,10 +47,13 @@ const AdminAnalyticsPage = () => {
     setError("");
     try {
       const session = getAdminSession();
+      const token = getAuthToken();
+
       const response = await fetch(`${getApiBase()}/api/admin/analytics`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(token ? { "X-CSRF-Token": token, Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           email: email || session.email || adminEmail || defaultEmail,
@@ -59,6 +63,10 @@ const AdminAnalyticsPage = () => {
 
       const data = await response.json();
       if (!response.ok) {
+        if (response.status === 401) {
+          clearAdminSession();
+          setIsAuthorized(false);
+        }
         throw new Error(data.error || "Failed to fetch analytics");
       }
 
@@ -87,6 +95,7 @@ const AdminAnalyticsPage = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setAdminSession(adminEmail, adminPassword);
     setIsAuthorized(true);
     fetchAnalytics(adminEmail, adminPassword);
@@ -169,6 +178,14 @@ const AdminAnalyticsPage = () => {
             >
               Lock
             </button>
+            <Link
+              href="/auth/logout"
+              onClick={() => clearAdminSession()}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl border border-red-400/20 text-sm"
+            >
+              <LogOut size={16} />
+              Logout
+            </Link>
           </div>
         </div>
 

@@ -9,7 +9,7 @@ import {
   CheckCircle2,
   Sparkles,
 } from "lucide-react";
-import { useDayOrder, useTimetable, useUserInfo, useAttendance, useMarks } from "@/hooks/query";
+import { useCalendar, useDayOrder, useTimetable, useUserInfo, useAttendance, useMarks } from "@/hooks/query";
 
 type TimetableClass = {
   time: string;
@@ -18,6 +18,14 @@ type TimetableClass = {
   courseRoomNo: string;
   courseType: string;
   isClass: boolean;
+};
+
+type CalendarEntry = {
+  date: Date;
+  rawDate: string;
+  rawMonth: string;
+  dayOrder: string;
+  event: string;
 };
 
 const parseTime = (timeStr: string) => {
@@ -37,12 +45,73 @@ const parseTime = (timeStr: string) => {
   }
 };
 
+const parseTimeRange = (timeRange: string) => {
+  const [startLabel = "", endLabel = ""] = timeRange.split("-").map((value) => value.trim());
+  return {
+    start: parseTime(startLabel),
+    end: parseTime(endLabel),
+  };
+};
+
+const formatMinutes = (totalMinutes: number) => {
+  const safeMinutes = Math.max(0, totalMinutes);
+  const hours = Math.floor(safeMinutes / 60);
+  const minutes = safeMinutes % 60;
+
+  if (hours === 0) return `${minutes} min`;
+  if (minutes === 0) return `${hours} hr`;
+  return `${hours} hr ${minutes} min`;
+};
+
+const parseAcademicDate = (monthLabel: string, dayLabel: string) => {
+  const [monthName, yearSuffix] = monthLabel.split(" '");
+  const monthIndex = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].indexOf(monthName);
+  const dayNumber = Number(dayLabel);
+  const year = Number(`20${yearSuffix}`);
+
+  if (monthIndex < 0 || Number.isNaN(dayNumber) || Number.isNaN(year)) {
+    return null;
+  }
+
+  return new Date(year, monthIndex, dayNumber);
+};
+
+const extractDayOrderNumber = (value: unknown) => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string") return NaN;
+  const match = value.match(/(\d+)/);
+  return match ? Number(match[1]) : NaN;
+};
+
+const isHolidayEntry = (entry?: CalendarEntry | null) => {
+  if (!entry) return false;
+  const event = entry.event.trim().toLowerCase();
+  const dayOrder = entry.dayOrder.trim().toLowerCase();
+  return dayOrder === "-" || dayOrder === "" || event.includes("holiday");
+};
+
+const isSameDate = (left: Date, right: Date) =>
+  left.getFullYear() === right.getFullYear() &&
+  left.getMonth() === right.getMonth() &&
+  left.getDate() === right.getDate();
+
 export default function DashboardPage() {
   const { data: timetableData } = useTimetable();
   const { data: dayOrderData } = useDayOrder();
+  const { data: calendarData } = useCalendar();
   const { data: userInfo } = useUserInfo();
   const { data: attendanceData } = useAttendance();
   const { data: marksData } = useMarks();
+  const [currentTime, setCurrentTime] = React.useState<Date | null>(null);
+
+  React.useEffect(() => {
+    const syncClock = () => setCurrentTime(new Date());
+
+    syncClock();
+    const intervalId = window.setInterval(syncClock, 30000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   const getScheduleForDayOrder = (dayOrder: number) => {
     if (!timetableData || timetableData.length === 0 || Number.isNaN(dayOrder) || dayOrder <= 0) {
@@ -56,14 +125,143 @@ export default function DashboardPage() {
       .sort((a, b) => parseTime(a.time) - parseTime(b.time));
   };
 
-  const activeDayOrder = Number(dayOrderData?.dayOrder);
-  const totalDayOrders = timetableData?.length ?? 0;
-  const todayDayOrder = !Number.isNaN(activeDayOrder) && activeDayOrder > 0 ? activeDayOrder : 1;
-  const nextDayOrder = totalDayOrders > 0 ? (todayDayOrder % totalDayOrders) + 1 : todayDayOrder + 1;
+  const calendarEntries = React.useMemo(() => {
+    return (calendarData ?? [])
+      .flatMap((month) =>
+        month.days
+          .map((day) => {
+            const parsedDate = parseAcademicDate(month.month, day.date);
+            if (!parsedDate) return null;
+            return {
+              date: parsedDate,
+              rawDate: day.date,
+              rawMonth: month.month,
+              dayOrder: day.dayOrder ?? "",
+              event: day.event ?? "",
+            } satisfies CalendarEntry;
+          })
+          .filter((entry): entry is CalendarEntry => entry !== null)
+      )
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+  }, [calendarData]);
 
-  const allTodayClasses = getScheduleForDayOrder(todayDayOrder);
+  const today = React.useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }, []);
+
+  const todayCalendarEntry = React.useMemo(
+    () => calendarEntries.find((entry) => isSameDate(entry.date, today)) ?? null,
+    [calendarEntries, today]
+  );
+
+  const upcomingCalendarEntry = React.useMemo(
+    () =>
+      calendarEntries.find(
+        (entry) => entry.date.getTime() > today.getTime() && !isHolidayEntry(entry) && !Number.isNaN(extractDayOrderNumber(entry.dayOrder))
+      ) ?? null,
+    [calendarEntries, today]
+  );
+
+  const activeDayOrder = Number(dayOrderData?.dayOrder);
+  const todayDayOrderFromCalendar = extractDayOrderNumber(todayCalendarEntry?.dayOrder);
+  const todayDayOrder =
+    !Number.isNaN(todayDayOrderFromCalendar) && !isHolidayEntry(todayCalendarEntry)
+      ? todayDayOrderFromCalendar
+      : !Number.isNaN(activeDayOrder) && activeDayOrder > 0
+        ? activeDayOrder
+        : 1;
+
+  const totalDayOrders = timetableData?.length ?? 0;
+  const nextDayOrderFromCalendar = extractDayOrderNumber(upcomingCalendarEntry?.dayOrder);
+  const nextDayOrder =
+    !Number.isNaN(nextDayOrderFromCalendar)
+      ? nextDayOrderFromCalendar
+      : totalDayOrders > 0
+        ? (todayDayOrder % totalDayOrders) + 1
+        : todayDayOrder + 1;
+
+  const todayIsHoliday = isHolidayEntry(todayCalendarEntry);
+  const allTodayClasses = todayIsHoliday ? [] : getScheduleForDayOrder(todayDayOrder);
   const nextDayClasses = getScheduleForDayOrder(nextDayOrder);
-  const nextDayLabel = `Day Order ${nextDayOrder}`;
+  const todayScheduleLabel = todayIsHoliday
+    ? (todayCalendarEntry?.event?.trim() || "Holiday")
+    : `Day Order ${todayDayOrder}`;
+  const nextDayLabel = upcomingCalendarEntry
+    ? `${upcomingCalendarEntry.rawDate} ${upcomingCalendarEntry.rawMonth} · Day Order ${nextDayOrder}`
+    : `Day Order ${nextDayOrder}`;
+
+  const todayClassWindows = React.useMemo(
+    () =>
+      allTodayClasses.map((cls) => ({
+        ...cls,
+        ...parseTimeRange(cls.time),
+      })),
+    [allTodayClasses]
+  );
+
+  const nowMinutes = currentTime ? currentTime.getHours() * 60 + currentTime.getMinutes() : null;
+  const ongoingClass =
+    nowMinutes === null ? null : todayClassWindows.find((cls) => nowMinutes >= cls.start && nowMinutes <= cls.end) ?? null;
+  const nextClassToday =
+    nowMinutes === null ? null : todayClassWindows.find((cls) => cls.start > nowMinutes) ?? null;
+  const minutesLeftInCurrentClass =
+    ongoingClass && nowMinutes !== null ? Math.max(0, ongoingClass.end - nowMinutes) : null;
+  const minutesUntilNextClass =
+    nextClassToday && nowMinutes !== null ? Math.max(0, nextClassToday.start - nowMinutes) : null;
+
+  const liveClassSummary = React.useMemo(() => {
+    if (todayIsHoliday) {
+      return {
+        eyebrow: "No classes today",
+        title: todayCalendarEntry?.event?.trim() || "Holiday on the academic calendar",
+        detail: "Today is marked as a holiday, so there are no running or upcoming classes.",
+        accent: "from-rose-500/20 via-orange-500/10 to-transparent border-rose-400/20",
+      };
+    }
+
+    if (allTodayClasses.length === 0) {
+      return {
+        eyebrow: "Schedule clear",
+        title: "No classes scheduled today",
+        detail: "There are no timetable entries mapped to today's working schedule.",
+        accent: "from-zinc-500/20 via-zinc-400/10 to-transparent border-white/10",
+      };
+    }
+
+    if (ongoingClass && minutesLeftInCurrentClass !== null) {
+      return {
+        eyebrow: "Current ongoing class",
+        title: ongoingClass.courseTitle,
+        detail: `${ongoingClass.time} · ${minutesLeftInCurrentClass === 0 ? "Ending now" : `${formatMinutes(minutesLeftInCurrentClass)} left`} · ${ongoingClass.courseRoomNo || "Room not available"}`,
+        accent: "from-emerald-500/20 via-emerald-400/10 to-transparent border-emerald-400/20",
+      };
+    }
+
+    if (nextClassToday && minutesUntilNextClass !== null) {
+      return {
+        eyebrow: "Countdown to next class today",
+        title: nextClassToday.courseTitle,
+        detail: `${nextClassToday.time} · Starts in ${formatMinutes(minutesUntilNextClass)} · ${nextClassToday.courseRoomNo || "Room not available"}`,
+        accent: "from-sky-500/20 via-cyan-400/10 to-transparent border-sky-400/20",
+      };
+    }
+
+    return {
+      eyebrow: "Today's classes complete",
+      title: "No more classes left today",
+      detail: "You've finished today's schedule. Upcoming below shows the next working day order.",
+      accent: "from-purple-500/20 via-fuchsia-400/10 to-transparent border-purple-400/20",
+    };
+  }, [
+    allTodayClasses.length,
+    minutesLeftInCurrentClass,
+    minutesUntilNextClass,
+    nextClassToday,
+    ongoingClass,
+    todayCalendarEntry,
+    todayIsHoliday,
+  ]);
 
   const overallAttendance = attendanceData && attendanceData.length > 0
     ? (attendanceData.reduce((acc, curr) => acc + (Number(curr.courseAttendance) || 0), 0) / attendanceData.length).toFixed(1)
@@ -168,9 +366,39 @@ export default function DashboardPage() {
           </Link>
         </section>
 
+        <section className={`overflow-hidden rounded-[28px] border bg-gradient-to-br p-6 backdrop-blur-md ${liveClassSummary.accent}`}>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">{liveClassSummary.eyebrow}</p>
+          <h3 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-[28px]">{liveClassSummary.title}</h3>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-300">{liveClassSummary.detail}</p>
+
+          {!todayIsHoliday && allTodayClasses.length > 0 ? (
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Current</p>
+                <p className="mt-2 text-sm font-semibold text-white">{ongoingClass?.courseCode || "No live class"}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Time Left</p>
+                <p className="mt-2 text-sm font-semibold text-white">
+                  {minutesLeftInCurrentClass !== null ? formatMinutes(minutesLeftInCurrentClass) : "Waiting for next class"}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Next Today</p>
+                <p className="mt-2 text-sm font-semibold text-white">
+                  {minutesUntilNextClass !== null ? formatMinutes(minutesUntilNextClass) : "No more classes"}
+                </p>
+              </div>
+            </div>
+          ) : null}
+        </section>
+
         <section className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-black tracking-tight">Today&apos;s Schedule</h3>
+            <div>
+              <h3 className="text-2xl font-black tracking-tight">Today&apos;s Schedule</h3>
+              <p className="mt-1 text-xs uppercase tracking-[0.22em] text-zinc-500">{todayScheduleLabel}</p>
+            </div>
             <Link href="/app/timetable" className="flex items-center gap-1 border-b border-zinc-800 pb-0.5 text-[10px] font-black uppercase tracking-widest text-zinc-500">
               View Full
             </Link>
@@ -194,7 +422,11 @@ export default function DashboardPage() {
                 </div>
               ))
             ) : (
-              <p className="py-4 text-sm italic text-zinc-600">No sessions scheduled for today in the gallery.</p>
+              <p className="py-4 text-sm italic text-zinc-600">
+                {todayIsHoliday
+                  ? `No classes today${todayCalendarEntry?.event ? ` · ${todayCalendarEntry.event}` : ""}.`
+                  : "No sessions scheduled for today."}
+              </p>
             )}
           </div>
         </section>
@@ -224,7 +456,7 @@ export default function DashboardPage() {
                   <div className="h-12 w-[1px] bg-zinc-800 transition-colors group-hover:bg-premium-gold/30" />
                   <div className="flex-1">
                     <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.2em] text-sky-400/80">
-                      {nextDayLabel} · {cls.courseCode}
+                      Day Order {nextDayOrder} · {cls.courseCode}
                     </span>
                     <h4 className="text-sm font-bold leading-tight sm:text-base">{cls.courseTitle}</h4>
                   </div>
@@ -232,7 +464,11 @@ export default function DashboardPage() {
                 </div>
               ))
             ) : (
-              <p className="py-4 text-sm italic text-zinc-600">No classes found for {nextDayLabel.toLowerCase()}.</p>
+              <p className="py-4 text-sm italic text-zinc-600">
+                {upcomingCalendarEntry
+                  ? `No classes found for ${nextDayLabel.toLowerCase()}.`
+                  : "No upcoming working day classes found in the academic calendar."}
+              </p>
             )}
           </div>
         </section>

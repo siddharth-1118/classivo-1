@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
-import { Sparkles, Users, Info } from "lucide-react";
+import { Sparkles, Users, Info, CalendarDays, MapPin, Link2 } from "lucide-react";
 import Image from "next/image";
+import { fetchEvents } from "@/lib/studentHubApi";
 
 const clubs = [
   {
@@ -86,6 +87,14 @@ const clubs = [
 ;
 
 const ClubsPage = () => {
+  const [events, setEvents] = useState<any[]>([]);
+
+  useEffect(() => {
+    void fetchEvents()
+      .then((data) => setEvents(data.events ?? []))
+      .catch(() => setEvents([]));
+  }, []);
+
   return (
     <div className="max-w-[1600px] mx-auto space-y-6 pb-24 px-3 w-full min-h-screen">
       <div className="mb-10 text-center sm:text-left">
@@ -103,6 +112,47 @@ const ClubsPage = () => {
           celebrate diversity, and make lasting positive changes in the world.
         </p>
       </div>
+
+      <section className="space-y-5">
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="border-sky-500/25 bg-sky-500/10 text-[10px] uppercase tracking-[0.22em] text-sky-400">
+            Admin Events
+          </Badge>
+          <div className="h-px w-8 bg-sky-500/20" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {events.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-white/10 p-8 text-sm text-zinc-500">
+              No club events are live right now.
+            </div>
+          ) : null}
+          {events.map((event) => (
+            <Card key={event.id} className="overflow-hidden bg-zinc-900/30 border-zinc-800/50 backdrop-blur-sm">
+              {event.image_url ? (
+                <div className="relative h-52 w-full">
+                  <Image src={event.image_url} alt={event.title} fill className="object-cover" />
+                </div>
+              ) : null}
+              <div className="p-6 space-y-4">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.22em] text-sky-400">Campus Event</div>
+                  <h2 className="mt-2 text-2xl font-bold text-white font-space-grotesk">{event.title}</h2>
+                </div>
+                <p className="text-sm leading-relaxed text-zinc-400">{event.description}</p>
+                <div className="grid gap-2 text-xs text-zinc-400">
+                  <div className="flex items-center gap-2"><CalendarDays size={14} /> {event.event_date} · {event.event_time}</div>
+                  <div className="flex items-center gap-2"><MapPin size={14} /> {event.venue}</div>
+                  {event.registration_link ? (
+                    <a href={event.registration_link} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sky-300 hover:text-sky-200">
+                      <Link2 size={14} /> Registration Link
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {clubs.map((club, index) => (

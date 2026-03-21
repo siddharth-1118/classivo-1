@@ -137,6 +137,34 @@ const titleCase = (value: string) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 
+const mapProfileResponse = (payload: unknown): UserProfile | null => {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  const record = payload as Record<string, unknown>;
+  const source =
+    record.userInfo && typeof record.userInfo === "object"
+      ? (record.userInfo as Record<string, unknown>)
+      : record;
+
+  const name = typeof source.name === "string" ? source.name : "";
+  const regNumber = typeof source.regNumber === "string" ? source.regNumber : "";
+  const batch = typeof source.batch === "string" ? source.batch : "";
+  const section = typeof source.section === "string" ? source.section : "";
+
+  if (!name && !regNumber && !section) {
+    return null;
+  }
+
+  return {
+    name,
+    regNumber,
+    batch,
+    section,
+  };
+};
+
 const buildSectionRoom = (section: string, ownSection?: string): RoomCard => ({
   key: section,
   title: titleCase(section),
@@ -174,9 +202,10 @@ const ChatPage = () => {
     const fetchProfile = async () => {
       if (!token) return;
       try {
-        const res: any = await api.user(token);
-        if (res?.userInfo) {
-          setProfile(res.userInfo as UserProfile);
+        const res = await api.user(token);
+        const nextProfile = mapProfileResponse(res);
+        if (nextProfile) {
+          setProfile(nextProfile);
         }
       } catch (err) {
         console.error("Failed to fetch profile:", err);

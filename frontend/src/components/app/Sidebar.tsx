@@ -18,7 +18,9 @@ import {
     User,
     Users,
     X,
-    Sparkles
+    Sparkles,
+    FileText,
+    MessageCircleHeart
 } from "lucide-react";
 import { useUserInfo } from "@/hooks/query";
 import { ProjectsHubIcon } from "@/components/ui/ProjectsHubIcon";
@@ -45,8 +47,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         { name: "GradeX", href: "/app/gradex", icon: Calculator },
         { name: "Projects", href: "/app/projects", icon: ProjectsHubIcon },
         { name: "Mess Menu", href: "/app/messmenu", icon: Calendar },
+        { name: "Notes", href: "/app/notes", icon: FileText },
+        { name: "Community", href: "/app/community", icon: Users },
+        { name: "Reviews", href: "/app/reviews", icon: MessageCircleHeart },
         { name: "Profile", href: "/app/profile", icon: User },
-        { name: "Join Community", href: "https://chat.whatsapp.com/KCbxvabSvRbK96h67JF3Io", icon: Users },
         { name: "Clubs", href: "/app/clubs", icon: Sparkles },
         { name: "Settings", href: "/app/settings", icon: Settings },
     ];

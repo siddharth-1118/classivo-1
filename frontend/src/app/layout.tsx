@@ -16,6 +16,7 @@ import { AIChat } from "./components/AIChat";
 import NotificationPrompt from "./components/NotificationPrompt";
 import { AuthAnalytics } from "./components/AuthAnalytics";
 import { PageViewAnalytics } from "./components/PageViewAnalytics";
+import MessNotificationScheduler from "./components/MessNotificationScheduler";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -31,9 +32,14 @@ const geistMono = Geist_Mono({
 
 const description = "Classivo helps SRM students track attendance, marks, timetable, day order, and academic calendar in one clear student-friendly app.";
 const enableVercelAnalytics = process.env.NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS === "true";
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  process.env.NEXT_PUBLIC_URL ??
+  "https://classivo-1.vercel.app";
+const iconVersion = "11";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://classivo-1.vercel.app"),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "CLASSIVO SRM",
     template: "%s | CLASSIVO SRM",
@@ -57,7 +63,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "CLASSIVO SRM",
     description,
-    url: "https://classivo-1.vercel.app",
+    url: siteUrl,
     siteName: "CLASSIVO SRM",
     locale: "en_US",
     type: "website",
@@ -78,14 +84,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico?v=10" },
-      { url: "/favicon-16.png?v=10", type: "image/png", sizes: "16x16" },
-      { url: "/favicon-32.png?v=10", type: "image/png", sizes: "32x32" },
-      { url: "/favicon-512.png?v=10", type: "image/png", sizes: "512x512" },
-      { url: "/favicon.svg?v=10", type: "image/svg+xml" },
+      { url: `/favicon.ico?v=${iconVersion}` },
+      { url: `/favicon-16.png?v=${iconVersion}`, type: "image/png", sizes: "16x16" },
+      { url: `/favicon-32.png?v=${iconVersion}`, type: "image/png", sizes: "32x32" },
+      { url: `/favicon-512.png?v=${iconVersion}`, type: "image/png", sizes: "512x512" },
+      { url: `/favicon.svg?v=${iconVersion}`, type: "image/svg+xml" },
     ],
-    shortcut: ["/favicon.ico?v=10"],
-    apple: [{ url: "/apple-touch-icon.png?v=10", sizes: "180x180", type: "image/png" }],
+    shortcut: [`/favicon.ico?v=${iconVersion}`],
+    apple: [{ url: `/apple-touch-icon.png?v=${iconVersion}`, sizes: "180x180", type: "image/png" }],
   },
 };
 
@@ -98,12 +104,12 @@ export default function RootLayout({
     <ViewTransitions>
       <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
         <head>
-          <link rel="icon" href="/favicon.ico?v=10" sizes="any" />
-          <link rel="icon" href="/favicon-32.png?v=10" type="image/png" sizes="32x32" />
-          <link rel="icon" href="/favicon-16.png?v=10" type="image/png" sizes="16x16" />
-          <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=10" />
-          <link rel="icon" href="/favicon.svg?v=10" type="image/svg+xml" />
-          <link rel="manifest" href="/site.webmanifest?v=10" />
+          <link rel="icon" href={`/favicon.ico?v=${iconVersion}`} sizes="any" />
+          <link rel="icon" href={`/favicon-32.png?v=${iconVersion}`} type="image/png" sizes="32x32" />
+          <link rel="icon" href={`/favicon-16.png?v=${iconVersion}`} type="image/png" sizes="16x16" />
+          <link rel="apple-touch-icon" href={`/apple-touch-icon.png?v=${iconVersion}`} />
+          <link rel="icon" href={`/favicon.svg?v=${iconVersion}`} type="image/svg+xml" />
+          <link rel="manifest" href={`/site.webmanifest?v=${iconVersion}`} />
           <meta name="theme-color" content="#09090b" />
         </head>
         <body
@@ -116,6 +122,7 @@ export default function RootLayout({
           <AuthStateWatcher />
           <PageViewAnalytics />
           <AuthAnalytics />
+          <MessNotificationScheduler />
           <ToasterClientComponent />
           
           <QueryProvider>

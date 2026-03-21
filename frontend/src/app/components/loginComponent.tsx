@@ -79,6 +79,7 @@ const isRateLimitError = (error: unknown, fallbackMessage?: string): boolean => 
 export const LoginComponent = () => {
   const [eyeOpen, setEyeOpen] = useState(false);
   const { error, setError, loading, setLoading, setEmail, email } = useAuth();
+  const [typedEmail, setTypedEmail] = useState("");
   const [captchaImage, setCaptchaImage] = useState<string | null>(null);
   const [captchaDigest, setCaptchaDigest] = useState<string | null>(null);
   const [captchaCode, setCaptchaCode] = useState("");
@@ -109,10 +110,15 @@ export const LoginComponent = () => {
 
     try {
       const form = new FormData(e.currentTarget);
-      const hash1 = form.get("name") as string;
+      const hash1 = ((form.get("name") as string) || typedEmail).trim();
       const hash2 = form.get("password") as string;
 
-      if (hash1 && hash1.length !== 0) {
+      const enteredEmail =
+        hash1 && hash1.length !== 0
+          ? (hash1.includes("@") ? hash1 : `${hash1}@srmist.edu.in`).toLowerCase()
+          : email.mail;
+
+      if (enteredEmail && (!hash2 || hash2.length === 0)) {
         const addr = hash1.includes("@");
         const email = (addr ? hash1 : `${hash1}@srmist.edu.in`).toLowerCase();
 
@@ -138,21 +144,28 @@ export const LoginComponent = () => {
         return;
       }
 
-      // Second step: Validate password
       if (hash2 && hash2.length !== 0) {
-        if (!email.digest || !email.identifier) {
+        if (!enteredEmail) {
           setError("Please enter your email first");
           setLoading(false);
           return;
         }
 
+        if (email.mail !== enteredEmail) {
+          setEmail({
+            mail: enteredEmail,
+            digest: "step2",
+            identifier: "step2",
+          });
+        }
+
         const devEmail = (process.env.NEXT_PUBLIC_DEV_EMAIL || "dev@srmist.edu.in").toLowerCase();
         const devPassword = process.env.NEXT_PUBLIC_DEV_PASSWORD || "Classivo123";
-        if (email.mail.toLowerCase() === devEmail) {
+        if (enteredEmail.toLowerCase() === devEmail) {
           if (hash2 === devPassword) {
             const devToken = `${DEV_TOKEN_PREFIX}${Math.random().toString(36).slice(2)}`;
             setAuthToken(devToken);
-            Cookies.set("user", email.mail, { expires: 30, path: "/" });
+            Cookies.set("user", enteredEmail, { expires: 30, path: "/" });
             trackEvent("login_success", { mode: "dev" });
             emitAuthEvent("login");
             return (window.location.href = "/app/dashboard");
@@ -162,7 +175,7 @@ export const LoginComponent = () => {
             return;
           }
         }
-        const payload: LoginPayload = { account: email.mail, password: hash2 };
+        const payload: LoginPayload = { account: enteredEmail, password: hash2 };
         if (captchaDigest && captchaCode) {
           payload.cdigest = captchaDigest;
           payload.captcha = captchaCode;
@@ -220,10 +233,10 @@ export const LoginComponent = () => {
         if (loginSucceeded) {
           if (hasCookies) {
             setAuthToken(cookiesText);
-            Cookies.set("user", email.mail, { expires: 30, path: "/" });
+            Cookies.set("user", enteredEmail, { expires: 30, path: "/" });
             const encryptionKey = process.env.NEXT_PUBLIC_ENCRYPTION_KEY || "@Ethical_Hacker2";
             encrypt(hash2, encryptionKey).then((encryptedPassword) => {
-              updateUserCache(email.mail, encryptedPassword);
+              updateUserCache(enteredEmail, encryptedPassword);
             }).catch((err) => {
               console.error("Encryption failed:", err);
             });
@@ -348,67 +361,60 @@ export const LoginComponent = () => {
           <div className="flex items-center justify-center px-4 py-6 lg:px-10 lg:py-10">
             <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-black/25 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-2xl sm:p-7">
               <div className="mb-6">
-                <div className="text-xs uppercase tracking-[0.22em] text-zinc-500">
-                  {email?.digest.length === 0 ? "Step 1" : "Step 2"}
-                </div>
-                <h2 className="mt-3 text-3xl font-semibold text-white">
-                  {email?.digest.length === 0 ? "Enter your SRM email" : "Enter your password"}
-                </h2>
+                <div className="text-xs uppercase tracking-[0.22em] text-zinc-500">Student Login</div>
+                <h2 className="mt-3 text-3xl font-semibold text-white">Enter your SRM credentials</h2>
                 <p className="mt-2 text-sm leading-7 text-zinc-400">
-                  {email?.digest.length === 0
-                    ? "Your SRM email address will be used to proceed to the secure authentication step."
-                    : `Signing in as ${email.mail}`}
+                  {typedEmail || email.mail
+                    ? `Signing in as ${(typedEmail || email.mail).includes("@") ? (typedEmail || email.mail) : `${typedEmail || email.mail}@srmist.edu.in`}`
+                    : "Use your SRM email and password to continue."}
                 </p>
               </div>
 
               <form onSubmit={HandleSubmit} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-4">
-                  {email?.digest.length === 0 && (
-                    <div className="space-y-2">
-                      <label htmlFor="name" className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                        SRM Mail ID
-                      </label>
+                  <div className="space-y-2">
+                    <label htmlFor="name" className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                      SRM Mail ID
+                    </label>
+                    <input
+                      id="name"
+                      name="name"
+                      type="email"
+                      value={typedEmail}
+                      onChange={(e) => setTypedEmail(e.target.value)}
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-white outline-none transition-colors placeholder:text-zinc-500 focus:border-premium-gold/40 focus:bg-white/10"
+                      placeholder="example@srmist.edu.in"
+                      autoComplete="email"
+                      autoFocus
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="password" className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                      Password
+                    </label>
+                    <div className="relative z-10">
                       <input
-                        id="name"
-                        name="name"
-                        type="name"
-                        className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-white outline-none transition-colors placeholder:text-zinc-500 focus:border-premium-gold/40 focus:bg-white/10"
-                        placeholder="example@srmist.edu.in"
-                        autoComplete="email"
-                        autoFocus
+                        id="password"
+                        name="password"
+                        type={eyeOpen ? "text" : "password"}
+                        className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 pr-14 text-white outline-none transition-colors placeholder:text-zinc-500 focus:border-premium-gold/40 focus:bg-white/10"
+                        placeholder="Enter your SRM password"
+                        autoComplete="current-password"
                         required
                       />
+                      <button
+                        type="button"
+                        onClick={() => setEyeOpen((prev) => !prev)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 transition hover:text-white"
+                      >
+                        {eyeOpen ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                      </button>
                     </div>
-                  )}
+                  </div>
 
-                  {email?.digest.length !== 0 && (
-                    <div className="space-y-2">
-                      <label htmlFor="password" className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                        Password
-                      </label>
-                      <div className="relative z-10">
-                        <input
-                          id="password"
-                          name="password"
-                          type={eyeOpen ? "text" : "password"}
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 pr-14 text-white outline-none transition-colors placeholder:text-zinc-500 focus:border-premium-gold/40 focus:bg-white/10"
-                          placeholder="Enter your SRM password"
-                          autoComplete="current-password"
-                          autoFocus
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setEyeOpen((prev) => !prev)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 transition hover:text-white"
-                        >
-                          {eyeOpen ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {email?.digest.length !== 0 && captchaImage && (
+                  {captchaImage && (
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                       <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">Verification</div>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -471,8 +477,6 @@ export const LoginComponent = () => {
                       <Loader className="h-4 w-4 text-black" />
                       Processing
                     </span>
-                  ) : email?.digest.length === 0 ? (
-                    "Continue"
                   ) : (
                     "Login"
                   )}

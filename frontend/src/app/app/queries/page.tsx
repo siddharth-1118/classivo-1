@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { BookOpenText, CheckCircle2, Send } from "lucide-react";
+import Link from "next/link";
+import { BookOpenText, CheckCircle2, LogOut, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/app/components/ui/Card";
 import { getApiBase } from "@/lib/api";
@@ -65,14 +66,23 @@ export default function QueriesPage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-4 pb-24 pt-4 sm:px-6">
       <Card className="overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.28)]">
-        <div className="flex items-center gap-3">
-          <div className="rounded-2xl border border-sky-400/20 bg-sky-400/10 p-3 text-sky-300">
-            <BookOpenText size={20} />
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl border border-sky-400/20 bg-sky-400/10 p-3 text-sky-300">
+              <BookOpenText size={20} />
+            </div>
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.22em] text-zinc-500">Student Queries</div>
+              <h1 className="text-2xl font-semibold text-white">Send your query to admin</h1>
+            </div>
           </div>
-          <div>
-            <div className="text-[11px] uppercase tracking-[0.22em] text-zinc-500">Student Queries</div>
-            <h1 className="text-2xl font-semibold text-white">Send your query to admin</h1>
-          </div>
+          <Link
+            href="/auth/logout"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-300 transition-all hover:bg-red-500/20"
+          >
+            <LogOut size={16} />
+            Logout
+          </Link>
         </div>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-300">
           If you have any issue, feedback, or question, type it here. It will be delivered to the admin queries dashboard.

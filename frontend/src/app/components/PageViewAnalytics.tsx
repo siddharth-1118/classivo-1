@@ -23,12 +23,16 @@ export function PageViewAnalytics() {
       return;
     }
 
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+      return;
+    }
+
     const visitorId = getOrCreateVisitorId();
     if (!visitorId) {
       return;
     }
 
-    fetch(`${getApiBase()}/api/analytics/pageview`, {
+    void fetch(`${getApiBase()}/api/analytics/pageview`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -39,8 +43,8 @@ export function PageViewAnalytics() {
         referrer: document.referrer || "",
         userAgent: navigator.userAgent || "",
       }),
-    }).catch((error) => {
-      console.error("[analytics] Failed to record page view", error);
+    }).catch(() => {
+      // Ignore analytics failures in the UI; this should never block navigation.
     });
   }, [pathname]);
 

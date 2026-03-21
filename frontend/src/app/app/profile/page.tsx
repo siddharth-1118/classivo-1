@@ -4,7 +4,7 @@ import React from "react";
 import { useUserInfo } from "@/hooks/query";
 import { UserInfo } from "srm-academia-api";
 import { GlobalLoader } from "../components/loader";
-import { Hash, Phone, Book, Layers, ChevronLeft, Sparkles } from "lucide-react";
+import { Hash, Phone, Book, Layers, ChevronLeft, Sparkles, LogOut } from "lucide-react";
 import Link from "next/link";
 
 const Page = () => {
@@ -67,6 +67,21 @@ const Data = ({ data }: { data: UserInfo }) => {
             <ProfileRow icon={<Phone size={16} />} label="Mobile" value={data.mobile} />
             <ProfileRow icon={<Layers size={16} />} label="Semester" value={String(data.semester)} />
             <ProfileRow icon={<Book size={16} />} label="Section" value={data.section} />
+          </div>
+
+          <div className="mt-6">
+            <Link
+              href="/auth/logout"
+              className="flex items-center justify-between rounded-2xl border border-red-500/20 bg-red-500/5 p-4 transition-colors hover:bg-red-500/10"
+            >
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-2 text-red-300">
+                  <LogOut size={16} />
+                </div>
+                <span className="text-sm font-medium text-red-300">Logout</span>
+              </div>
+              <span className="text-xs uppercase tracking-[0.2em] text-red-200/70">End Session</span>
+            </Link>
           </div>
 
           <p className="mt-6 text-center text-xs text-zinc-500">Academic details synced from portal.</p>
