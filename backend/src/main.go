@@ -33,6 +33,7 @@ import (
 const (
 	defaultPort = "7860"
 	staticDir   = "../static"
+	buildTag    = "v17-hostel-roommate-2026-03-21"
 )
 
 func main() {
@@ -74,6 +75,7 @@ func main() {
 			"message": "Classivo API is Live 🚀",
 			"status":  "running",
 			"version": "v17-stable",
+			"build":   buildTag,
 		})
 	})
 
@@ -81,6 +83,7 @@ func main() {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"status":  "ok",
 			"service": "backend",
+			"build":   buildTag,
 		})
 	})
 
@@ -232,6 +235,7 @@ func main() {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"status":  "ok",
 			"service": "api",
+			"build":   buildTag,
 		})
 	})
 
@@ -464,7 +468,7 @@ func main() {
 	log.Printf("Serving static from %s", resolvedStaticDir)
 	app.Static("/", resolvedStaticDir)
 
-	log.Printf("Starting on :%s", port)
+	log.Printf("Starting on :%s | build=%s", port, buildTag)
 	if err := app.Listen(":" + port); err != nil {
 		log.Printf("Fiber listen failed on :%s: %v", port, err)
 	}
