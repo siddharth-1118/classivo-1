@@ -158,6 +158,7 @@ async function request<T = Json>(path: string, opts: RequestOptions = {}): Promi
     headers: {
       "Content-Type": "application/json",
       ...(token ? { "X-CSRF-Token": token } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
     ...(body !== undefined ? { body: typeof body === "string" ? body : JSON.stringify(body) } : {}),
