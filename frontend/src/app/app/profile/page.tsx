@@ -86,7 +86,7 @@ const Data = ({ data }: { data: UserInfo }) => {
   return (
     <main className="min-h-screen w-full text-white overflow-y-auto pb-20">
       <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6">
-        <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur-xl">
+        <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-6 shadow-[0_14px_36px_rgba(0,0,0,0.22)]">
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-premium-gold">
@@ -98,15 +98,15 @@ const Data = ({ data }: { data: UserInfo }) => {
                 Profile information synchronized from the academic portal, presented in a refined premium layout.
               </p>
             </div>
-            <Link href="/app/settings" className="rounded-full border border-white/10 bg-white/5 p-3 text-zinc-300 transition hover:bg-white/10 hover:text-white">
+            <Link href="/app/settings" className="rounded-full border border-white/10 bg-white/5 p-3 text-zinc-300 hover:bg-white/10 hover:text-white">
               <ChevronLeft size={22} />
             </Link>
           </div>
 
           <div className="mt-8 flex flex-col items-center gap-4">
             <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-premium-gold/20 blur-2xl" />
-              <div className="relative flex h-28 w-28 items-center justify-center rounded-full border border-white/10 bg-black/25 shadow-[0_20px_40px_rgba(0,0,0,0.3)]">
+              <div className="absolute inset-0 rounded-full bg-premium-gold/12 blur-xl" />
+              <div className="relative flex h-28 w-28 items-center justify-center rounded-full border border-white/10 bg-black/25 shadow-[0_12px_24px_rgba(0,0,0,0.24)]">
                 <span className="text-4xl font-bold tracking-widest text-white font-display">{initials}</span>
               </div>
             </div>
@@ -125,7 +125,7 @@ const Data = ({ data }: { data: UserInfo }) => {
             <ProfileRow icon={<Book size={16} />} label="Section" value={data.section} />
           </div>
 
-          <section className="mt-8 rounded-[28px] border border-white/10 bg-black/20 p-5 shadow-[0_12px_36px_rgba(0,0,0,0.18)]">
+          <section className="mt-8 rounded-[28px] border border-white/10 bg-black/20 p-5 shadow-[0_10px_26px_rgba(0,0,0,0.16)]">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-sky-300">
@@ -150,7 +150,7 @@ const Data = ({ data }: { data: UserInfo }) => {
                   value={hostelName}
                   onChange={(event) => setHostelName(event.target.value)}
                   placeholder="Example: Paari Bhavan"
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/40"
+                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-sky-400/40"
                 />
               </label>
 
@@ -161,7 +161,7 @@ const Data = ({ data }: { data: UserInfo }) => {
                   value={roomNumber}
                   onChange={(event) => setRoomNumber(event.target.value)}
                   placeholder="Example: A-214"
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/40"
+                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-sky-400/40"
                 />
               </label>
 
@@ -169,7 +169,7 @@ const Data = ({ data }: { data: UserInfo }) => {
                 <button
                   type="submit"
                   disabled={isSavingHostel}
-                  className="w-full rounded-2xl border border-sky-400/20 bg-sky-400/10 px-5 py-3 text-sm font-medium text-sky-100 transition hover:bg-sky-400/15 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-2xl border border-sky-400/20 bg-sky-400/10 px-5 py-3 text-sm font-medium text-sky-100 hover:bg-sky-400/15 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSavingHostel ? "Saving..." : "Save Room"}
                 </button>
@@ -236,7 +236,7 @@ const Data = ({ data }: { data: UserInfo }) => {
           <div className="mt-6">
             <Link
               href="/auth/logout"
-              className="flex items-center justify-between rounded-2xl border border-red-500/20 bg-red-500/5 p-4 transition-colors hover:bg-red-500/10"
+              className="flex items-center justify-between rounded-2xl border border-red-500/20 bg-red-500/5 p-4 hover:bg-red-500/10"
             >
               <div className="flex items-center gap-3">
                 <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-2 text-red-300">

@@ -323,8 +323,8 @@ export const LoginComponent = () => {
   };
   return (
     <div className="flex-1 overflow-y-auto px-4 pb-6 pt-4 sm:px-6 lg:px-0">
-      <div className="mx-auto relative w-full max-w-6xl overflow-hidden rounded-[36px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-3xl">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.15),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.08),transparent_28%)]" />
+      <div className="mx-auto relative w-full max-w-6xl overflow-hidden rounded-[36px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] shadow-[0_18px_48px_rgba(0,0,0,0.32)]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.1),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.05),transparent_22%)]" />
         <div className="relative grid grid-cols-1 lg:min-h-[620px] lg:grid-cols-[1.05fr_0.95fr]">
           <div className="flex flex-col justify-between border-b border-white/10 px-6 py-6 lg:border-b-0 lg:border-r lg:px-10 lg:py-10">
             <div>
@@ -359,7 +359,7 @@ export const LoginComponent = () => {
           </div>
 
           <div className="flex items-center justify-center px-4 py-6 lg:px-10 lg:py-10">
-            <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-black/25 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-2xl sm:p-7">
+            <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-black/30 p-6 shadow-[0_14px_36px_rgba(0,0,0,0.28)] sm:p-7">
               <div className="mb-6">
                 <div className="text-xs uppercase tracking-[0.22em] text-zinc-500">Student Login</div>
                 <h2 className="mt-3 text-3xl font-semibold text-white">Enter your SRM credentials</h2>
@@ -407,7 +407,7 @@ export const LoginComponent = () => {
                       <button
                         type="button"
                         onClick={() => setEyeOpen((prev) => !prev)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 transition hover:text-white"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
                       >
                         {eyeOpen ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                       </button>
@@ -470,7 +470,7 @@ export const LoginComponent = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex w-full items-center justify-center rounded-2xl bg-premium-gold px-4 py-3.5 text-sm font-bold uppercase tracking-[0.22em] text-black transition-all hover:bg-[#f3cf63] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="flex w-full items-center justify-center rounded-2xl bg-premium-gold px-4 py-3.5 text-sm font-bold uppercase tracking-[0.22em] text-black hover:bg-[#f3cf63] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {loading ? (
                     <span className="inline-flex items-center gap-2">

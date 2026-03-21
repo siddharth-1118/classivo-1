@@ -10,7 +10,6 @@ import {
   ShieldAlert,
   TrendingUp
 } from "lucide-react";
-import ShinyText from "@/components/ShinyText";
 
 const AttendancePage = () => {
   const { data, isPending } = useAttendance();
@@ -21,7 +20,7 @@ const AttendancePage = () => {
   if (!data || data.length === 0)
     return (
       <div className="flex w-full justify-center items-center h-screen">
-        <ShinyText text="No attendance data found" speed={2} delay={0} color="#a1a1aa" shineColor="#ffffff" spread={120} direction="left" yoyo={false} pauseOnHover={false} />
+        <p className="text-zinc-500">No attendance data found</p>
       </div>
     );
 
@@ -54,14 +53,14 @@ const AttendancePage = () => {
 
         {/* Overall Status Card */}
         <section className="relative">
-           <div className={`relative h-[300px] w-full rounded-[40px] overflow-hidden flex flex-col items-center justify-center border border-white/10`}>
+           <div className="relative h-[300px] w-full rounded-[40px] overflow-hidden border border-white/10">
               {/* Abstract Green Shape (simplified as a tilted box) */}
-              <div className="absolute inset-0 z-0 flex items-center justify-center opacity-40">
-                 <div className="h-48 w-48 bg-emerald-500 rotate-12 rounded-3xl blur-[80px]" />
-                 <div className="absolute h-56 w-56 border-[20px] border-emerald-500 rotate-[-15deg] rounded-3xl opacity-60" />
+              <div className="absolute inset-0 z-0 flex items-center justify-center opacity-25">
+                 <div className="h-40 w-40 rounded-3xl bg-emerald-500 rotate-12 blur-[56px]" />
+                 <div className="absolute h-48 w-48 border-[14px] border-emerald-500 rotate-[-15deg] rounded-3xl opacity-35" />
               </div>
               
-              <div className="relative z-10 text-center flex flex-col items-center">
+              <div className="relative z-10 flex h-full flex-col items-center justify-center text-center">
                  <p className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.3em] mb-4 opacity-80">Overall Status</p>
                  <div className="flex items-baseline justify-center">
                     <span className="text-[100px] font-black leading-none tracking-tighter">{overallPercent}</span>
@@ -74,7 +73,7 @@ const AttendancePage = () => {
            </div>
 
            {/* Trend Card */}
-           <div className="mt-5 rounded-[32px] bg-zinc-900/40 border border-white/5 p-6 flex items-center justify-between backdrop-blur-md">
+           <div className="mt-5 flex items-center justify-between rounded-[32px] border border-white/5 bg-zinc-900/45 p-6">
               <div className="space-y-1">
                  <p className="text-zinc-500 text-[9px] font-black uppercase tracking-[0.2em]">30 Day Trend</p>
                  <h3 className="text-lg font-black tracking-tight">+4.2% Growth</h3>
@@ -113,7 +112,7 @@ const AttendancePage = () => {
           />
         </section>
 
-        <section className="rounded-[32px] border border-red-400/15 bg-red-500/8 p-6 backdrop-blur-xl">
+        <section className="rounded-[32px] border border-red-400/15 bg-red-500/8 p-6">
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-200/80">Attendance Predictor</p>
           <h2 className="mt-2 text-xl font-black tracking-tight text-white">
             {criticalSubjects.length > 0 ? "Action needed this week" : "You still have breathing room"}
@@ -128,7 +127,7 @@ const AttendancePage = () => {
         {/* Active Disciplines */}
         <section className="flex flex-col gap-6">
            <h2 className="text-2xl font-black tracking-tight">Active Disciplines</h2>
-           <div className="flex flex-col gap-4">
+           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {data.map((item, i) => (
                 <SubjectCard key={i} item={item} />
               ))}
@@ -146,10 +145,10 @@ const SubjectCard = ({ item }: { item: AttendanceDetail }) => {
   const classesCount = item.courseAttendanceStatus?.classes || 0;
   
   return (
-    <div className="rounded-[32px] bg-zinc-900/30 border border-white/5 p-7 flex flex-col gap-6 group transition-all hover:bg-zinc-900/50">
+    <div className="flex h-full flex-col gap-5 rounded-[28px] border border-white/5 bg-zinc-900/35 p-5">
        <div className="flex items-start justify-between">
           <div className="space-y-1">
-             <h3 className="text-xl font-bold tracking-tight leading-none">{item.courseTitle}</h3>
+             <h3 className="text-lg font-bold tracking-tight leading-tight">{item.courseTitle}</h3>
              <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Module ID: {item.courseCode}</p>
           </div>
           <span className={`px-3 py-1 rounded-lg text-[9px] font-black tracking-widest ${isSafe ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
@@ -160,7 +159,7 @@ const SubjectCard = ({ item }: { item: AttendanceDetail }) => {
        <div className="flex items-end justify-between">
           <div className="space-y-2">
              <div className="flex items-baseline gap-1.5">
-                <span className="text-4xl font-black tracking-tighter">{item.courseAttendance}%</span>
+                <span className="text-3xl font-black tracking-tighter">{item.courseAttendance}%</span>
                 <span className="text-zinc-600 text-[10px] font-black uppercase tracking-widest">Attendance</span>
              </div>
              <p className={`text-[10px] font-bold ${isSafe ? 'text-emerald-500/80' : 'text-red-500/80'}`}>
@@ -181,7 +180,7 @@ const SubjectCard = ({ item }: { item: AttendanceDetail }) => {
                  className={`w-2 rounded-full ${isSafe ? 'bg-emerald-500/20' : 'bg-red-500/20'}`} 
                  style={{ height: `${h}%` }}
                >
-                  {i === 6 && <div className={`w-full h-full rounded-full ${isSafe ? 'bg-emerald-400' : 'bg-red-400'} animate-pulse`} />}
+                  {i === 6 && <div className={`w-full h-full rounded-full ${isSafe ? 'bg-emerald-400' : 'bg-red-400'}`} />}
                </div>
              ))}
           </div>
@@ -211,7 +210,7 @@ const InsightCard = ({
   };
 
   return (
-    <div className={`rounded-[28px] border p-5 backdrop-blur-xl ${tones[tone]}`}>
+    <div className={`rounded-[28px] border p-5 ${tones[tone]}`}>
       <div className="flex items-center justify-between">
         <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-400">{label}</p>
         <Icon size={16} />

@@ -13,7 +13,6 @@ import {
   Target,
   TrendingUp
 } from "lucide-react";
-import ShinyText from "@/components/ShinyText";
 
 const MarksPage = () => {
   const { data, isPending } = useMarks();
@@ -25,7 +24,7 @@ const MarksPage = () => {
   if (!data || data.length === 0)
     return (
       <main className="flex h-screen w-full justify-center items-center">
-        <ShinyText text="No Marks Data found" speed={2} delay={0} color="#a1a1aa" shineColor="#ffffff" spread={120} direction="left" yoyo={false} pauseOnHover={false} />
+        <p className="text-zinc-500">No marks data found</p>
       </main>
     );
 
@@ -62,14 +61,14 @@ const MarksPage = () => {
 
         {/* Total Score Hub */}
         <section className="relative">
-           <div className={`relative h-[300px] w-full rounded-[40px] overflow-hidden flex flex-col items-center justify-center border border-white/10 bg-zinc-900/40 backdrop-blur-xl`}>
+           <div className="relative h-[300px] w-full rounded-[40px] overflow-hidden border border-white/10 bg-zinc-900/45">
               {/* Dynamic Glow */}
-              <div className="absolute inset-0 z-0 flex items-center justify-center opacity-40">
-                 <div className="h-48 w-48 bg-purple-500 rotate-[35deg] rounded-3xl blur-[90px]" />
-                 <div className="absolute h-56 w-56 border-[15px] border-purple-500 rotate-[-20deg] rounded-[60px] opacity-40" />
+              <div className="absolute inset-0 z-0 flex items-center justify-center opacity-28">
+                 <div className="h-40 w-40 bg-purple-500 rotate-[35deg] rounded-3xl blur-[56px]" />
+                 <div className="absolute h-48 w-48 border-[12px] border-purple-500 rotate-[-20deg] rounded-[60px] opacity-25" />
               </div>
               
-              <div className="relative z-10 text-center flex flex-col items-center">
+              <div className="relative z-10 flex h-full flex-col items-center justify-center text-center">
                  <p className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.4em] mb-4 opacity-70">Cumulative Performance</p>
                  <div className="flex flex-col items-center">
                     <span className="text-[80px] font-black leading-none tracking-tighter">{formatMark(totalObtained)}</span>
@@ -84,7 +83,7 @@ const MarksPage = () => {
            </div>
 
             <div className="mt-5 grid grid-cols-2 gap-5">
-               <div className="rounded-[32px] bg-zinc-900/40 border border-white/5 p-6 space-y-4 backdrop-blur-md">
+               <div className="rounded-[32px] bg-zinc-900/45 border border-white/5 p-6 space-y-4">
                   <div className="flex items-center justify-between">
                      <div className="h-9 w-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
                         <Zap size={18} />
@@ -102,7 +101,7 @@ const MarksPage = () => {
                   </div>
                </div>
 
-              <div className="rounded-[32px] bg-zinc-900/40 border border-white/5 p-6 space-y-4 backdrop-blur-md">
+              <div className="rounded-[32px] bg-zinc-900/45 border border-white/5 p-6 space-y-4">
                  <div className="flex items-center justify-between">
                     <div className="h-9 w-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
                        <Activity size={18} />
@@ -141,7 +140,7 @@ const MarksPage = () => {
           />
         </section>
 
-        <section className="rounded-[32px] border border-premium-gold/15 bg-premium-gold/5 p-6 backdrop-blur-xl">
+        <section className="rounded-[32px] border border-premium-gold/15 bg-premium-gold/5 p-6">
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-premium-gold/80">Marks Target Planner</p>
           <h2 className="mt-2 text-xl font-black tracking-tight text-white">What to improve next</h2>
           <p className="mt-2 text-sm leading-6 text-zinc-300">
@@ -154,7 +153,7 @@ const MarksPage = () => {
         {/* Subject Mastery */}
         <section className="flex flex-col gap-6">
            <h2 className="text-2xl font-black tracking-tight">Subject Mastery</h2>
-           <div className="flex flex-col gap-4">
+           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {data.map((item, i) => (
                 <MasteryCard key={i} item={item} courses={courses} />
               ))}
@@ -186,7 +185,7 @@ const MetricCard = ({
   };
 
   return (
-    <div className={`rounded-[28px] border p-5 backdrop-blur-xl ${tones[tone]}`}>
+    <div className={`rounded-[28px] border p-5 ${tones[tone]}`}>
       <div className="flex items-center justify-between">
         <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-400">{label}</p>
         <Icon size={16} />
@@ -203,19 +202,19 @@ const MasteryCard = ({ item, courses }: { item: MarkDetail; courses: CourseDetai
   const courseInfo = courses?.find(c => c.courseCode === item.course);
   
   return (
-    <div className="rounded-[32px] bg-zinc-900/30 border border-white/5 p-7 flex flex-col gap-6 group transition-all hover:bg-zinc-900/50">
+    <div className="flex h-full flex-col gap-5 rounded-[28px] border border-white/5 bg-zinc-900/35 p-5">
        <div className="flex items-start justify-between">
           <div className="space-y-1">
-             <h3 className="text-xl font-bold tracking-tight leading-none line-clamp-1">{courseInfo?.courseTitle || item.course}</h3>
+             <h3 className="line-clamp-2 text-lg font-bold tracking-tight leading-tight">{courseInfo?.courseTitle || item.course}</h3>
              <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">{item.category}</p>
           </div>
-          <ChevronRight size={18} className="text-zinc-800 group-hover:text-premium-gold transition-colors" />
+          <ChevronRight size={18} className="text-zinc-800" />
        </div>
 
        <div className="flex items-end justify-between">
           <div className="space-y-2">
              <div className="flex items-baseline gap-1.5">
-                <span className="text-3xl font-black tracking-tighter">
+                <span className="text-[26px] font-black tracking-tighter">
                    {Number.isInteger(item.total?.obtained || 0) ? item.total?.obtained : item.total?.obtained?.toFixed(1) || "0"}/{Number.isInteger(item.total?.maxMark || 0) ? item.total?.maxMark : item.total?.maxMark?.toFixed(1) || "0"}
                 </span>
                 <span className="text-zinc-600 text-[10px] font-black uppercase tracking-widest">Marks</span>
@@ -236,7 +235,7 @@ const MasteryCard = ({ item, courses }: { item: MarkDetail; courses: CourseDetai
                  className={`w-1 rounded-full ${isHigh ? 'bg-premium-gold/20' : 'bg-zinc-800'}`} 
                  style={{ height: `${h}%` }}
                >
-                  {i === 4 && <div className={`w-full h-full rounded-full ${isHigh ? 'bg-premium-gold' : 'bg-zinc-600'} animate-pulse`} />}
+                  {i === 4 && <div className={`w-full h-full rounded-full ${isHigh ? 'bg-premium-gold' : 'bg-zinc-600'}`} />}
                </div>
              ))}
           </div>

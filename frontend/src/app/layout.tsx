@@ -8,7 +8,6 @@ import { ToasterClientComponent } from "./toaster";
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import PagePadding from "./components/PagePadding";
-import { ViewTransitions } from "next-view-transitions";
 import PageTransition from "./components/PageTransition";
 import NavigationWrapper from "./components/NavigationWrapper";
 import QueryProvider from "./app/components/provider";
@@ -101,47 +100,45 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ViewTransitions>
-      <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
-        <head>
-          <link rel="icon" href={`/favicon.ico?v=${iconVersion}`} sizes="any" />
-          <link rel="icon" href={`/favicon-32.png?v=${iconVersion}`} type="image/png" sizes="32x32" />
-          <link rel="icon" href={`/favicon-16.png?v=${iconVersion}`} type="image/png" sizes="16x16" />
-          <link rel="apple-touch-icon" href={`/apple-touch-icon.png?v=${iconVersion}`} />
-          <link rel="icon" href={`/favicon.svg?v=${iconVersion}`} type="image/svg+xml" />
-          <link rel="manifest" href={`/site.webmanifest?v=${iconVersion}`} />
-          <meta name="theme-color" content="#09090b" />
-        </head>
-        <body
-          className={`${geistMono.variable} ${spaceGrotesk.variable} antialiased`}
-          style={{
-            fontFamily: 'var(--font-body), system-ui, sans-serif'
-          }}
-        >
-          <SwRegister />
-          <AuthStateWatcher />
-          <PageViewAnalytics />
-          <AuthAnalytics />
-          <MessNotificationScheduler />
-          <ToasterClientComponent />
-          
-          <QueryProvider>
-            <NavigationWrapper>
-              <main className="min-h-screen relative z-10 overflow-x-hidden">
-                <PagePadding>
-                  <PageTransition>
-                    {children}
-                  </PageTransition>
-                </PagePadding>
-              </main>
-            </NavigationWrapper>
-          </QueryProvider>
-          <AIChat />
-          <NotificationPrompt />
-          {enableVercelAnalytics ? <Analytics /> : null}
-          {enableVercelAnalytics ? <SpeedInsights /> : null}
-        </body>
-      </html>
-    </ViewTransitions>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
+      <head>
+        <link rel="icon" href={`/favicon.ico?v=${iconVersion}`} sizes="any" />
+        <link rel="icon" href={`/favicon-32.png?v=${iconVersion}`} type="image/png" sizes="32x32" />
+        <link rel="icon" href={`/favicon-16.png?v=${iconVersion}`} type="image/png" sizes="16x16" />
+        <link rel="apple-touch-icon" href={`/apple-touch-icon.png?v=${iconVersion}`} />
+        <link rel="icon" href={`/favicon.svg?v=${iconVersion}`} type="image/svg+xml" />
+        <link rel="manifest" href={`/site.webmanifest?v=${iconVersion}`} />
+        <meta name="theme-color" content="#09090b" />
+      </head>
+      <body
+        className={`classivo-light ${geistMono.variable} ${spaceGrotesk.variable} antialiased`}
+        style={{
+          fontFamily: 'var(--font-body), system-ui, sans-serif'
+        }}
+      >
+        <SwRegister />
+        <AuthStateWatcher />
+        <PageViewAnalytics />
+        <AuthAnalytics />
+        <MessNotificationScheduler />
+        <ToasterClientComponent />
+        
+        <QueryProvider>
+          <NavigationWrapper>
+            <main className="min-h-screen relative z-10 overflow-x-hidden">
+              <PagePadding>
+                <PageTransition>
+                  {children}
+                </PageTransition>
+              </PagePadding>
+            </main>
+          </NavigationWrapper>
+        </QueryProvider>
+        <AIChat />
+        <NotificationPrompt />
+        {enableVercelAnalytics ? <Analytics /> : null}
+        {enableVercelAnalytics ? <SpeedInsights /> : null}
+      </body>
+    </html>
   );
 }

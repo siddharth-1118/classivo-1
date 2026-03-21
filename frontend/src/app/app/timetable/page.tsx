@@ -18,7 +18,6 @@ import { DaySchedule } from "srm-academia-api";
 import { GlobalLoader } from "../components/loader";
 import { Button } from "@/app/components/ui/Button";
 import { Badge } from "@/app/components/ui/Badge";
-import ShinyText from "@/components/ShinyText";
 import { isCurrentClass } from "@/utils/currentClass";
 import { toast } from "sonner";
 
@@ -47,17 +46,7 @@ const Page = () => {
   if (!data || data.length === 0)
     return (
       <main className="flex h-screen w-full justify-center items-center text-Classivo-text-grey">
-        <ShinyText
-          text="No Timetable Data found"
-          speed={2}
-          delay={0}
-          color="#a1a1aa"
-          shineColor="#ffffff"
-          spread={120}
-          direction="left"
-          yoyo={false}
-          pauseOnHover={false}
-        />
+        <p>No timetable data found</p>
       </main>
     );
 
@@ -653,7 +642,7 @@ const TimelineView = ({ data }: { data: DaySchedule[] }) => {
   }, [calendarData, data]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)] w-full overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur-xl">
+    <div className="flex h-[calc(100vh-6rem)] w-full flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] shadow-[0_16px_42px_rgba(0,0,0,0.2)]">
       {/* Header */}
       <div className="flex flex-col gap-4 border-b border-white/10 bg-black/20 px-4 pb-4 pt-4 sm:px-6">
         <div>
@@ -674,7 +663,7 @@ const TimelineView = ({ data }: { data: DaySchedule[] }) => {
           <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-1">
             <button
               onClick={() => setDayOrder(prev => prev - 1)}
-              className="rounded-md p-2 text-zinc-400 transition-colors hover:text-white"
+            className="rounded-md p-2 text-zinc-400 hover:text-white"
             >
               <ChevronLeft size={18} />
             </button>
@@ -683,7 +672,7 @@ const TimelineView = ({ data }: { data: DaySchedule[] }) => {
             </span>
             <button
               onClick={() => setDayOrder(prev => prev + 1)}
-              className="rounded-md p-2 text-zinc-400 transition-colors hover:text-white"
+            className="rounded-md p-2 text-zinc-400 hover:text-white"
             >
               <ChevronRight size={18} />
             </button>
@@ -692,21 +681,21 @@ const TimelineView = ({ data }: { data: DaySchedule[] }) => {
           <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:justify-end">
             <button
               onClick={downloadFullTimetable}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
             >
               <Download size={16} />
               Download CSV
             </button>
             <button
               onClick={downloadTimetablePdf}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-premium-gold/25 bg-premium-gold/10 px-4 py-2 text-sm font-medium text-premium-gold transition-colors hover:bg-premium-gold/15"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-premium-gold/25 bg-premium-gold/10 px-4 py-2 text-sm font-medium text-premium-gold hover:bg-premium-gold/15"
             >
               <FileText size={16} />
               Export PDF
             </button>
             <button
               onClick={downloadCalendarFile}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-400/20 bg-sky-400/10 px-4 py-2 text-sm font-medium text-sky-200 transition-colors hover:bg-sky-400/15"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-400/20 bg-sky-400/10 px-4 py-2 text-sm font-medium text-sky-200 hover:bg-sky-400/15"
             >
               <Calendar size={16} />
               Download Calendar
@@ -734,7 +723,7 @@ const TimelineView = ({ data }: { data: DaySchedule[] }) => {
               return (
                 <div
                   key={index}
-                  className={`rounded-2xl border p-4 backdrop-blur-sm transition-colors ${cardTone} ${isLive ? "ring-2 ring-emerald-300/70 shadow-[0_0_28px_rgba(110,231,183,0.2)]" : ""}`}
+                  className={`rounded-2xl border p-4 ${cardTone} ${isLive ? "ring-2 ring-emerald-300/70 shadow-[0_0_20px_rgba(110,231,183,0.16)]" : ""}`}
                 >
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <div>

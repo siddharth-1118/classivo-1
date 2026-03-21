@@ -65,6 +65,16 @@ func min(a, b int) int {
 	return b
 }
 
+func isMissingTableError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	message := err.Error()
+	return strings.Contains(message, "PGRST205") &&
+		(strings.Contains(message, "schema cache") || strings.Contains(message, "Could not find the table"))
+}
+
 func (db *DatabaseHelper) Client() *supabase.Client {
 	return db.client
 }
@@ -326,6 +336,9 @@ func (db *DatabaseHelper) SaveSession(hash string) error {
 		"created_at": time.Now().Format(time.RFC3339),
 	}
 	_, _, err := db.client.From("sessions").Upsert(data, "hash_key", "", "").Execute()
+	if isMissingTableError(err) {
+		return nil
+	}
 	return err
 }
 
@@ -333,6 +346,9 @@ func (db *DatabaseHelper) VerifySession(hash string) (bool, error) {
 	var results []map[string]interface{}
 	query := map[string]string{"hash_key": hash}
 	_, err := db.client.From("sessions").Select("hash_key", "", false).Match(query).ExecuteTo(&results)
+	if isMissingTableError(err) {
+		return false, nil
+	}
 	if err != nil {
 		return false, err
 	}

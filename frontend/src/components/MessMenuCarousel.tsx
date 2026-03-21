@@ -14,6 +14,7 @@ export interface MessMenuCarouselItem {
 interface CarouselProps {
     items: MessMenuCarouselItem[];
     baseWidth?: number;
+    cardHeight?: number;
     autoplay?: boolean;
     autoplayDelay?: number;
     pauseOnHover?: boolean;
@@ -31,13 +32,14 @@ export interface CarouselHandle {
 
 const DRAG_BUFFER = 0;
 const VELOCITY_THRESHOLD = 500;
-const GAP = 16;
+const GAP = 6;
 const SPRING_OPTIONS = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 interface CarouselItemProps {
     item: MessMenuCarouselItem;
     index: number;
     itemWidth: number;
+    cardHeight: number;
     round: boolean;
     trackItemOffset: number;
     x: any;
@@ -48,6 +50,7 @@ function CarouselItem({
     item,
     index,
     itemWidth,
+    cardHeight,
     round,
     trackItemOffset,
     x,
@@ -70,6 +73,7 @@ function CarouselItem({
                 } overflow-hidden cursor-grab active:cursor-grabbing`}
             style={{
                 width: itemWidth,
+                height: cardHeight,
                 rotateY: rotateY,
                 ...(round && { borderRadius: "50%" }),
             }}
@@ -77,16 +81,16 @@ function CarouselItem({
         >
 
             {/* Scrollable Content Container matching the image */}
-            <div className="w-full h-auto overflow-hidden rounded-2xl border border-white bg-zinc-900/20 backdrop-blur-md flex flex-col px-1 transform-style-preserve-3d">
+            <div className="w-full h-auto overflow-hidden rounded-[18px] border border-white/90 bg-zinc-900/20 backdrop-blur-md flex flex-col px-1 transform-style-preserve-3d">
                 {/* Scrollable List */}
-                <div className="px-4 py-2 overflow-y-auto no-scrollbar flex-1 w-full relative">
+                <div className="px-3 py-1.5 overflow-y-auto no-scrollbar flex-1 w-full relative">
                     <div className="flex flex-col gap-0">
                         {item.items.map((food, i) => (
                             <div
                                 key={i}
-                                className="flex flex-col py-3 border-b border-light-border/20 dark:border-white/10 last:border-0"
+                                className="flex flex-col py-2 border-b border-light-border/20 dark:border-white/10 last:border-0"
                             >
-                                <span className="text-base font-medium text-white/90 pl-5">
+                                <span className="pl-3 text-sm font-medium leading-5 text-white/90">
                                     {food}
                                 </span>
                             </div>
@@ -105,6 +109,7 @@ const MessMenuCarousel = forwardRef<CarouselHandle, CarouselProps>(
         {
             items,
             baseWidth = 450,
+            cardHeight = 420,
             autoplay = false,
             autoplayDelay = 3000,
             pauseOnHover = false,
@@ -115,7 +120,7 @@ const MessMenuCarousel = forwardRef<CarouselHandle, CarouselProps>(
         },
         ref
     ) => {
-        const containerPadding = 16;
+        const containerPadding = 12;
         const itemWidth = baseWidth - containerPadding * 2;
         const trackItemOffset = itemWidth + GAP;
 
@@ -267,7 +272,7 @@ const MessMenuCarousel = forwardRef<CarouselHandle, CarouselProps>(
         return (
             <div
                 ref={containerRef}
-                className={`relative overflow-hidden py-4 flex flex-col items-center ${round ? "rounded-full border border-white" : "rounded-[24px]"
+                className={`relative overflow-hidden py-2 flex flex-col items-center ${round ? "rounded-full border border-white" : "rounded-[20px]"
                     }`}
                 style={{
                     width: `${baseWidth}px`,
@@ -299,6 +304,7 @@ const MessMenuCarousel = forwardRef<CarouselHandle, CarouselProps>(
                             item={item}
                             index={index}
                             itemWidth={itemWidth}
+                            cardHeight={cardHeight}
                             round={round}
                             trackItemOffset={trackItemOffset}
                             x={x}

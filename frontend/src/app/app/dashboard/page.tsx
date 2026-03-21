@@ -286,55 +286,55 @@ export default function DashboardPage() {
   })();
 
   return (
-    <main className="relative min-h-screen w-full overflow-y-auto px-4 pb-32 pt-10 text-white font-sans sm:px-6 sm:pt-12">
-      <div className="relative z-10 mx-auto flex max-w-lg flex-col gap-8 sm:gap-10">
+    <main className="relative h-screen w-full overflow-hidden px-4 pb-24 pt-4 text-white font-sans sm:px-6 sm:pt-5">
+      <div className="relative z-10 mx-auto flex h-full max-w-lg flex-col gap-4">
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full border-2 border-premium-gold p-0.5">
+            <div className="h-10 w-10 rounded-full border-2 border-premium-gold p-0.5">
               <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-zinc-800">
-                <User size={24} className="text-zinc-500" />
+                <User size={20} className="text-zinc-500" />
               </div>
             </div>
-            <h1 className="flex flex-wrap items-baseline gap-1.5 text-xl font-black tracking-tight sm:text-2xl">
+            <h1 className="flex flex-wrap items-baseline gap-1.5 text-lg font-black tracking-tight sm:text-xl">
               Welcome back, <span className="text-premium-gold">{displayName || "Student"}</span>
             </h1>
           </div>
-          <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/5 bg-zinc-900 text-zinc-400">
-            <Bell size={20} />
+          <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/5 bg-zinc-900 text-zinc-400">
+            <Bell size={18} />
           </button>
         </header>
 
-        <section className="mt-2">
-          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Academic Status</p>
+        <section>
+          <p className="mb-1 text-[9px] font-black uppercase tracking-[0.28em] text-zinc-500">Academic Status</p>
           <div className="relative">
-            <h2 className="text-[40px] font-black leading-[0.9] tracking-tighter sm:text-[52px]">
+            <h2 className="text-[28px] font-black leading-[0.9] tracking-tighter sm:text-[34px]">
               Mastering<span className="text-emerald-400">.</span>
             </h2>
-            <h2 className="mt-1 text-3xl italic tracking-tight text-zinc-500 opacity-80 sm:text-4xl">
+            <h2 className="mt-0.5 text-xl italic tracking-tight text-zinc-500 opacity-80 sm:text-2xl">
               the Semester.
             </h2>
           </div>
         </section>
 
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+        <section className="grid grid-cols-2 gap-3">
           <Link
             href="/app/attendance"
-            className="rounded-3xl border border-white/10 bg-zinc-900/45 p-5 backdrop-blur-md transition-all hover:border-emerald-400/30 hover:bg-zinc-900/60 active:scale-[0.99] sm:p-6"
+            className="rounded-[24px] border border-white/10 bg-zinc-900/45 p-3 backdrop-blur-md transition-all hover:border-emerald-400/30 hover:bg-zinc-900/60 active:scale-[0.99]"
           >
-            <div className="mb-6 flex items-center justify-between sm:mb-8">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
-                <CheckCircle2 size={22} />
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
+                <CheckCircle2 size={17} />
               </div>
-              <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                Live <ChevronRight size={12} />
+              <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-zinc-500">
+                Live <ChevronRight size={11} />
               </span>
             </div>
             <div className="space-y-1">
-              <span className="text-4xl font-black tracking-tighter">{overallAttendance}%</span>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Attendance</p>
-              <p className="pt-1 text-xs text-zinc-400">Open attendance insights</p>
+              <span className="text-[26px] font-black tracking-tighter">{overallAttendance}%</span>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">Attendance</p>
+              <p className="text-[10px] text-zinc-400">Open insights</p>
             </div>
-            <div className="mt-6 h-1 w-full overflow-hidden rounded-full bg-zinc-800">
+            <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-zinc-800">
               <div
                 className="h-full rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"
                 style={{ width: `${Math.min(Number(overallAttendance), 100)}%` }}
@@ -344,22 +344,22 @@ export default function DashboardPage() {
 
           <Link
             href="/app/marks"
-            className="rounded-3xl border border-white/10 bg-zinc-900/45 p-5 backdrop-blur-md transition-all hover:border-purple-400/30 hover:bg-zinc-900/60 active:scale-[0.99] sm:p-6"
+            className="rounded-[24px] border border-white/10 bg-zinc-900/45 p-3 backdrop-blur-md transition-all hover:border-purple-400/30 hover:bg-zinc-900/60 active:scale-[0.99]"
           >
-            <div className="mb-6 flex items-center justify-between sm:mb-8">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400">
-                <Sparkles size={22} />
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400">
+                <Sparkles size={17} />
               </div>
-              <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                Peak <ChevronRight size={12} />
+              <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-zinc-500">
+                Peak <ChevronRight size={11} />
               </span>
             </div>
             <div className="space-y-1">
-              <span className="text-3xl font-black tracking-tighter">{totalMarksDisplay}</span>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Total Marks</p>
-              <p className="pt-1 text-xs text-zinc-400">Open marks breakdown</p>
+              <span className="text-2xl font-black tracking-tighter">{totalMarksDisplay}</span>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">Total Marks</p>
+              <p className="text-[10px] text-zinc-400">Open breakdown</p>
             </div>
-            <div className="mt-6 h-1 w-full overflow-hidden rounded-full bg-zinc-800">
+            <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-zinc-800">
               <div
                 className="h-full rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.5)]"
                 style={{ width: `${marksProgress}%` }}
@@ -368,110 +368,111 @@ export default function DashboardPage() {
           </Link>
         </section>
 
-        <section className={`overflow-hidden rounded-[28px] border bg-gradient-to-br p-6 backdrop-blur-md ${liveClassSummary.accent}`}>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">{liveClassSummary.eyebrow}</p>
-          <h3 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-[28px]">{liveClassSummary.title}</h3>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-300">{liveClassSummary.detail}</p>
+        <section className={`overflow-hidden rounded-[24px] border bg-gradient-to-br p-4 backdrop-blur-md ${liveClassSummary.accent}`}>
+          <p className="text-[9px] font-black uppercase tracking-[0.26em] text-zinc-400">{liveClassSummary.eyebrow}</p>
+          <h3 className="mt-2 text-lg font-black tracking-tight text-white sm:text-xl">{liveClassSummary.title}</h3>
+          <p className="mt-1 max-w-xl text-xs leading-5 text-zinc-300">{liveClassSummary.detail}</p>
 
           {!todayIsHoliday && allTodayClasses.length > 0 ? (
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Current</p>
-                <p className="mt-2 text-sm font-semibold text-white">{ongoingClass?.courseCode || "No live class"}</p>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">Current</p>
+                <p className="mt-1 text-xs font-semibold text-white">{ongoingClass?.courseCode || "No live class"}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Time Left</p>
-                <p className="mt-2 text-sm font-semibold text-white">
-                  {minutesLeftInCurrentClass !== null ? formatMinutes(minutesLeftInCurrentClass) : "Waiting for next class"}
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">Time Left</p>
+                <p className="mt-1 text-xs font-semibold text-white">
+                  {minutesLeftInCurrentClass !== null ? formatMinutes(minutesLeftInCurrentClass) : "Waiting"}
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Next Today</p>
-                <p className="mt-2 text-sm font-semibold text-white">
-                  {minutesUntilNextClass !== null ? formatMinutes(minutesUntilNextClass) : "No more classes"}
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">Next</p>
+                <p className="mt-1 text-xs font-semibold text-white">
+                  {minutesUntilNextClass !== null ? formatMinutes(minutesUntilNextClass) : "Done"}
                 </p>
               </div>
             </div>
           ) : null}
         </section>
 
-        <section className="flex flex-col gap-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-2xl font-black tracking-tight">Today&apos;s Schedule</h3>
-              <p className="mt-1 text-xs uppercase tracking-[0.22em] text-zinc-500">{todayScheduleLabel}</p>
+        <section className="grid min-h-0 flex-1 grid-cols-2 gap-3">
+          <div className="flex min-h-0 flex-col rounded-[24px] border border-white/10 bg-zinc-900/30 p-3 backdrop-blur-md">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div>
+                <h3 className="text-base font-black tracking-tight">Today</h3>
+                <p className="mt-0.5 text-[9px] uppercase tracking-[0.18em] text-zinc-500">{todayScheduleLabel}</p>
+              </div>
+              <Link href="/app/timetable" className="flex items-center gap-1 border-b border-zinc-800 pb-0.5 text-[9px] font-black uppercase tracking-widest text-zinc-500">
+                View
+              </Link>
             </div>
-            <Link href="/app/timetable" className="flex items-center gap-1 border-b border-zinc-800 pb-0.5 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              View Full
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {allTodayClasses.length > 0 ? (
-              allTodayClasses.map((cls, i) => (
-                <div key={i} className="group flex items-center gap-4 rounded-3xl border border-white/5 bg-zinc-900/30 p-5 transition-all hover:bg-zinc-900/50 sm:gap-5 sm:p-6">
-                  <div className="flex min-w-[64px] flex-col items-start sm:min-w-[70px]">
-                    <span className="text-lg font-black tracking-tighter sm:text-xl">{cls.time.split(" ")[0]}</span>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">{cls.time.split(" ")[1]}</span>
+            <div className="min-h-0 space-y-2 overflow-y-auto pr-1">
+              {allTodayClasses.length > 0 ? (
+                allTodayClasses.map((cls, i) => (
+                  <div key={i} className="group flex items-center gap-3 rounded-[20px] border border-white/5 bg-zinc-900/30 p-3 transition-all hover:bg-zinc-900/50">
+                    <div className="flex min-w-[54px] flex-col items-start">
+                      <span className="text-sm font-black tracking-tighter">{cls.time.split(" ")[0]}</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">{cls.time.split(" ")[1]}</span>
+                    </div>
+                    <div className="h-10 w-[1px] bg-zinc-800 transition-colors group-hover:bg-premium-gold/30" />
+                    <div className="flex-1">
+                      <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/80">
+                        {cls.courseCode}
+                      </span>
+                      <h4 className="text-xs font-bold leading-tight">{cls.courseTitle}</h4>
+                    </div>
+                    <ChevronRight size={16} className="text-zinc-700 transition-colors group-hover:text-premium-gold" />
                   </div>
-                  <div className="h-12 w-[1px] bg-zinc-800 transition-colors group-hover:bg-premium-gold/30" />
-                  <div className="flex-1">
-                    <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/80">
-                      {cls.courseCode}
-                    </span>
-                    <h4 className="text-sm font-bold leading-tight sm:text-base">{cls.courseTitle}</h4>
-                  </div>
-                  <ChevronRight size={18} className="text-zinc-700 transition-colors group-hover:text-premium-gold" />
-                </div>
-              ))
-            ) : (
-              <p className="py-4 text-sm italic text-zinc-600">
-                {todayIsHoliday
-                  ? `No classes today${todayCalendarEntry?.event ? ` · ${todayCalendarEntry.event}` : ""}.`
-                  : "No sessions scheduled for today."}
-              </p>
-            )}
-          </div>
-        </section>
-
-        <section className="flex flex-col gap-6">
-          <div className="flex items-end justify-between gap-3">
-            <div>
-              <h3 className="text-2xl font-black tracking-tight">Upcoming</h3>
-              <p className="mt-1 text-xs uppercase tracking-[0.22em] text-zinc-500">{nextDayLabel}</p>
+                ))
+              ) : (
+                <p className="py-3 text-xs italic text-zinc-600">
+                  {todayIsHoliday
+                    ? `No classes today${todayCalendarEntry?.event ? ` · ${todayCalendarEntry.event}` : ""}.`
+                    : "No sessions scheduled for today."}
+                </p>
+              )}
             </div>
-            <Link
-              href={`/app/timetable?dayOrder=${nextDayOrder}`}
-              className="flex items-center gap-1 border-b border-zinc-800 pb-0.5 text-[10px] font-black uppercase tracking-widest text-zinc-500"
-            >
-              Open Day
-            </Link>
           </div>
 
-          <div className="space-y-3">
-            {nextDayClasses.length > 0 ? (
-              nextDayClasses.map((cls, i) => (
-                <div key={i} className="group flex items-center gap-4 rounded-3xl border border-white/5 bg-zinc-900/30 p-5 transition-all hover:bg-zinc-900/50 sm:gap-5 sm:p-6">
-                  <div className="flex min-w-[64px] flex-col items-start sm:min-w-[70px]">
-                    <span className="text-lg font-black tracking-tighter sm:text-xl">{cls.time.split(" ")[0]}</span>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">{cls.time.split(" ")[1]}</span>
+          <div className="flex min-h-0 flex-col rounded-[24px] border border-white/10 bg-zinc-900/30 p-3 backdrop-blur-md">
+            <div className="mb-2 flex items-end justify-between gap-2">
+              <div>
+                <h3 className="text-base font-black tracking-tight">Upcoming</h3>
+                <p className="mt-0.5 text-[9px] uppercase tracking-[0.18em] text-zinc-500">{nextDayLabel}</p>
+              </div>
+              <Link
+                href={`/app/timetable?dayOrder=${nextDayOrder}`}
+                className="flex items-center gap-1 border-b border-zinc-800 pb-0.5 text-[9px] font-black uppercase tracking-widest text-zinc-500"
+              >
+                Open
+              </Link>
+            </div>
+            <div className="min-h-0 space-y-2 overflow-y-auto pr-1">
+              {nextDayClasses.length > 0 ? (
+                nextDayClasses.map((cls, i) => (
+                  <div key={i} className="group flex items-center gap-3 rounded-[20px] border border-white/5 bg-zinc-900/30 p-3 transition-all hover:bg-zinc-900/50">
+                    <div className="flex min-w-[54px] flex-col items-start">
+                      <span className="text-sm font-black tracking-tighter">{cls.time.split(" ")[0]}</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">{cls.time.split(" ")[1]}</span>
+                    </div>
+                    <div className="h-10 w-[1px] bg-zinc-800 transition-colors group-hover:bg-premium-gold/30" />
+                    <div className="flex-1">
+                      <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.2em] text-sky-400/80">
+                        Day Order {nextDayOrder} · {cls.courseCode}
+                      </span>
+                      <h4 className="text-xs font-bold leading-tight">{cls.courseTitle}</h4>
+                    </div>
+                    <ChevronRight size={16} className="text-zinc-700 transition-colors group-hover:text-premium-gold" />
                   </div>
-                  <div className="h-12 w-[1px] bg-zinc-800 transition-colors group-hover:bg-premium-gold/30" />
-                  <div className="flex-1">
-                    <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.2em] text-sky-400/80">
-                      Day Order {nextDayOrder} · {cls.courseCode}
-                    </span>
-                    <h4 className="text-sm font-bold leading-tight sm:text-base">{cls.courseTitle}</h4>
-                  </div>
-                  <ChevronRight size={18} className="text-zinc-700 transition-colors group-hover:text-premium-gold" />
-                </div>
-              ))
-            ) : (
-              <p className="py-4 text-sm italic text-zinc-600">
-                {upcomingCalendarEntry
-                  ? `No classes found for ${nextDayLabel.toLowerCase()}.`
-                  : "No upcoming working day classes found in the academic calendar."}
-              </p>
-            )}
+                ))
+              ) : (
+                <p className="py-3 text-xs italic text-zinc-600">
+                  {upcomingCalendarEntry
+                    ? `No classes found for ${nextDayLabel.toLowerCase()}.`
+                    : "No upcoming working day classes found in the academic calendar."}
+                </p>
+              )}
+            </div>
           </div>
         </section>
       </div>

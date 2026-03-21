@@ -56,8 +56,8 @@ const NotificationPrompt = () => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="glass-dock bg-zinc-950/80 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col gap-3">
+    <div className="fixed bottom-24 left-1/2 z-[100] w-[calc(100%-2rem)] max-w-md -translate-x-1/2">
+      <div className="glass-dock rounded-2xl border border-white/10 bg-zinc-950/88 p-4 shadow-[0_14px_34px_rgba(0,0,0,0.42)] flex flex-col gap-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
@@ -70,7 +70,7 @@ const NotificationPrompt = () => {
           </div>
           <button 
             onClick={handleDismiss}
-            className="text-zinc-500 hover:text-white transition-colors p-1"
+            className="p-1 text-zinc-500 hover:text-white"
           >
             <X size={18} />
           </button>
@@ -80,7 +80,7 @@ const NotificationPrompt = () => {
           <button
             onClick={handleEnable}
             disabled={status === 'loading'}
-            className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all duration-300 ${
+            className={`flex-1 py-2 rounded-xl text-xs font-medium ${
               status === 'success' ? 'bg-emerald-500 text-white' :
               status === 'error' ? 'bg-red-500 text-white' :
               'bg-white text-black hover:bg-zinc-200'
@@ -93,7 +93,7 @@ const NotificationPrompt = () => {
           </button>
           <button
             onClick={handleDismiss}
-            className="px-4 py-2 rounded-xl text-xs font-medium border border-white/10 text-white hover:bg-white/5 transition-all"
+            className="px-4 py-2 rounded-xl border border-white/10 text-xs font-medium text-white hover:bg-white/5"
           >
             Later
           </button>

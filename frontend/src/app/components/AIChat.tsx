@@ -228,41 +228,36 @@ export const AIChat = () => {
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label="Open Classivo AI"
-        className="fixed bottom-24 right-4 z-[220] flex h-14 w-14 items-center justify-center rounded-full border border-emerald-400/30 bg-[linear-gradient(180deg,rgba(9,18,16,0.98),rgba(12,38,30,0.96))] shadow-[0_0_28px_rgba(52,211,153,0.28),0_16px_40px_rgba(0,0,0,0.45)] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_46px_rgba(52,211,153,0.45),0_24px_50px_rgba(0,0,0,0.5)] active:scale-95 group md:bottom-6 md:right-6 md:h-16 md:w-16"
+        className="fixed bottom-24 right-4 z-[220] flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-zinc-950 text-zinc-200 shadow-[0_8px_20px_rgba(0,0,0,0.28)] md:bottom-6 md:right-6 md:h-16 md:w-16"
       >
         {isOpen
-          ? <X className="h-6 w-6 text-emerald-300 transition-transform duration-300" />
-          : <Bot className="h-6 w-6 text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] transition-transform duration-300 group-hover:scale-110" />
+          ? <X className="h-6 w-6 text-emerald-300" />
+          : <Bot className="h-6 w-6 text-emerald-300" />
         }
-        {!isOpen && <span className="absolute inset-0 rounded-full border border-emerald-400/25 animate-ping" />}
       </button>
 
       {isOpen && (
         <>
           <button
             aria-label="Close AI chat"
-            className="fixed inset-0 z-[205] bg-[radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.12),transparent_25%),linear-gradient(180deg,rgba(3,6,10,0.52),rgba(3,6,10,0.72))] backdrop-blur-[6px]"
+            className="fixed inset-0 z-[205] bg-[linear-gradient(180deg,rgba(3,6,10,0.42),rgba(3,6,10,0.62))]"
             onClick={() => setIsOpen(false)}
           />
 
-          <div className="fixed bottom-28 right-3 z-[210] flex h-[580px] w-[calc(100vw-1.5rem)] max-w-[430px] flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,14,18,0.96),rgba(5,8,12,0.98))] shadow-[0_30px_100px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.04),0_0_50px_rgba(16,185,129,0.08)] backdrop-blur-2xl md:bottom-6 md:right-6 md:w-[430px]">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.12),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_28%)]" />
+          <div className="fixed bottom-28 right-3 z-[210] flex h-[580px] w-[calc(100vw-1.5rem)] max-w-[430px] flex-col overflow-hidden rounded-[24px] border border-white/10 bg-zinc-950 shadow-[0_16px_38px_rgba(0,0,0,0.4)] md:bottom-6 md:right-6 md:w-[430px]">
 
-            <div className="relative z-10 flex flex-shrink-0 items-center gap-3 border-b border-white/10 bg-black/35 px-4 py-4">
-              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-emerald-400/20 bg-[linear-gradient(180deg,rgba(10,35,28,1),rgba(8,18,16,1))] shadow-[0_0_20px_rgba(52,211,153,0.12)]">
-                <Bot className="h-5 w-5 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.7)]" />
+            <div className="relative z-10 flex flex-shrink-0 items-center gap-3 border-b border-white/10 bg-zinc-950 px-4 py-4">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-white/10 bg-zinc-900">
+                <Bot className="h-5 w-5 text-zinc-200" />
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="leading-none font-semibold text-white">Classivo AI</h3>
                 <div className="mt-1 flex items-center gap-1.5">
-                  <BookOpen className="h-3 w-3 text-emerald-400" />
-                  <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-emerald-300/90">Study and Campus Assistant</p>
+                  <BookOpen className="h-3 w-3 text-zinc-400" />
+                  <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-zinc-400">Study and Campus Assistant</p>
                 </div>
               </div>
-              <div className="hidden rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-zinc-300 sm:block">
-                Premium Mode
-              </div>
-              <button onClick={() => setIsOpen(false)} className="p-1 text-white/40 transition-colors hover:text-white/80">
+              <button onClick={() => setIsOpen(false)} className="p-1 text-white/40 hover:text-white/80">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -295,7 +290,7 @@ export const AIChat = () => {
                 <button
                   key={label}
                   onClick={() => setInput(prompt)}
-                  className="flex flex-shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/6 px-3 py-2 text-[11px] text-white/70 transition-all hover:border-emerald-400/20 hover:bg-white/10 hover:text-white"
+                  className="flex flex-shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[11px] text-white/70 hover:bg-white/10"
                 >
                   <Icon className="h-3 w-3" />
                   {label}
@@ -304,7 +299,7 @@ export const AIChat = () => {
             </div>
 
             <div className="relative z-10 mt-3 flex min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-              <div className="w-full space-y-4 rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+              <div className="w-full space-y-4 rounded-[20px] border border-white/8 bg-zinc-900 p-4">
                 {messages.map((msg, idx) => (
                   <div key={idx} className={`flex gap-2.5 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                     <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/8 bg-[#101317]">
@@ -312,10 +307,10 @@ export const AIChat = () => {
                         ? <User className="h-3.5 w-3.5 text-white/70" />
                         : <Bot className="h-3.5 w-3.5 text-emerald-400" />}
                     </div>
-                    <div className={`max-w-[84%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-[13px] leading-relaxed shadow-[0_10px_30px_rgba(0,0,0,0.18)] ${
+                    <div className={`max-w-[84%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-[13px] leading-relaxed ${
                       msg.role === 'user'
-                        ? 'rounded-tr-sm border border-white/10 bg-[linear-gradient(180deg,rgba(38,38,38,0.9),rgba(20,20,20,0.95))] text-white/92'
-                        : 'rounded-tl-sm border border-emerald-400/10 bg-[linear-gradient(180deg,rgba(9,24,20,0.92),rgba(10,12,14,0.96))] text-white/84'
+                        ? 'rounded-tr-sm border border-white/10 bg-zinc-800 text-white/92'
+                        : 'rounded-tl-sm border border-white/10 bg-black/30 text-white/84'
                     }`}>
                       {msg.content}
                     </div>
@@ -327,8 +322,8 @@ export const AIChat = () => {
                     <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/8 bg-[#101317]">
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-400" />
                     </div>
-                    <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm border border-emerald-400/10 bg-[linear-gradient(180deg,rgba(9,24,20,0.92),rgba(10,12,14,0.96))] px-4 py-3 text-[13px] text-white/55 shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
-                      Thinking<span className="animate-pulse">...</span>
+                    <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm border border-white/10 bg-black/30 px-4 py-3 text-[13px] text-white/55">
+                      Thinking...
                     </div>
                   </div>
                 )}
@@ -339,7 +334,7 @@ export const AIChat = () => {
 
             <div className="relative z-10 flex-shrink-0 border-t border-white/8 bg-black/25 p-4">
               <form onSubmit={handleSubmit} className="flex gap-2">
-                <div className="flex-1 rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,18,0.95),rgba(10,10,10,0.98))] px-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] outline outline-1 outline-transparent transition-all focus-within:border-emerald-400/15 focus-within:outline-emerald-400/20">
+                <div className="flex-1 rounded-2xl border border-white/10 bg-black px-1 outline outline-1 outline-transparent focus-within:border-white/20">
                   <input
                     type="text"
                     value={input}
@@ -352,10 +347,10 @@ export const AIChat = () => {
                 <button
                   type="submit"
                   disabled={!input.trim() || isLoading}
-                  className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl transition-all duration-200 ${
+                  className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl ${
                     !input.trim() || isLoading
                       ? 'cursor-not-allowed border border-white/8 bg-[#111315] text-white/20'
-                      : 'border border-emerald-400/25 bg-[linear-gradient(180deg,rgba(14,51,41,0.98),rgba(8,28,22,0.98))] text-emerald-300 shadow-[0_12px_28px_rgba(16,185,129,0.16)] hover:scale-[1.02] hover:border-emerald-300/35 hover:text-white active:scale-95'
+                      : 'border border-white/10 bg-zinc-900 text-white hover:bg-zinc-800'
                   }`}
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

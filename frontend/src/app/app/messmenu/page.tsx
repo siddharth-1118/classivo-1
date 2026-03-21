@@ -79,47 +79,48 @@ export default function MessMenuPage() {
   if (!currentItem) return null;
 
   return (
-    <main className="min-h-screen w-full text-white">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-4 pb-20 sm:px-6">
-        <header className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-6 text-center shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur-xl">
-          <div className="flex items-center justify-center gap-2 text-[11px] uppercase tracking-[0.22em] text-premium-gold">
-            <Sparkles size={12} />
+    <main className="h-screen w-full overflow-hidden text-white">
+      <div className="mx-auto flex h-full w-full max-w-4xl flex-col gap-3 px-4 py-3 pb-10 sm:px-6 sm:py-4">
+        <header className="rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-4 text-center shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur-xl">
+          <div className="flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.2em] text-premium-gold">
+            <Sparkles size={11} />
             Mess Menu
           </div>
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">Mess Menu Overview</h1>
-          <p className="mt-2 text-sm leading-7 text-zinc-300">
-            Browse breakfast, lunch, snacks, and dinner in the same premium glassmorphism interface.
+          <h1 className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl">Mess Menu Overview</h1>
+          <p className="mt-1 text-[11px] leading-5 text-zinc-300 sm:text-xs">
+            Everything stays visible in one compact dashboard-style view.
           </p>
         </header>
 
-        <div className="rounded-[28px] border border-white/10 bg-black/20 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.2)] backdrop-blur-xl">
-          <div className="mb-6 flex items-center justify-center gap-6 select-none relative">
-            <button onClick={() => carouselRef.current?.prev()} className="rounded-full border border-white/10 bg-white/5 p-3 text-white/70 transition hover:bg-white/10 hover:text-white" aria-label="Previous">
-              <ChevronLeft className="h-6 w-6" />
+        <div className="flex min-h-0 flex-1 flex-col rounded-[22px] border border-white/10 bg-black/20 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.2)] backdrop-blur-xl sm:p-4">
+          <div className="relative mb-3 flex select-none items-center justify-center gap-3">
+            <button onClick={() => carouselRef.current?.prev()} className="rounded-full border border-white/10 bg-white/5 p-2.5 text-white/70 transition hover:bg-white/10 hover:text-white" aria-label="Previous">
+              <ChevronLeft className="h-5 w-5" />
             </button>
 
             <div className="text-center">
-              <h2 className="text-2xl leading-tight text-white">{currentItem.day}</h2>
-              <h3 className="text-lg font-semibold text-zinc-300">{currentItem.meal}</h3>
+              <h2 className="text-lg leading-tight text-white sm:text-xl">{currentItem.day}</h2>
+              <h3 className="text-sm font-semibold text-zinc-300 sm:text-base">{currentItem.meal}</h3>
             </div>
 
-            <button onClick={() => carouselRef.current?.next()} className="rounded-full border border-white/10 bg-white/5 p-3 text-white/70 transition hover:bg-white/10 hover:text-white" aria-label="Next">
-              <ChevronRight className="h-6 w-6" />
+            <button onClick={() => carouselRef.current?.next()} className="rounded-full border border-white/10 bg-white/5 p-2.5 text-white/70 transition hover:bg-white/10 hover:text-white" aria-label="Next">
+              <ChevronRight className="h-5 w-5" />
             </button>
           </div>
 
-          <p className="mb-5 flex items-center justify-center gap-2 text-xs text-zinc-400">
-            <Clock size={14} />
+          <p className="mb-3 flex items-center justify-center gap-2 text-[11px] text-zinc-400 sm:text-xs">
+            <Clock size={13} />
             Current time: {currentTimeStr}
           </p>
 
-          <div className="flex w-full items-center justify-center">
+          <div className="flex min-h-0 flex-1 items-center justify-center">
             <MessMenuCarousel
               ref={carouselRef}
               items={carouselItems}
               initialIndex={initialIndex}
               loop={true}
-              baseWidth={320}
+              baseWidth={272}
+              cardHeight={420}
               onIndexChange={setCurrentIndex}
             />
           </div>

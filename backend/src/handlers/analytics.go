@@ -11,6 +11,16 @@ import (
 	"goscraper/src/helpers/databases"
 )
 
+func isMissingAnalyticsTableError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	message := err.Error()
+	return strings.Contains(message, "PGRST205") &&
+		strings.Contains(message, "analytics_events")
+}
+
 type AnalyticsPageViewPayload struct {
 	VisitorID string `json:"visitorId"`
 	Path      string `json:"path"`
@@ -78,6 +88,9 @@ func RecordAnalyticsEvent(eventType, userEmail, visitorID, path string, metadata
 
 	_, _, err = db.Client().From("analytics_events").Insert(data, false, "", "", "").Execute()
 	if err != nil {
+		if isMissingAnalyticsTableError(err) {
+			return
+		}
 		log.Printf("[ANALYTICS ERR] Failed to insert event %s: %v", eventType, err)
 	}
 }
@@ -140,6 +153,11 @@ func HandleGetAnalytics(c *fiber.Ctx) error {
 	var results []map[string]interface{}
 	_, err = db.Client().From("analytics_events").Select("*", "", false).ExecuteTo(&results)
 	if err != nil {
+		if isMissingAnalyticsTableError(err) {
+			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
+				"error": "Analytics storage is not ready yet. Run supabase_analytics_migration.sql in Supabase.",
+			})
+		}
 		log.Printf("[ADMIN ANALYTICS ERR] Failed to fetch analytics events: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Analytics storage is not ready yet. Run the analytics migration in Supabase first.",

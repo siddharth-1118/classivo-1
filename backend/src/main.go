@@ -77,6 +77,13 @@ func main() {
 		})
 	})
 
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"status":  "ok",
+			"service": "backend",
+		})
+	})
+
 	app.Use(func(c *fiber.Ctx) error {
 		log.Printf("[REQUEST] %s %s", c.Method(), c.Path())
 		return c.Next()
@@ -219,6 +226,13 @@ func main() {
 			go handlers.RecordLoginSuccess(creds.Username)
 		}
 		return c.JSON(session)
+	})
+
+	api.Get("/healthz", func(c *fiber.Ctx) error {
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"status":  "ok",
+			"service": "api",
+		})
 	})
 
 	api.Delete("/logout", func(c *fiber.Ctx) error {
