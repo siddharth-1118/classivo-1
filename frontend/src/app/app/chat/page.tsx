@@ -14,14 +14,7 @@ import {
 import useWebSocket from "../../../hooks/useWebSocket";
 import useNotifications from "../../../hooks/useNotifications";
 import { getSessionToken } from "@/utils/sessionClient";
-import { api } from "@/lib/api";
-
-interface UserProfile {
-  name: string;
-  regNumber: string;
-  batch: string;
-  section: string;
-}
+import { useUserInfo } from "@/hooks/query";
 
 interface ChatMessage {
   action?: string;
@@ -137,34 +130,6 @@ const titleCase = (value: string) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 
-const mapProfileResponse = (payload: unknown): UserProfile | null => {
-  if (!payload || typeof payload !== "object") {
-    return null;
-  }
-
-  const record = payload as Record<string, unknown>;
-  const source =
-    record.userInfo && typeof record.userInfo === "object"
-      ? (record.userInfo as Record<string, unknown>)
-      : record;
-
-  const name = typeof source.name === "string" ? source.name : "";
-  const regNumber = typeof source.regNumber === "string" ? source.regNumber : "";
-  const batch = typeof source.batch === "string" ? source.batch : "";
-  const section = typeof source.section === "string" ? source.section : "";
-
-  if (!name && !regNumber && !section) {
-    return null;
-  }
-
-  return {
-    name,
-    regNumber,
-    batch,
-    section,
-  };
-};
-
 const buildSectionRoom = (section: string, ownSection?: string): RoomCard => ({
   key: section,
   title: titleCase(section),
@@ -183,12 +148,12 @@ const buildSectionRoom = (section: string, ownSection?: string): RoomCard => ({
 const ChatPage = () => {
   const [token, setToken] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState("");
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [rooms, setRooms] = useState<string[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
+  const { data: profile, isPending: isProfilePending } = useUserInfo(Boolean(token));
   const { showNotification } = useNotifications();
   const { messages, sendMessage, isConnected } = useWebSocket(
-    token && profile ? getSocketBase() : "",
+    token ? getSocketBase() : "",
     token || undefined,
     profile?.section,
     profile?.regNumber
@@ -199,22 +164,8 @@ const ChatPage = () => {
   }, []);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!token) return;
-      try {
-        const res = await api.user(token);
-        const nextProfile = mapProfileResponse(res);
-        if (nextProfile) {
-          setProfile(nextProfile);
-        }
-      } catch (err) {
-        console.error("Failed to fetch profile:", err);
-      }
-      setSelectedRoom((current) => current ?? "campus");
-    };
-
-    fetchProfile();
-
+    if (!token) return;
+    setSelectedRoom((current) => current ?? "campus");
   }, [token]);
 
   useEffect(() => {
@@ -248,6 +199,13 @@ const ChatPage = () => {
   );
 
   const ownSection = profile?.section?.toLowerCase?.() ?? "";
+  const chatStatusLabel = !token
+    ? "Loading session..."
+    : isProfilePending
+      ? "Loading profile..."
+      : profile
+        ? (isConnected ? "Live" : "Connecting...")
+        : "Profile unavailable";
 
   const sectionRooms = useMemo(() => {
     const activeSectionRooms = rooms.filter(
@@ -303,13 +261,13 @@ const ChatPage = () => {
            <div className="max-w-3xl">
             <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.24em] text-premium-gold font-black">
               <Sparkles className="h-4 w-4" />
-              Stealth Tensor - Global Anonymous Hub
+              Anonymous Student Chat
             </div>
             <h1 className="mt-4 text-4xl font-black tracking-tighter text-white uppercase sm:text-5xl">
-              Talk freely. <span className="text-zinc-600 italic font-serif lowercase">Stay anonymus.</span>
+              Talk freely. <span className="text-zinc-600 italic font-serif lowercase">Stay anonymous.</span>
             </h1>
             <p className="mt-4 max-w-2xl text-xs leading-relaxed text-zinc-400 uppercase tracking-widest font-black opacity-60">
-              The central nerve center for campus-wide coordination, secrets, and raw energy.
+              Jump into your section room, topic rooms, or the full campus room right after login.
             </p>
           </div>
 
@@ -320,7 +278,7 @@ const ChatPage = () => {
                 Current Section
               </div>
               <div className="mt-2 font-semibold text-white">
-                {profile?.section?.toUpperCase() || "Unknown"}
+                {profile?.section?.toUpperCase() || (isProfilePending ? "Loading..." : "Unknown")}
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-200">
@@ -329,7 +287,7 @@ const ChatPage = () => {
                 Chat Status
               </div>
               <div className="mt-2 font-semibold text-white">
-                {isConnected ? "Live" : "Connecting..."}
+                {chatStatusLabel}
               </div>
             </div>
           </div>
@@ -409,7 +367,7 @@ const ChatPage = () => {
                     <div className="flex items-center gap-1.5">
                       <div className={`h-1.5 w-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`} />
                       <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">
-                        {isConnected ? 'Live Sync Active' : 'Connecting to Flux...'}
+                        {isProfilePending ? 'Loading profile...' : isConnected ? 'Live sync active' : 'Connecting...'}
                       </p>
                     </div>
                   </div>

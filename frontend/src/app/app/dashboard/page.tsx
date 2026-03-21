@@ -113,6 +113,8 @@ export default function DashboardPage() {
     return () => window.clearInterval(intervalId);
   }, []);
 
+  const displayName = (userInfo?.name || "").trim();
+
   const getScheduleForDayOrder = (dayOrder: number) => {
     if (!timetableData || timetableData.length === 0 || Number.isNaN(dayOrder) || dayOrder <= 0) {
       return [];
@@ -294,7 +296,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <h1 className="flex flex-wrap items-baseline gap-1.5 text-xl font-black tracking-tight sm:text-2xl">
-              Welcome back, <span className="text-premium-gold">{userInfo?.name?.split(" ")[0] || "Curator"}</span>
+              Welcome back, <span className="text-premium-gold">{displayName || "Student"}</span>
             </h1>
           </div>
           <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/5 bg-zinc-900 text-zinc-400">
