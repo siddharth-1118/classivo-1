@@ -60,6 +60,14 @@ const Data = ({ data }: { data: UserInfo }) => {
     void loadHostelState();
   }, [loadHostelState]);
 
+  React.useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      void loadHostelState();
+    }, 30000);
+
+    return () => window.clearInterval(intervalId);
+  }, [loadHostelState]);
+
   const handleSaveHostel = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!hostelName.trim() || !roomNumber.trim()) {
@@ -210,6 +218,11 @@ const Data = ({ data }: { data: UserInfo }) => {
                   <BedDouble size={12} />
                   Roommates
                 </div>
+                {!isLoadingHostel && hostelState ? (
+                  <p className="mt-3 text-xs uppercase tracking-[0.18em] text-zinc-500">
+                    {hostelState.matchCount} match{hostelState.matchCount === 1 ? "" : "es"} found
+                  </p>
+                ) : null}
                 {isLoadingHostel ? (
                   <p className="mt-3 text-sm text-zinc-400">Checking for roommate matches...</p>
                 ) : hostelState?.roommates?.length ? (

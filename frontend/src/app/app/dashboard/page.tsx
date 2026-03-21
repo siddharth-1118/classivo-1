@@ -8,8 +8,10 @@ import {
   Bell,
   CheckCircle2,
   Sparkles,
+  BedDouble,
 } from "lucide-react";
 import { useCalendar, useDayOrder, useTimetable, useUserInfo, useAttendance, useMarks } from "@/hooks/query";
+import { fetchHostelRoommate } from "@/lib/studentHubApi";
 
 type TimetableClass = {
   time: string;
@@ -103,6 +105,7 @@ export default function DashboardPage() {
   const { data: attendanceData } = useAttendance();
   const { data: marksData } = useMarks();
   const [currentTime, setCurrentTime] = React.useState<Date | null>(null);
+  const [hasRoomDetails, setHasRoomDetails] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
     const syncClock = () => setCurrentTime(new Date());
@@ -111,6 +114,27 @@ export default function DashboardPage() {
     const intervalId = window.setInterval(syncClock, 30000);
 
     return () => window.clearInterval(intervalId);
+  }, []);
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const loadRoommateStatus = async () => {
+      try {
+        const response = await fetchHostelRoommate();
+        if (!isMounted) return;
+        setHasRoomDetails(Boolean(response.entry));
+      } catch {
+        if (!isMounted) return;
+        setHasRoomDetails(null);
+      }
+    };
+
+    void loadRoommateStatus();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const displayName = (userInfo?.name || "").trim();
@@ -286,8 +310,8 @@ export default function DashboardPage() {
   })();
 
   return (
-    <main className="relative h-screen w-full overflow-hidden px-4 pb-24 pt-4 text-white font-sans sm:px-6 sm:pt-5">
-      <div className="relative z-10 mx-auto flex h-full max-w-lg flex-col gap-4">
+    <main className="relative min-h-screen w-full overflow-y-auto px-4 pb-24 pt-4 text-white font-sans sm:px-6 sm:pt-5">
+      <div className="relative z-10 mx-auto flex max-w-lg flex-col gap-4">
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full border-2 border-premium-gold p-0.5">
@@ -303,6 +327,29 @@ export default function DashboardPage() {
             <Bell size={18} />
           </button>
         </header>
+
+        {hasRoomDetails === false ? (
+          <section className="rounded-[22px] border border-amber-400/20 bg-amber-500/10 p-3 backdrop-blur-md">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-400/15 text-amber-300">
+                  <BedDouble size={18} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black uppercase tracking-[0.26em] text-amber-200/80">Important Note</p>
+                  <p className="text-sm font-semibold text-white">You did not enter the room details.</p>
+                  <p className="text-[11px] leading-5 text-amber-100/75">Add your hostel and room number so roommate matches can find you.</p>
+                </div>
+              </div>
+              <Link
+                href="/app/profile"
+                className="shrink-0 rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-amber-100 transition hover:bg-amber-300/15"
+              >
+                Enter Now
+              </Link>
+            </div>
+          </section>
+        ) : null}
 
         <section>
           <p className="mb-1 text-[9px] font-black uppercase tracking-[0.28em] text-zinc-500">Academic Status</p>
@@ -395,8 +442,8 @@ export default function DashboardPage() {
           ) : null}
         </section>
 
-        <section className="grid min-h-0 flex-1 grid-cols-1 gap-3">
-          <div className="flex min-h-0 flex-col rounded-[24px] border border-white/10 bg-zinc-900/30 p-3 backdrop-blur-md">
+        <section className="grid grid-cols-1 gap-3">
+          <div className="flex flex-col rounded-[24px] border border-white/10 bg-zinc-900/30 p-3 backdrop-blur-md">
             <div className="mb-2 flex items-center justify-between gap-2">
               <div>
                 <h3 className="text-base font-black tracking-tight">Today</h3>
@@ -406,7 +453,7 @@ export default function DashboardPage() {
                 View
               </Link>
             </div>
-            <div className="min-h-0 space-y-2 overflow-y-auto pr-1">
+            <div className="space-y-2">
               {allTodayClasses.length > 0 ? (
                 allTodayClasses.map((cls, i) => (
                   <div key={i} className="group flex items-center gap-3 rounded-[20px] border border-white/5 bg-zinc-900/30 p-3 transition-all hover:bg-zinc-900/50">
@@ -434,7 +481,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex min-h-0 flex-col rounded-[24px] border border-white/10 bg-zinc-900/30 p-3 backdrop-blur-md">
+          <div className="flex flex-col rounded-[24px] border border-white/10 bg-zinc-900/30 p-3 backdrop-blur-md">
             <div className="mb-2 flex items-end justify-between gap-2">
               <div>
                 <h3 className="text-base font-black tracking-tight">Upcoming</h3>
@@ -447,7 +494,7 @@ export default function DashboardPage() {
                 Open
               </Link>
             </div>
-            <div className="min-h-0 space-y-2 overflow-y-auto pr-1">
+            <div className="space-y-2">
               {nextDayClasses.length > 0 ? (
                 nextDayClasses.map((cls, i) => (
                   <div key={i} className="group flex items-center gap-3 rounded-[20px] border border-white/5 bg-zinc-900/30 p-3 transition-all hover:bg-zinc-900/50">
