@@ -15,10 +15,11 @@ function buildUrl(path: string) {
 }
 
 function authHeaders(token?: string) {
-  if (!token) return {} as Record<string, string>;
+  const normalizedToken = token?.trim();
+  if (!normalizedToken) return {} as Record<string, string>;
   return {
-    "X-CSRF-Token": token,
-    Authorization: `Bearer ${token}`,
+    "X-CSRF-Token": normalizedToken,
+    Authorization: `Bearer ${normalizedToken}`,
   } as Record<string, string>;
 }
 

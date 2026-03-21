@@ -152,13 +152,14 @@ async function request<T = Json>(path: string, opts: RequestOptions = {}): Promi
   const { method = "GET", body, token, headers = {}, allowErrorStatuses = [] } = opts;
   const url = buildApiUrl(path);
   logApi(`${method} ${url || normalizeApiPath(path)}`);
+  const normalizedToken = token?.trim();
 
   const init: RequestInit = {
     method,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { "X-CSRF-Token": token } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(normalizedToken ? { "X-CSRF-Token": normalizedToken } : {}),
+      ...(normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : {}),
       ...headers,
     },
     ...(body !== undefined ? { body: typeof body === "string" ? body : JSON.stringify(body) } : {}),
