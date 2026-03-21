@@ -22,6 +22,7 @@ type StudentIdentity struct {
 	RegNumber string `json:"regNumber"`
 	Semester  int    `json:"semester"`
 	Section   string `json:"section"`
+	Department string `json:"department"`
 }
 
 type ContentReportPayload struct {
@@ -45,6 +46,11 @@ type AdminActionPayload struct {
 	Password string `json:"password"`
 	Token    string `json:"token"`
 	Reason   string `json:"reason"`
+}
+
+type HostelRoomPayload struct {
+	HostelName string `json:"hostelName"`
+	RoomNumber string `json:"roomNumber"`
 }
 
 func resolveStudentIdentity(c *fiber.Ctx) (*StudentIdentity, error) {
@@ -73,6 +79,7 @@ func resolveStudentIdentity(c *fiber.Ctx) (*StudentIdentity, error) {
 		RegNumber: "UNKNOWN",
 		Semester:  0,
 		Section:   "",
+		Department: "",
 	}
 
 	if userData == nil {
@@ -97,6 +104,9 @@ func resolveStudentIdentity(c *fiber.Ctx) (*StudentIdentity, error) {
 		if section, ok := userMap["section"].(string); ok {
 			identity.Section = strings.TrimSpace(section)
 		}
+		if department, ok := userMap["department"].(string); ok {
+			identity.Department = strings.TrimSpace(department)
+		}
 		identity.Semester = extractSemester(userMap["semester"])
 	}
 
@@ -105,6 +115,144 @@ func resolveStudentIdentity(c *fiber.Ctx) (*StudentIdentity, error) {
 	}
 
 	return identity, nil
+}
+
+func normalizeHostelValue(value string) string {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	replacer := strings.NewReplacer(
+		"-", " ",
+		"_", " ",
+		".", " ",
+		",", " ",
+		"/", " ",
+		"\\", " ",
+		"(", " ",
+		")", " ",
+	)
+	normalized = replacer.Replace(normalized)
+	return strings.Join(strings.Fields(normalized), " ")
+}
+
+func HandleGetHostelRoommate(c *fiber.Ctx) error {
+	identity, err := resolveStudentIdentity(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unable to resolve student identity"})
+	}
+
+	db, err := databases.NewDatabaseHelper()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal database error"})
+	}
+
+	var entries []map[string]interface{}
+	_, err = db.Client().From("hostel_room_entries").
+		Select("*", "", false).
+		Eq("reg_number", identity.RegNumber).
+		Limit(1, "").
+		ExecuteTo(&entries)
+	if err != nil || len(entries) == 0 {
+		return c.JSON(fiber.Map{
+			"entry":      nil,
+			"roommates":  []interface{}{},
+			"hasMatch":   false,
+			"matchCount": 0,
+		})
+	}
+
+	entry := entries[0]
+	normalizedHostel := strings.TrimSpace(fmt.Sprintf("%v", entry["normalized_hostel_name"]))
+	normalizedRoom := strings.TrimSpace(fmt.Sprintf("%v", entry["normalized_room_number"]))
+
+	var matching []map[string]interface{}
+	if normalizedHostel != "" && normalizedRoom != "" {
+		_, _ = db.Client().From("hostel_room_entries").
+			Select("*", "", false).
+			Eq("normalized_hostel_name", normalizedHostel).
+			Eq("normalized_room_number", normalizedRoom).
+			Order("student_name", &postgrest.OrderOpts{Ascending: true}).
+			ExecuteTo(&matching)
+	}
+
+	roommates := make([]map[string]interface{}, 0)
+	for _, record := range matching {
+		regNumber := strings.TrimSpace(fmt.Sprintf("%v", record["reg_number"]))
+		if regNumber == identity.RegNumber {
+			continue
+		}
+
+		roommates = append(roommates, map[string]interface{}{
+			"name":       strings.TrimSpace(fmt.Sprintf("%v", record["student_name"])),
+			"department": strings.TrimSpace(fmt.Sprintf("%v", record["department"])),
+			"hostelName": strings.TrimSpace(fmt.Sprintf("%v", record["hostel_name"])),
+			"roomNumber": strings.TrimSpace(fmt.Sprintf("%v", record["room_number"])),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"entry": fiber.Map{
+			"hostelName": strings.TrimSpace(fmt.Sprintf("%v", entry["hostel_name"])),
+			"roomNumber": strings.TrimSpace(fmt.Sprintf("%v", entry["room_number"])),
+		},
+		"roommates":  roommates,
+		"hasMatch":   len(roommates) > 0,
+		"matchCount": len(roommates),
+	})
+}
+
+func HandleUpsertHostelRoommate(c *fiber.Ctx) error {
+	identity, err := resolveStudentIdentity(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unable to resolve student identity"})
+	}
+
+	var payload HostelRoomPayload
+	if err := c.BodyParser(&payload); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request payload"})
+	}
+
+	payload.HostelName = strings.TrimSpace(payload.HostelName)
+	payload.RoomNumber = strings.TrimSpace(payload.RoomNumber)
+
+	if payload.HostelName == "" || payload.RoomNumber == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "hostelName and roomNumber are required"})
+	}
+
+	db, err := databases.NewDatabaseHelper()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal database error"})
+	}
+
+	data := map[string]interface{}{
+		"user_email":              identity.Email,
+		"student_name":            identity.Name,
+		"reg_number":              identity.RegNumber,
+		"department":              identity.Department,
+		"hostel_name":             payload.HostelName,
+		"normalized_hostel_name":  normalizeHostelValue(payload.HostelName),
+		"room_number":             payload.RoomNumber,
+		"normalized_room_number":  normalizeHostelValue(payload.RoomNumber),
+		"updated_at":              time.Now().UTC().Format(time.RFC3339),
+	}
+
+	var existing []map[string]interface{}
+	_, _ = db.Client().From("hostel_room_entries").
+		Select("id", "", false).
+		Eq("reg_number", identity.RegNumber).
+		Limit(1, "").
+		ExecuteTo(&existing)
+
+	if len(existing) > 0 {
+		_, _, err = db.Client().From("hostel_room_entries").Update(data, "", "").Eq("reg_number", identity.RegNumber).Execute()
+	} else {
+		data["created_at"] = time.Now().UTC().Format(time.RFC3339)
+		_, _, err = db.Client().From("hostel_room_entries").Insert(data, false, "", "", "").Execute()
+	}
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save hostel room details"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Hostel room details saved successfully"})
 }
 
 func extractSemester(value interface{}) int {

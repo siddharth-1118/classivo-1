@@ -104,6 +104,22 @@ export async function fetchEvents() {
   return request<{ events: any[] }>("/events");
 }
 
+export async function fetchHostelRoommate() {
+  return request<{
+    entry: { hostelName: string; roomNumber: string } | null;
+    roommates: Array<{ name: string; department: string; hostelName: string; roomNumber: string }>;
+    hasMatch: boolean;
+    matchCount: number;
+  }>("/hostel-roommate");
+}
+
+export async function saveHostelRoommate(payload: { hostelName: string; roomNumber: string }) {
+  return request<{ message: string }>("/hostel-roommate", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function fetchAdminQueries(credentials: AdminCredentials) {
   return request<any[]>("/admin/queries", {
     method: "POST",

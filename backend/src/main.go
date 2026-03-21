@@ -371,6 +371,8 @@ func main() {
 	api.Get("/faculty-reviews", handlers.HandleListFacultyReviews)
 	api.Post("/faculty-reviews", handlers.HandleCreateFacultyReview)
 	api.Get("/events", handlers.HandleListEvents)
+	api.Get("/hostel-roommate", handlers.HandleGetHostelRoommate)
+	api.Post("/hostel-roommate", handlers.HandleUpsertHostelRoommate)
 	api.Post("/admin/analytics", handlers.HandleGetAnalytics)
 	api.Post("/admin/queries", handlers.HandleGetQueries)
 	api.Post("/admin/moderation", handlers.HandleGetModeration)
